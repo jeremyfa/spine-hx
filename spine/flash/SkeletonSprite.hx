@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -54,34 +54,34 @@ class SkeletonSprite extends Sprite
     private static var blendModes : Array<String> = [
                 BlendMode.NORMAL, BlendMode.ADD, BlendMode.MULTIPLY, BlendMode.SCREEN
         ];
-    
+
     private var _skeleton : Skeleton;
     public var timeScale : Float = 1;
     private var lastTime : Int;
     private var wrappers : Dictionary = new Dictionary(true);
-    
+
     public function new(skeletonData : SkeletonData)
     {
         super();
         Bone.yDown = true;
-        
+
         _skeleton = new Skeleton(skeletonData);
         _skeleton.updateWorldTransform();
-        
+
         addEventListener(Event.ENTER_FRAME, enterFrame);
     }
-    
+
     private function enterFrame(event : Event) : Void
     {
         var time : Int = Math.round(haxe.Timer.stamp() * 1000);
         advanceTime((time - lastTime) / 1000);
         lastTime = time;
     }
-    
+
     public function advanceTime(delta : Float) : Void
     {
         _skeleton.update(delta * timeScale);
-        
+
         removeChildren();
         var drawOrder : Array<Slot> = skeleton.drawOrder;
         var i : Int = 0;
@@ -95,7 +95,7 @@ class SkeletonSprite extends Sprite
                 {i++;continue;
                 }
             }
-            
+
             var wrapper : Sprite = wrappers[regionAttachment];
             if (wrapper == null)
             {
@@ -110,15 +110,15 @@ class SkeletonSprite extends Sprite
                     regionData.copyPixels(bitmapData, new Rectangle(region.x, region.y, regionWidth, regionHeight), new Point());
                     region.rendererObject = regionData;
                 }
-                
+
                 var bitmap : Bitmap = new Bitmap(regionData);
                 bitmap.smoothing = true;
-                
+
                 // Rotate and scale using default registration point (top left corner, y-down, CW) instead of image center.
                 bitmap.rotation = -regionAttachment.rotation;
                 bitmap.scaleX = regionAttachment.scaleX * (regionAttachment.width / region.width);
                 bitmap.scaleY = regionAttachment.scaleY * (regionAttachment.height / region.height);
-                
+
                 // Position using attachment translation, shifted as if scale and rotation were at image center.
                 var radians : Float = -regionAttachment.rotation * Math.PI / 180;
                 var cos : Float = Math.cos(radians);
@@ -132,27 +132,27 @@ class SkeletonSprite extends Sprite
                 }
                 bitmap.x = regionAttachment.x + shiftX * cos - shiftY * sin;
                 bitmap.y = -regionAttachment.y + shiftX * sin + shiftY * cos;
-                
+
                 // Use bone as registration point.
                 wrapper = new Sprite();
                 wrapper.transform.colorTransform = new ColorTransform();
                 wrapper.addChild(bitmap);
                 wrappers[regionAttachment] = wrapper;
             }
-            
+
             wrapper.blendMode = blendModes[slot.data.blendMode.ordinal];
-            
+
             var colorTransform : ColorTransform = wrapper.transform.colorTransform;
             colorTransform.redMultiplier = skeleton.r * slot.r * regionAttachment.r;
             colorTransform.greenMultiplier = skeleton.g * slot.g * regionAttachment.g;
             colorTransform.blueMultiplier = skeleton.b * slot.b * regionAttachment.b;
             colorTransform.alphaMultiplier = skeleton.a * slot.a * regionAttachment.a;
             wrapper.transform.colorTransform = colorTransform;
-            
+
             var bone : Bone = slot.bone;
             var flipX : Int = (skeleton.flipX) ? -1 : 1;
             var flipY : Int = (skeleton.flipY) ? -1 : 1;
-            
+
             wrapper.x = bone.worldX;
             wrapper.y = bone.worldY;
             wrapper.rotation = bone.worldRotationX * flipX * flipY;
@@ -162,11 +162,9 @@ class SkeletonSprite extends Sprite
             i++;
         }
     }
-    
+
     private function get_skeleton() : Skeleton
     {
         return _skeleton;
     }
 }
-
-
