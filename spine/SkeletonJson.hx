@@ -807,7 +807,8 @@ class SkeletonJson
                             }
                             if (scale != 1)
                             {
-                                var n : Int;
+                                var i = start;
+                                var n : Int = i + temp.length;
                                 for (i in start...n)
                                 {
                                     deform[i] *= scale;

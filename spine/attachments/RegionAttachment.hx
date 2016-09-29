@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -43,7 +43,7 @@ class RegionAttachment extends Attachment
     public var Y3 : Int = 5;
     public var X4 : Int = 6;
     public var Y4 : Int = 7;
-    
+
     public var x : Float;
     public var y : Float;
     public var scaleX : Float = 1;
@@ -55,26 +55,28 @@ class RegionAttachment extends Attachment
     public var g : Float = 1;
     public var b : Float = 1;
     public var a : Float = 1;
-    
+
     public var path : String;
     public var rendererObject : Dynamic;
-    public var regionOffsetX : Float;  // Pixels stripped from the bottom left, unrotated.  
+    public var regionOffsetX : Float;  // Pixels stripped from the bottom left, unrotated.
     public var regionOffsetY : Float;
-    public var regionWidth : Float;  // Unrotated, stripped size.  
+    public var regionWidth : Float;  // Unrotated, stripped size.
     public var regionHeight : Float;
-    public var regionOriginalWidth : Float;  // Unrotated, unstripped size.  
+    public var regionOriginalWidth : Float;  // Unrotated, unstripped size.
     public var regionOriginalHeight : Float;
-    
+
     public var offset : Array<Float> = new Array<Float>();
     public var uvs : Array<Float> = new Array<Float>();
-    
+
+    public var wrapperSprite : Dynamic = null;
+
     public function new(name : String)
     {
         super(name);
         spine.as3hx.Compat.setArrayLength(offset, 8);
         spine.as3hx.Compat.setArrayLength(uvs, 8);
     }
-    
+
     public function setUVs(u : Float, v : Float, u2 : Float, v2 : Float, rotate : Bool) : Void
     {
         if (rotate)
@@ -100,7 +102,7 @@ class RegionAttachment extends Attachment
             uvs[Y4] = v2;
         }
     }
-    
+
     public function updateOffset() : Void
     {
         var regionScaleX : Float = width / regionOriginalWidth * scaleX;
@@ -129,7 +131,7 @@ class RegionAttachment extends Attachment
         offset[X4] = localX2Cos - localYSin;
         offset[Y4] = localYCos + localX2Sin;
     }
-    
+
     public function computeWorldVertices(x : Float, y : Float, bone : Bone, worldVertices : Array<Float>) : Void
     {
         x += bone.worldX;
@@ -156,5 +158,3 @@ class RegionAttachment extends Attachment
         worldVertices[Y4] = x4 * m10 + y4 * m11 + y;
     }
 }
-
-

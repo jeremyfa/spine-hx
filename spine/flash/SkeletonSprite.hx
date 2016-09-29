@@ -140,7 +140,12 @@ class SkeletonSprite extends Sprite
                 wrappers[regionAttachment] = wrapper;
             }
 
-            wrapper.blendMode = blendModes[slot.data.blendMode.ordinal];
+            wrapper.blendMode = switch (slot.data.blendMode) {
+                case Additive: BlendMode.ADD;
+                case Multiply: BlendMode.MULTIPLY;
+                case Screen: BlendMode.SCREEN;
+                default: BlendMode.NORMAL;
+            }
 
             var colorTransform : ColorTransform = wrapper.transform.colorTransform;
             colorTransform.redMultiplier = skeleton.r * slot.r * regionAttachment.r;
