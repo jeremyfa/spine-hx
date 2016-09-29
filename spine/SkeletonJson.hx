@@ -628,8 +628,8 @@ class SkeletonJson
                         frameIndex = 0;
                         for (valueMap in values)
                         {
-                            var x : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "x") || 0) * timelineScale;
-                            var y : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "y") || 0) * timelineScale;
+                            var x : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "x") != null ? Reflect.field(valueMap, "x") : 0) * timelineScale;
+                            var y : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "y") != null ? Reflect.field(valueMap, "y") : 0) * timelineScale;
                             translateTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), x, y);
                             readCurve(valueMap, translateTimeline, frameIndex);
                             frameIndex++;
@@ -781,7 +781,7 @@ class SkeletonJson
                     }
                     var weighted : Bool = attachment.bones != null;
                     var vertices : Array<Float> = attachment.vertices;
-                    var deformLength : Int = (weighted) ? vertices.length / 3 * 2 : vertices.length;
+                    var deformLength : Int = (weighted) ? Math.round(vertices.length / 3 * 2) : vertices.length;
 
                     var deformTimeline : DeformTimeline = new DeformTimeline(values.length);
                     deformTimeline.slotIndex = slotIndex;
@@ -799,7 +799,7 @@ class SkeletonJson
                         else
                         {
                             deform = new Array<Float>();
-                            var start : Int = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "offset") || 0);
+                            var start : Int = Math.round(spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "offset") != null ? Reflect.field(valueMap, "offset") : 0));
                             var temp : Array<Float> = getFloatArray(valueMap, "vertices", 1);
                             for (i in 0...temp.length)
                             {
@@ -871,7 +871,7 @@ class SkeletonJson
                             unchanged[unchangedIndex++] = originalIndex++;
                         }
                         // Set changed items.
-                        drawOrder[originalIndex + Reflect.setField(offsetMap, "offset", Reflect.field(offsetMap, "offset"))];
+                        drawOrder[originalIndex + Reflect.field(offsetMap, "offset")] = originalIndex++;
                     }
                     // Collect remaining unchanged items.
                     while (originalIndex < slotCount)
