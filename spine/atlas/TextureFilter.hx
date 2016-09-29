@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -32,24 +32,13 @@
 package spine.atlas;
 
 
-class TextureFilter
-{
-    public static var nearest : TextureFilter = new TextureFilter(0, "nearest");
-    public static var linear : TextureFilter = new TextureFilter(1, "linear");
-    public static var mipMap : TextureFilter = new TextureFilter(2, "mipMap");
-    public static var mipMapNearestNearest : TextureFilter = new TextureFilter(3, "mipMapNearestNearest");
-    public static var mipMapLinearNearest : TextureFilter = new TextureFilter(4, "mipMapLinearNearest");
-    public static var mipMapNearestLinear : TextureFilter = new TextureFilter(5, "mipMapNearestLinear");
-    public static var mipMapLinearLinear : TextureFilter = new TextureFilter(6, "mipMapLinearLinear");
-    
-    public var ordinal : Int;
-    public var name : String;
-    
-    public function new(ordinal : Int, name : String)
-    {
-        this.ordinal = ordinal;
-        this.name = name;
-    }
+@:enum
+abstract TextureFilter(String) from String to String {
+	var Nearest = "nearest";
+	var Linear = "linear";
+	var MipMap = "mipMap";
+	var MipMapNearestNearest = "mipMapNearestNearest";
+	var MipMapLinearNearest = "mipMapLinearNearest";
+	var MipMapNearestLinear = "mipMapNearestLinear";
+	var MipMapLinearLinear = "mipMapLinearLinear";
 }
-
-

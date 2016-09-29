@@ -51,14 +51,14 @@ class SkeletonSprite extends Sprite
 {
     public var skeleton(get, never) : Skeleton;
 
-    private static var blendModes : Array<String> = [
-                BlendMode.NORMAL, BlendMode.ADD, BlendMode.MULTIPLY, BlendMode.SCREEN
-        ];
+    private static var blendModes : Array<BlendMode> = [
+        BlendMode.NORMAL, BlendMode.ADD, BlendMode.MULTIPLY, BlendMode.SCREEN
+    ];
 
     private var _skeleton : Skeleton;
     public var timeScale : Float = 1;
     private var lastTime : Int;
-    private var wrappers : Dictionary = new Dictionary(true);
+    private var wrappers : Dictionary<RegionAttachment,Sprite> = new Dictionary<RegionAttachment,Sprite>(true);
 
     public function new(skeletonData : SkeletonData)
     {
@@ -100,12 +100,12 @@ class SkeletonSprite extends Sprite
             if (wrapper == null)
             {
                 var region : AtlasRegion = cast((regionAttachment.rendererObject), AtlasRegion);
-                var regionHeight : Float = (region.rotate) ? region.width : region.height;
+                var regionHeight : Int = (region.rotate) ? region.width : region.height;
                 var regionData : BitmapData = try cast(region.rendererObject, BitmapData) catch(e:Dynamic) null;
                 if (regionData == null)
                 {
                     var bitmapData : BitmapData = try cast(region.page.rendererObject, BitmapData) catch(e:Dynamic) null;
-                    var regionWidth : Float = (region.rotate) ? region.height : region.width;
+                    var regionWidth : Int = (region.rotate) ? region.height : region.width;
                     regionData = new BitmapData(regionWidth, regionHeight);
                     regionData.copyPixels(bitmapData, new Rectangle(region.x, region.y, regionWidth, regionHeight), new Point());
                     region.rendererObject = regionData;

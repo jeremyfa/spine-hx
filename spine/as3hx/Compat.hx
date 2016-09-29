@@ -9,6 +9,7 @@ import haxe.macro.Context;
  */
 class Compat {
 
+#if !macro
     /**
      * According to Adobe:
      * The result is limited to six possible string values:
@@ -69,6 +70,8 @@ class Compat {
         return result;
     }
 
+#end
+
     macro public static function getFunctionLength(f) {
         switch(Context.follow(Context.typeof(f))) {
             case TFun(args, _): return @:pos(Context.currentPos()) macro $v{args.length};
@@ -112,6 +115,8 @@ class Compat {
         }
         return _(ECall( _(EField( _(EConst(CIdent("Std"))), "parseInt")), [_(ECall( _(EField( _(EConst(CIdent("Std"))), "string")), [e]))]));
     }
+
+#if !macro
 
     /**
      * Runs a function at a specified interval (in milliseconds).
@@ -227,7 +232,7 @@ class Compat {
         #elseif java
         return untyped __java__('Double.MAX_VALUE');
         #elseif cpp
-        return 1.79769313486232e+308;
+        return 3.402823e+38;
         #elseif python
         return PythonSysAdapter.float_info.max;
         #else
@@ -336,9 +341,11 @@ class Compat {
             return s;
         #end
     }
+
+    #end
 }
 
-#if (!flash && !js && (haxe_ver >= "3.3"))
+#if (!flash && !js && (haxe_ver >= "3.3") && !macro)
 private class FlashTimerAdapter {
 
     public static var timers:Array<haxe.Timer> = [];

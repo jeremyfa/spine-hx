@@ -35,6 +35,8 @@ import flash.errors.ArgumentError;
 import flash.errors.Error;
 import flash.utils.ByteArray;
 
+using StringTools;
+
 class Atlas
 {
     private var pages : Array<AtlasPage> = new Array<AtlasPage>();
@@ -103,11 +105,11 @@ class Atlas
                         page.height = spine.as3hx.Compat.parseInt(tuple[1]);
                         reader.readTuple(tuple);
                     }
-                    page.format = Format[tuple[0]];
+                    page.format = tuple[0];
 
                     reader.readTuple(tuple);
-                    page.minFilter = TextureFilter[tuple[0]];
-                    page.magFilter = TextureFilter[tuple[1]];
+                    page.minFilter = tuple[0];
+                    page.magFilter = tuple[1];
 
                     var direction : String = reader.readValue();
                     page.uWrap = TextureWrap.clampToEdge;
@@ -165,8 +167,8 @@ class Atlas
                     }
                     region.x = x;
                     region.y = y;
-                    region.width = Math.abs(width);
-                    region.height = Math.abs(height);
+                    region.width = cast Math.abs(width);
+                    region.height = cast Math.abs(height);
 
                     if (reader.readTuple(tuple) == 4)
                     {
@@ -176,7 +178,7 @@ class Atlas
                         if (reader.readTuple(tuple) == 4)
                         {
                             // pad is optional, but only present with splits
-                            region.pads = new Array<Int>(spine.as3hx.Compat.parseInt(tuple[0]), spine.as3hx.Compat.parseInt(tuple[1]), spine.as3hx.Compat.parseInt(tuple[2]), spine.as3hx.Compat.parseInt(tuple[3]));
+                            region.pads = [spine.as3hx.Compat.parseInt(tuple[0]), spine.as3hx.Compat.parseInt(tuple[1]), spine.as3hx.Compat.parseInt(tuple[2]), spine.as3hx.Compat.parseInt(tuple[3])];
 
                             reader.readTuple(tuple);
                         }
@@ -237,7 +239,7 @@ class Reader
 
     public function new(text : String)
     {
-        lines = text.split(new spine.as3hx.Compat.Regex('\\r\\n|\\r|\\n', ""));
+        lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n");
     }
 
     public function trim(value : String) : String

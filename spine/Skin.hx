@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -38,13 +38,13 @@ import spine.attachments.Attachment;
 /** Stores attachments by slot index and attachment name. */
 class Skin
 {
-    public var attachments(get, never) : Array<Dictionary>;
+    public var attachments(get, never) : Array<Dictionary<String,Attachment>>;
     public var name(get, never) : String;
 
     @:allow(spine)
     private var _name : String;
-    private var _attachments : Array<Dictionary> = new Array<Dictionary>();
-    
+    private var _attachments : Array<Dictionary<String,Attachment>> = new Array<Dictionary<String,Attachment>>();
+
     public function new(name : String)
     {
         if (name == null)
@@ -53,7 +53,7 @@ class Skin
         }
         _name = name;
     }
-    
+
     public function addAttachment(slotIndex : Int, name : String, attachment : Attachment) : Void
     {
         if (attachment == null)
@@ -66,11 +66,11 @@ class Skin
         }
         if (attachments[slotIndex] == null)
         {
-            attachments[slotIndex] = new Dictionary();
+            attachments[slotIndex] = new Dictionary<String,Attachment>();
         }
         Reflect.setField(attachments[slotIndex], name, attachment);
     }
-    
+
     /** @return May be null. */
     public function getAttachment(slotIndex : Int, name : String) : Attachment
     {
@@ -78,25 +78,25 @@ class Skin
         {
             return null;
         }
-        var dictionary : Dictionary = attachments[slotIndex];
+        var dictionary : Dictionary<String,Attachment> = attachments[slotIndex];
         return (dictionary != null) ? dictionary[name] : null;
     }
-    
-    private function get_attachments() : Array<Dictionary>
+
+    private function get_attachments() : Array<Dictionary<String,Attachment>>
     {
         return _attachments;
     }
-    
+
     private function get_name() : String
     {
         return _name;
     }
-    
+
     public function toString() : String
     {
         return _name;
     }
-    
+
     /** Attach each attachment in this skin if the corresponding attachment in the old skin is currently attached. */
     public function attachAll(skeleton : Skeleton, oldSkin : Skin) : Void
     {
@@ -106,7 +106,7 @@ class Skin
             var slotAttachment : Attachment = slot.attachment;
             if (slotAttachment != null && slotIndex < oldSkin.attachments.length)
             {
-                var dictionary : Dictionary = oldSkin.attachments[slotIndex];
+                var dictionary : Dictionary<String,Attachment> = oldSkin.attachments[slotIndex];
                 for (name in Reflect.fields(dictionary))
                 {
                     var skinAttachment : Attachment = dictionary[name];
@@ -125,5 +125,3 @@ class Skin
         }
     }
 }
-
-

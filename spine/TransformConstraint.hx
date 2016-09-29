@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -49,7 +49,7 @@ class TransformConstraint implements Updatable
     public var shearMix : Float;
     @:allow(spine)
     private var _temp : Array<Float> = new Array<Float>();
-    
+
     public function new(data : TransformConstraintData, skeleton : Skeleton)
     {
         if (data == null)
@@ -72,12 +72,12 @@ class TransformConstraint implements Updatable
         }
         target = skeleton.findBone(data.target._name);
     }
-    
+
     public function apply() : Void
     {
         update();
     }
-    
+
     public function update() : Void
     {
         var rotateMix : Float = this.rotateMix;
@@ -95,7 +95,7 @@ class TransformConstraint implements Updatable
         while (i < n)
         {
             var bone : Bone = bones[i];
-            
+
             if (rotateMix > 0)
             {
                 var a : Float = bone.a;
@@ -122,7 +122,7 @@ class TransformConstraint implements Updatable
                 bone._c = sin * a + cos * c;
                 bone._d = sin * b + cos * d;
             }
-            
+
             if (translateMix > 0)
             {
                 _temp[0] = data.offsetX;
@@ -131,7 +131,7 @@ class TransformConstraint implements Updatable
                 bone._worldX += (_temp[0] - bone.worldX) * translateMix;
                 bone._worldY += (_temp[1] - bone.worldY) * translateMix;
             }
-            
+
             if (scaleMix > 0)
             {
                 var bs : Float = Math.sqrt(bone.a * bone.a + bone.c * bone.c);
@@ -145,12 +145,13 @@ class TransformConstraint implements Updatable
                 bone._b *= s;
                 bone._d *= s;
             }
-            
+
             if (shearMix > 0)
             {
-                b = bone.b;d = bone.d;
+                var b = bone.b;
+                var d = bone.d;
                 var by : Float = Math.atan2(d, b);
-                r = Math.atan2(td, tb) - Math.atan2(tc, ta) - (by - Math.atan2(bone.c, bone.a));
+                var r = Math.atan2(td, tb) - Math.atan2(tc, ta) - (by - Math.atan2(bone.c, bone.a));
                 if (r > Math.PI)
                 {
                     r -= Math.PI * 2;
@@ -163,28 +164,26 @@ class TransformConstraint implements Updatable
                     }
                 }
                 r = by + (r + data.offsetShearY * MathUtils.degRad) * shearMix;
-                s = Math.sqrt(b * b + d * d);
+                var s = Math.sqrt(b * b + d * d);
                 bone._b = Math.cos(r) * s;
                 bone._d = Math.sin(r) * s;
             }
             i++;
         }
     }
-    
+
     private function get_data() : TransformConstraintData
     {
         return _data;
     }
-    
+
     private function get_bones() : Array<Bone>
     {
         return _bones;
     }
-    
+
     public function toString() : String
     {
         return _data._name;
     }
 }
-
-

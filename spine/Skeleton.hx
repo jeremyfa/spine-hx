@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -58,7 +58,7 @@ class Skeleton
     public var time : Float = 0;
     public var flipX : Bool;public var flipY : Bool;
     public var x : Float = 0;public var y : Float = 0;
-    
+
     public function new(data : SkeletonData)
     {
         if (data == null)
@@ -66,7 +66,7 @@ class Skeleton
             throw new ArgumentError("data cannot be null.");
         }
         _data = data;
-        
+
         bones = new Array<Bone>();
         for (boneData/* AS3HX WARNING could not determine type for var: boneData exp: EField(EIdent(data),bones) type: null */ in data.bones)
         {
@@ -83,46 +83,46 @@ class Skeleton
             }
             bones.push(bone);
         }
-        
+
         slots = new Array<Slot>();
         drawOrder = new Array<Slot>();
         for (slotData/* AS3HX WARNING could not determine type for var: slotData exp: EField(EIdent(data),slots) type: null */ in data.slots)
         {
-            bone = bones[slotData.boneData.index];
+            var bone = bones[slotData.boneData.index];
             var slot : Slot = new Slot(slotData, bone);
             slots.push(slot);
             drawOrder[drawOrder.length] = slot;
         }
-        
+
         ikConstraints = new Array<IkConstraint>();
         ikConstraintsSorted = new Array<IkConstraint>();
         for (ikConstraintData/* AS3HX WARNING could not determine type for var: ikConstraintData exp: EField(EIdent(data),ikConstraints) type: null */ in data.ikConstraints)
         {
             ikConstraints.push(new IkConstraint(ikConstraintData, this));
         }
-        
+
         transformConstraints = new Array<TransformConstraint>();
         for (transformConstraintData/* AS3HX WARNING could not determine type for var: transformConstraintData exp: EField(EIdent(data),transformConstraints) type: null */ in data.transformConstraints)
         {
             transformConstraints.push(new TransformConstraint(transformConstraintData, this));
         }
-        
+
         pathConstraints = new Array<PathConstraint>();
         for (pathConstraintData/* AS3HX WARNING could not determine type for var: pathConstraintData exp: EField(EIdent(data),pathConstraints) type: null */ in data.pathConstraints)
         {
             pathConstraints.push(new PathConstraint(pathConstraintData, this));
         }
-        
+
         updateCache();
     }
-    
+
     /** Caches information about bones and constraints. Must be called if bones, constraints, or weighted path attachments are
 	 * added or removed. */
     public function updateCache() : Void
     {
         var updateCache : Array<Updatable> = this._updateCache;
         spine.as3hx.Compat.setArrayLength(updateCache, 0);
-        
+
         var bones : Array<Bone> = this.bones;
         var i : Int = 0;
         var n : Int = bones.length;
@@ -131,30 +131,31 @@ class Skeleton
             bones[i]._sorted = false;
             i++;
         }
-        
+
         // IK first, lowest hierarchy depth first.
         var ikConstraints : Array<IkConstraint> = this.ikConstraintsSorted;
         spine.as3hx.Compat.setArrayLength(ikConstraints, 0);
-        for (c/* AS3HX WARNING could not determine type for var: c exp: EField(EIdent(this),ikConstraints) type: null */ in this.ikConstraints)
+        for (c in this.ikConstraints)
         {
             ikConstraints.push(c);
         }
         var ikCount : Int = ikConstraints.length;
-        var level : Int;
+        var level : Int = 0;
         for (i in 0...n)
         {
             var ik : IkConstraint = ikConstraints[i];
             var bone : Bone = ik.bones[0].parent;
-            for (level in 0...null)
+            while (bone != null)
             {
                 bone = bone.parent;
+                level++;
             }
             ik.level = level;
         }
         var ii : Int;
         for (i in 1...ikCount)
         {
-            ik = ikConstraints[i];
+            var ik = ikConstraints[i];
             level = ik.level;
             ii = spine.as3hx.Compat.parseInt(i - 1);
             while (ii >= 0)
@@ -174,22 +175,22 @@ class Skeleton
             var ikConstraint : IkConstraint = ikConstraints[i];
             var target : Bone = ikConstraint.target;
             sortBone(target);
-            
+
             var constrained : Array<Bone> = ikConstraint.bones;
             var parent : Bone = constrained[0];
             sortBone(parent);
-            
+
             updateCache.push(ikConstraint);
-            
+
             sortReset(parent.children);
             constrained[constrained.length - 1]._sorted = true;
         }
-        
+
         var pathConstraints : Array<PathConstraint> = this.pathConstraints;
         for (i in 0...n)
         {
             var pathConstraint : PathConstraint = pathConstraints[i];
-            
+
             var slot : Slot = pathConstraint.target;
             var slotIndex : Int = slot.data.index;
             var slotBone : Bone = slot.bone;
@@ -201,28 +202,28 @@ class Skeleton
             {
                 sortPathConstraintAttachment(_data.defaultSkin, slotIndex, slotBone);
             }
-            
-            var nn : Int;
+
+            var nn : Int = _data.skins.length;
             for (ii in 0...nn)
             {
                 sortPathConstraintAttachment(_data.skins[ii], slotIndex, slotBone);
             }
-            
+
             var attachment : PathAttachment = try cast(slot.attachment, PathAttachment) catch(e:Dynamic) null;
             if (attachment != null)
             {
                 sortPathConstraintAttachment2(attachment, slotBone);
             }
-            
-            constrained = pathConstraint.bones;
+
+            var constrained = pathConstraint.bones;
             var boneCount : Int = constrained.length;
             for (ii in 0...boneCount)
             {
                 sortBone(constrained[ii]);
             }
-            
+
             updateCache.push(pathConstraint);
-            
+
             for (ii in 0...boneCount)
             {
                 sortReset(constrained[ii].children);
@@ -232,23 +233,23 @@ class Skeleton
                 constrained[ii]._sorted = true;
             }
         }
-        
+
         var transformConstraints : Array<TransformConstraint> = this.transformConstraints;
         for (i in 0...n)
         {
             var transformConstraint : TransformConstraint = transformConstraints[i];
-            
+
             sortBone(transformConstraint.target);
-            
-            constrained = transformConstraint.bones;
-            boneCount = constrained.length;
+
+            var constrained = transformConstraint.bones;
+            var boneCount = constrained.length;
             for (ii in 0...boneCount)
             {
                 sortBone(constrained[ii]);
             }
-            
+
             updateCache.push(transformConstraint);
-            
+
             for (ii in 0...boneCount)
             {
                 sortReset(constrained[ii].children);
@@ -258,27 +259,27 @@ class Skeleton
                 constrained[ii]._sorted = true;
             }
         }
-        
+
         for (i in 0...n)
         {
             sortBone(bones[i]);
         }
     }
-    
+
     private function sortPathConstraintAttachment(skin : Skin, slotIndex : Int, slotBone : Bone) : Void
     {
-        var dict : Dictionary = skin.attachments[slotIndex];
+        var dict : Dictionary<String,Attachment> = skin.attachments[slotIndex];
         if (dict == null)
         {
             return;
         }
-        
-        for (value/* AS3HX WARNING could not determine type for var: value exp: EIdent(dict) type: Dictionary */ in dict)
+
+        for (value in dict)
         {
-            sortPathConstraintAttachment2(value, slotBone);
+            sortPathConstraintAttachment2(dict.get(value), slotBone);
         }
     }
-    
+
     private function sortPathConstraintAttachment2(attachment : Attachment, slotBone : Bone) : Void
     {
         var pathAttachment : PathAttachment = try cast(attachment, PathAttachment) catch(e:Dynamic) null;
@@ -300,7 +301,7 @@ class Skeleton
             }
         }
     }
-    
+
     private function sortBone(bone : Bone) : Void
     {
         if (bone._sorted)
@@ -315,7 +316,7 @@ class Skeleton
         bone._sorted = true;
         _updateCache.push(bone);
     }
-    
+
     private function sortReset(bones : Array<Bone>) : Void
     {
         var i : Int = 0;
@@ -331,7 +332,7 @@ class Skeleton
             i++;
         }
     }
-    
+
     /** Updates the world transform for each bone and applies constraints. */
     public function updateWorldTransform() : Void
     {
@@ -340,14 +341,14 @@ class Skeleton
             updatable.update();
         }
     }
-    
+
     /** Sets the bones, constraints, and slots to their setup pose values. */
     public function setToSetupPose() : Void
     {
         setBonesToSetupPose();
         setSlotsToSetupPose();
     }
-    
+
     /** Sets the bones and constraints to their setup pose values. */
     public function setBonesToSetupPose() : Void
     {
@@ -355,13 +356,13 @@ class Skeleton
         {
             bone.setToSetupPose();
         }
-        
+
         for (ikConstraint in ikConstraints)
         {
             ikConstraint.bendDirection = ikConstraint._data.bendDirection;
             ikConstraint.mix = ikConstraint._data.mix;
         }
-        
+
         for (transformConstraint in transformConstraints)
         {
             transformConstraint.rotateMix = transformConstraint._data.rotateMix;
@@ -369,7 +370,7 @@ class Skeleton
             transformConstraint.scaleMix = transformConstraint._data.scaleMix;
             transformConstraint.shearMix = transformConstraint._data.shearMix;
         }
-        
+
         for (pathConstraint in pathConstraints)
         {
             pathConstraint.position = pathConstraint._data.position;
@@ -378,7 +379,7 @@ class Skeleton
             pathConstraint.translateMix = pathConstraint._data.translateMix;
         }
     }
-    
+
     public function setSlotsToSetupPose() : Void
     {
         var i : Int = 0;
@@ -388,17 +389,17 @@ class Skeleton
             slot.setToSetupPose();
         }
     }
-    
+
     private function get_data() : SkeletonData
     {
         return _data;
     }
-    
+
     private function get_getUpdateCache() : Array<Updatable>
     {
         return _updateCache;
     }
-    
+
     private function get_rootBone() : Bone
     {
         if (bones.length == 0)
@@ -407,7 +408,7 @@ class Skeleton
         }
         return bones[0];
     }
-    
+
     /** @return May be null. */
     public function findBone(boneName : String) : Bone
     {
@@ -424,7 +425,7 @@ class Skeleton
         }
         return null;
     }
-    
+
     /** @return -1 if the bone was not found. */
     public function findBoneIndex(boneName : String) : Int
     {
@@ -443,7 +444,7 @@ class Skeleton
         }
         return -1;
     }
-    
+
     /** @return May be null. */
     public function findSlot(slotName : String) : Slot
     {
@@ -460,7 +461,7 @@ class Skeleton
         }
         return null;
     }
-    
+
     /** @return -1 if the bone was not found. */
     public function findSlotIndex(slotName : String) : Int
     {
@@ -479,12 +480,12 @@ class Skeleton
         }
         return -1;
     }
-    
+
     private function get_skin() : Skin
     {
         return _skin;
     }
-    
+
     private function set_skinName(skinName : String) : String
     {
         var skin : Skin = data.findSkin(skinName);
@@ -495,15 +496,15 @@ class Skeleton
         this.skin = skin;
         return skinName;
     }
-    
+
     /** @return May be null. */
     private function get_skinName() : String
     {
         return (_skin == null) ? null : _skin._name;
     }
-    
-    /** Sets the skin used to look up attachments before looking in the {@link SkeletonData#getDefaultSkin() default skin}. 
-	 * Attachments from the new skin are attached if the corresponding attachment from the old skin was attached. If there was 
+
+    /** Sets the skin used to look up attachments before looking in the {@link SkeletonData#getDefaultSkin() default skin}.
+	 * Attachments from the new skin are attached if the corresponding attachment from the old skin was attached. If there was
 	 * no old skin, each slot's setup mode attachment is attached from the new skin.
 	 * @param newSkin May be null. */
     private function set_skin(newSkin : Skin) : Skin
@@ -535,13 +536,13 @@ class Skeleton
         _skin = newSkin;
         return newSkin;
     }
-    
+
     /** @return May be null. */
     public function getAttachmentForSlotName(slotName : String, attachmentName : String) : Attachment
     {
         return getAttachmentForSlotIndex(data.findSlotIndex(slotName), attachmentName);
     }
-    
+
     /** @return May be null. */
     public function getAttachmentForSlotIndex(slotIndex : Int, attachmentName : String) : Attachment
     {
@@ -563,7 +564,7 @@ class Skeleton
         }
         return null;
     }
-    
+
     /** @param attachmentName May be null. */
     public function setAttachment(slotName : String, attachmentName : String) : Void
     {
@@ -592,7 +593,7 @@ class Skeleton
         }
         throw new ArgumentError("Slot not found: " + slotName);
     }
-    
+
     /** @return May be null. */
     public function findIkConstraint(constraintName : String) : IkConstraint
     {
@@ -609,7 +610,7 @@ class Skeleton
         }
         return null;
     }
-    
+
     /** @return May be null. */
     public function findTransformConstraint(constraintName : String) : TransformConstraint
     {
@@ -626,7 +627,7 @@ class Skeleton
         }
         return null;
     }
-    
+
     /** @return May be null. */
     public function findPathConstraint(constraintName : String) : PathConstraint
     {
@@ -643,16 +644,14 @@ class Skeleton
         }
         return null;
     }
-    
+
     public function update(delta : Float) : Void
     {
         time += delta;
     }
-    
+
     public function toString() : String
     {
-        return (_data.name != null) ? _data.name : Std.string(super);
+        return (_data.name != null) ? _data.name : "Skeleton";
     }
 }
-
-

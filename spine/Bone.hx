@@ -53,7 +53,7 @@ class Bone implements Updatable
     public var worldScaleY(get, never) : Float;
 
     public static var yDown : Bool;
-    
+
     @:allow(spine)
     private var _data : BoneData;
     @:allow(spine)
@@ -70,7 +70,7 @@ class Bone implements Updatable
     public var shearX : Float;
     public var shearY : Float;
     public var appliedRotation : Float;
-    
+
     @:allow(spine)
     private var _a : Float;
     @:allow(spine)
@@ -87,10 +87,10 @@ class Bone implements Updatable
     private var _worldSignX : Float;
     @:allow(spine)
     private var _worldSignY : Float;
-    
+
     @:allow(spine)
     private var _sorted : Bool;
-    
+
     /** @param parent May be null. */
     public function new(data : BoneData, skeleton : Skeleton, parent : Bone)
     {
@@ -107,30 +107,30 @@ class Bone implements Updatable
         _parent = parent;
         setToSetupPose();
     }
-    
+
     /** Same as updateWorldTransform(). This method exists for Bone to implement Updatable. */
     public function update() : Void
     {
         updateWorldTransformWith(x, y, rotation, scaleX, scaleY, shearX, shearY);
     }
-    
+
     /** Computes the world SRT using the parent bone and this bone's local SRT. */
     public function updateWorldTransform() : Void
     {
         updateWorldTransformWith(x, y, rotation, scaleX, scaleY, shearX, shearY);
     }
-    
+
     /** Computes the world SRT using the parent bone and the specified local SRT. */
     public function updateWorldTransformWith(x : Float, y : Float, rotation : Float, scaleX : Float, scaleY : Float, shearX : Float, shearY : Float) : Void
     {
         appliedRotation = rotation;
-        
+
         var rotationY : Float = rotation + 90 + shearY;
         var la : Float = MathUtils.cosDeg(rotation + shearX) * scaleX;
         var lb : Float = MathUtils.cosDeg(rotationY) * scaleY;
         var lc : Float = MathUtils.sinDeg(rotation + shearX) * scaleX;
         var ld : Float = MathUtils.sinDeg(rotationY) * scaleY;
-        
+
         var parent : Bone = _parent;
         if (parent == null)
         {
@@ -158,7 +158,7 @@ class Bone implements Updatable
             _worldSignY = (scaleY < 0) ? -1 : 1;
             return;
         }
-        
+
         var pa : Float = parent._a;
         var pb : Float = parent._b;
         var pc : Float = parent._c;
@@ -167,7 +167,7 @@ class Bone implements Updatable
         _worldY = pc * x + pd * y + parent._worldY;
         _worldSignX = parent._worldSignX * ((scaleX < 0) ? -1 : 1);
         _worldSignY = parent._worldSignY * ((scaleY < 0) ? -1 : 1);
-        
+
         if (data.inheritRotation && data.inheritScale)
         {
             _a = pa * la + pb * lc;
@@ -194,7 +194,7 @@ class Bone implements Updatable
                     temp = pc * cos + pd * sin;
                     pd = pd * cos - pc * sin;
                     pc = temp;
-                    
+
                     if (!parent.data.inheritRotation)
                     {
                         break;
@@ -218,20 +218,21 @@ class Bone implements Updatable
                     pd = 1;
                     do
                     {
-                        cos = MathUtils.cosDeg(parent.appliedRotation);sin = MathUtils.sinDeg(parent.appliedRotation);
+                        var cos = MathUtils.cosDeg(parent.appliedRotation);
+                        var sin = MathUtils.sinDeg(parent.appliedRotation);
                         var psx : Float = parent.scaleX;
                         var psy : Float = parent.scaleY;
                         var za : Float = cos * psx;
                         var zb : Float = sin * psy;
                         var zc : Float = sin * psx;
                         var zd : Float = cos * psy;
-                        temp = pa * za + pb * zc;
+                        var temp = pa * za + pb * zc;
                         pb = pb * zd - pa * zb;
                         pa = temp;
                         temp = pc * za + pd * zc;
                         pd = pd * zd - pc * zb;
                         pc = temp;
-                        
+
                         if (psx >= 0)
                         {
                             sin = -sin;
@@ -242,7 +243,7 @@ class Bone implements Updatable
                         temp = pc * cos + pd * sin;
                         pd = pd * cos - pc * sin;
                         pc = temp;
-                        
+
                         if (!parent.data.inheritScale)
                         {
                             break;
@@ -275,7 +276,7 @@ class Bone implements Updatable
             }
         }
     }
-    
+
     public function setToSetupPose() : Void
     {
         x = _data.x;
@@ -286,87 +287,87 @@ class Bone implements Updatable
         shearX = _data.shearX;
         shearY = _data.shearY;
     }
-    
+
     private function get_data() : BoneData
     {
         return _data;
     }
-    
+
     private function get_skeleton() : Skeleton
     {
         return _skeleton;
     }
-    
+
     private function get_parent() : Bone
     {
         return _parent;
     }
-    
+
     private function get_children() : Array<Bone>
     {
         return _children;
     }
-    
+
     private function get_a() : Float
     {
         return _a;
     }
-    
+
     private function get_b() : Float
     {
         return _b;
     }
-    
+
     private function get_c() : Float
     {
         return _c;
     }
-    
+
     private function get_d() : Float
     {
         return _d;
     }
-    
+
     private function get_worldX() : Float
     {
         return _worldX;
     }
-    
+
     private function get_worldY() : Float
     {
         return _worldY;
     }
-    
+
     private function get_worldSignX() : Float
     {
         return _worldSignX;
     }
-    
+
     private function get_worldSignY() : Float
     {
         return _worldSignY;
     }
-    
+
     private function get_worldRotationX() : Float
     {
         return Math.atan2(_c, _a) * MathUtils.radDeg;
     }
-    
+
     private function get_worldRotationY() : Float
     {
         return Math.atan2(_d, _b) * MathUtils.radDeg;
     }
-    
+
     private function get_worldScaleX() : Float
     {
         return Math.sqrt(_a * _a + _b * _b) * _worldSignX;
     }
-    
+
     private function get_worldScaleY() : Float
     {
         return Math.sqrt(_c * _c + _d * _d) * _worldSignY;
     }
-    
+
     public function worldToLocalRotationX() : Float
     {
         var parent : Bone = _parent;
@@ -382,7 +383,7 @@ class Bone implements Updatable
         var c : Float = this.c;
         return Math.atan2(pa * c - pc * a, pd * a - pb * c) * MathUtils.radDeg;
     }
-    
+
     public function worldToLocalRotationY() : Float
     {
         var parent : Bone = _parent;
@@ -398,7 +399,7 @@ class Bone implements Updatable
         var d : Float = this.d;
         return Math.atan2(pa * d - pc * b, pd * b - pb * d) * MathUtils.radDeg;
     }
-    
+
     public function rotateWorld(degrees : Float) : Void
     {
         var a : Float = this.a;
@@ -412,7 +413,7 @@ class Bone implements Updatable
         this._c = sin * a + cos * c;
         this._d = sin * b + cos * d;
     }
-    
+
     /** Computes the local transform from the world transform. This can be useful to perform processing on the local transform
 	 * after the world transform has been modified directly (eg, by a constraint).
 	 * <p>
@@ -454,7 +455,7 @@ class Bone implements Updatable
         scaleX = Math.sqrt(ra * ra + rc * rc);
         if (scaleX > 0.0001)
         {
-            det = ra * rd - rb * rc;
+            var det = ra * rd - rb * rc;
             scaleY = det / scaleX;
             shearY = Math.atan2(ra * rb + rc * rd, det) * MathUtils.radDeg;
             rotation = Math.atan2(rc, ra) * MathUtils.radDeg;
@@ -468,7 +469,7 @@ class Bone implements Updatable
         }
         appliedRotation = rotation;
     }
-    
+
     public function worldToLocal(world : Array<Float>) : Void
     {
         var a : Float = _a;
@@ -481,7 +482,7 @@ class Bone implements Updatable
         world[0] = (x * d * invDet - y * b * invDet);
         world[1] = (y * a * invDet - x * c * invDet);
     }
-    
+
     public function localToWorld(local : Array<Float>) : Void
     {
         var localX : Float = local[0];
@@ -489,11 +490,9 @@ class Bone implements Updatable
         local[0] = localX * _a + localY * _b + _worldX;
         local[1] = localX * _c + localY * _d + _worldY;
     }
-    
+
     public function toString() : String
     {
         return _data._name;
     }
 }
-
-

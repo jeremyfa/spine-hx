@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -38,8 +38,8 @@ class SkeletonData
 {
     /** May be null. */
     public var name : String;
-    public var bones : Array<BoneData> = new Array<BoneData>();  // Ordered parents first.  
-    public var slots : Array<SlotData> = new Array<SlotData>();  // Setup pose draw order.  
+    public var bones : Array<BoneData> = new Array<BoneData>();  // Ordered parents first.
+    public var slots : Array<SlotData> = new Array<SlotData>();  // Setup pose draw order.
     public var skins : Array<Skin> = new Array<Skin>();
     public var defaultSkin : Skin;
     public var events : Array<EventData> = new Array<EventData>();
@@ -49,13 +49,13 @@ class SkeletonData
     public var pathConstraints : Array<PathConstraintData> = new Array<PathConstraintData>();
     public var width : Float;public var height : Float;
     public var version : String;public var hash : String;
-    
+
     public function new()
     {
     }
-    
+
     // --- Bones.
-    
+
     /** @return May be null. */
     public function findBone(boneName : String) : BoneData
     {
@@ -76,7 +76,7 @@ class SkeletonData
         }
         return null;
     }
-    
+
     /** @return -1 if the bone was not found. */
     public function findBoneIndex(boneName : String) : Int
     {
@@ -96,9 +96,9 @@ class SkeletonData
         }
         return -1;
     }
-    
+
     // --- Slots.
-    
+
     /** @return May be null. */
     public function findSlot(slotName : String) : SlotData
     {
@@ -119,7 +119,7 @@ class SkeletonData
         }
         return null;
     }
-    
+
     /** @return -1 if the bone was not found. */
     public function findSlotIndex(slotName : String) : Int
     {
@@ -139,9 +139,9 @@ class SkeletonData
         }
         return -1;
     }
-    
+
     // --- Skins.
-    
+
     /** @return May be null. */
     public function findSkin(skinName : String) : Skin
     {
@@ -158,9 +158,9 @@ class SkeletonData
         }
         return null;
     }
-    
+
     // --- Events.
-    
+
     /** @return May be null. */
     public function findEvent(eventName : String) : EventData
     {
@@ -177,9 +177,9 @@ class SkeletonData
         }
         return null;
     }
-    
+
     // --- Animations.
-    
+
     /** @return May be null. */
     public function findAnimation(animationName : String) : Animation
     {
@@ -196,9 +196,9 @@ class SkeletonData
         }
         return null;
     }
-    
+
     // --- IK constraints.
-    
+
     /** @return May be null. */
     public function findIkConstraint(constraintName : String) : IkConstraintData
     {
@@ -215,9 +215,9 @@ class SkeletonData
         }
         return null;
     }
-    
+
     // --- Transform constraints.
-    
+
     /** @return May be null. */
     public function findTransformConstraint(constraintName : String) : TransformConstraintData
     {
@@ -234,7 +234,7 @@ class SkeletonData
         }
         return null;
     }
-    
+
     /** @return -1 if the transform constraint was not found. */
     public function findTransformConstraintIndex(transformConstraintName : String) : Int
     {
@@ -255,9 +255,9 @@ class SkeletonData
         }
         return -1;
     }
-    
+
     // --- Path constraints.
-    
+
     /** @return May be null. */
     public function findPathConstraint(constraintName : String) : PathConstraintData
     {
@@ -279,7 +279,7 @@ class SkeletonData
         }
         return null;
     }
-    
+
     /** @return -1 if the path constraint was not found. */
     public function findPathConstraintIndex(pathConstraintName : String) : Int
     {
@@ -300,13 +300,11 @@ class SkeletonData
         }
         return -1;
     }
-    
+
     // ---
-    
+
     public function toString() : String
     {
-        return (name != null) ? name : Std.string(super);
+        return (name != null) ? name : "SkeletonData";
     }
 }
-
-

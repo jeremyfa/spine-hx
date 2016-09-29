@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -45,7 +45,7 @@ class AnimationState
     public var onComplete : Listeners = new Listeners();
     public var onEvent : Listeners = new Listeners();
     public var timeScale : Float = 1;
-    
+
     public function new(data : AnimationStateData)
     {
         if (data == null)
@@ -54,7 +54,7 @@ class AnimationState
         }
         _data = data;
     }
-    
+
     public function update(delta : Float) : Void
     {
         delta *= timeScale;
@@ -65,15 +65,15 @@ class AnimationState
             {
                 continue;
             }
-            
+
             current.time += delta * current.timeScale;
-            if (current.previous)
+            if (current.previous != null)
             {
                 var previousDelta : Float = delta * current.previous.timeScale;
                 current.previous.time += previousDelta;
                 current.mixTime += previousDelta;
             }
-            
+
             var next : TrackEntry = current.next;
             if (next != null)
             {
@@ -93,7 +93,7 @@ class AnimationState
             }
         }
     }
-    
+
     public function apply(skeleton : Skeleton) : Void
     {
         for (i in 0..._tracks.length)
@@ -103,9 +103,9 @@ class AnimationState
             {
                 continue;
             }
-            
+
             spine.as3hx.Compat.setArrayLength(_events, 0);
-            
+
             var time : Float = current.time;
             var lastTime : Float = current.lastTime;
             var endTime : Float = current.endTime;
@@ -114,7 +114,7 @@ class AnimationState
             {
                 time = endTime;
             }
-            
+
             var previous : TrackEntry = current.previous;
             if (previous == null)
             {
@@ -135,7 +135,7 @@ class AnimationState
                     previousTime = previous.endTime;
                 }
                 previous.animation.apply(skeleton, previousTime, previousTime, previous.loop, null);
-                
+
                 var alpha : Float = current.mixTime / current.mixDuration * current.mix;
                 if (alpha >= 1)
                 {
@@ -144,16 +144,16 @@ class AnimationState
                 }
                 current.animation.mix(skeleton, current.lastTime, time, loop, _events, alpha);
             }
-            
+
             for (event in _events)
             {
                 if (current.onEvent != null)
                 {
                     current.onEvent(i, event);
                 }
-                onEvent.invoke(i, event);
+                onEvent.invoke([i, event]);
             }
-            
+
             // Check if completed the animation or a loop iteration.
             if ((loop) ? (lastTime % endTime > time % endTime) : (lastTime < endTime && time >= endTime))
             {
@@ -162,13 +162,13 @@ class AnimationState
                 {
                     current.onComplete(i, count);
                 }
-                onComplete.invoke(i, count);
+                onComplete.invoke([i, count]);
             }
-            
+
             current.lastTime = current.time;
         }
     }
-    
+
     public function clearTracks() : Void
     {
         var i : Int = 0;
@@ -180,7 +180,7 @@ class AnimationState
         }
         spine.as3hx.Compat.setArrayLength(_tracks, 0);
     }
-    
+
     public function clearTrack(trackIndex : Int) : Void
     {
         if (trackIndex >= _tracks.length)
@@ -192,16 +192,16 @@ class AnimationState
         {
             return;
         }
-        
+
         if (current.onEnd != null)
         {
             current.onEnd(trackIndex);
         }
-        onEnd.invoke(trackIndex);
-        
+        onEnd.invoke([trackIndex]);
+
         _tracks[trackIndex] = null;
     }
-    
+
     private function expandToIndex(index : Int) : TrackEntry
     {
         if (index < _tracks.length)
@@ -214,7 +214,7 @@ class AnimationState
         }
         return null;
     }
-    
+
     private function setCurrent(index : Int, entry : TrackEntry) : Void
     {
         var current : TrackEntry = expandToIndex(index);
@@ -222,13 +222,13 @@ class AnimationState
         {
             var previous : TrackEntry = current.previous;
             current.previous = null;
-            
+
             if (current.onEnd != null)
             {
                 current.onEnd(index);
             }
-            onEnd.invoke(index);
-            
+            onEnd.invoke([index]);
+
             entry.mixDuration = _data.getMix(current.animation, entry.animation);
             if (entry.mixDuration > 0)
             {
@@ -245,16 +245,16 @@ class AnimationState
                 }
             }
         }
-        
+
         _tracks[index] = entry;
-        
+
         if (entry.onStart != null)
         {
             entry.onStart(index);
         }
-        onStart.invoke(index);
+        onStart.invoke([index]);
     }
-    
+
     public function setAnimationByName(trackIndex : Int, animationName : String, loop : Bool) : TrackEntry
     {
         var animation : Animation = _data._skeletonData.findAnimation(animationName);
@@ -264,7 +264,7 @@ class AnimationState
         }
         return setAnimation(trackIndex, animation, loop);
     }
-    
+
     /** Set the current animation. Any queued animations are cleared. */
     public function setAnimation(trackIndex : Int, animation : Animation, loop : Bool) : TrackEntry
     {
@@ -275,7 +275,7 @@ class AnimationState
         setCurrent(trackIndex, entry);
         return entry;
     }
-    
+
     public function addAnimationByName(trackIndex : Int, animationName : String, loop : Bool, delay : Float) : TrackEntry
     {
         var animation : Animation = _data._skeletonData.findAnimation(animationName);
@@ -285,7 +285,7 @@ class AnimationState
         }
         return addAnimation(trackIndex, animation, loop, delay);
     }
-    
+
     /** Adds an animation to be played delay seconds after the current or last queued animation.
 	 * @param delay May be <= 0 to use duration of previous animation minus any mix duration plus the negative delay. */
     public function addAnimation(trackIndex : Int, animation : Animation, loop : Bool, delay : Float) : TrackEntry
@@ -294,11 +294,11 @@ class AnimationState
         entry.animation = animation;
         entry.loop = loop;
         entry.endTime = animation.duration;
-        
+
         var last : TrackEntry = expandToIndex(trackIndex);
         if (last != null)
         {
-            while (last.next)
+            while (last.next != null)
             {
                 last = last.next;
             }
@@ -308,7 +308,7 @@ class AnimationState
         {
             _tracks[trackIndex] = entry;
         }
-        
+
         if (delay <= 0)
         {
             if (last != null)
@@ -321,10 +321,10 @@ class AnimationState
             }
         }
         entry.delay = delay;
-        
+
         return entry;
     }
-    
+
     /** May be null. */
     public function getCurrent(trackIndex : Int) : TrackEntry
     {
@@ -334,7 +334,7 @@ class AnimationState
         }
         return _tracks[trackIndex];
     }
-    
+
     public function toString() : String
     {
         var buffer : String = "";
@@ -357,5 +357,3 @@ class AnimationState
         return buffer;
     }
 }
-
-

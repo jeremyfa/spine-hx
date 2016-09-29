@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -40,14 +40,14 @@ class PathConstraint implements Updatable
     public var data(get, never) : PathConstraintData;
 
     private static var NONE : Int = -1;private static var BEFORE : Int = -2;private static var AFTER : Int = -3;
-    
+
     @:allow(spine)
     private var _data : PathConstraintData;
     @:allow(spine)
     private var _bones : Array<Bone>;
     public var target : Slot;
     public var position : Float;public var spacing : Float;public var rotateMix : Float;public var translateMix : Float;
-    
+
     @:allow(spine)
     private var _spaces : Array<Float> = new Array<Float>();
     @:allow(spine)
@@ -60,7 +60,7 @@ class PathConstraint implements Updatable
     private var _lengths : Array<Float> = new Array<Float>();
     @:allow(spine)
     private var _segments : Array<Float> = new Array<Float>();
-    
+
     public function new(data : PathConstraintData, skeleton : Skeleton)
     {
         if (data == null)
@@ -83,12 +83,12 @@ class PathConstraint implements Updatable
         rotateMix = data.rotateMix;
         translateMix = data.translateMix;
     }
-    
+
     public function apply() : Void
     {
         update();
     }
-    
+
     public function update() : Void
     {
         var attachment : PathAttachment = try cast(target.attachment, PathAttachment) catch(e:Dynamic) null;
@@ -96,7 +96,7 @@ class PathConstraint implements Updatable
         {
             return;
         }
-        
+
         var rotateMix : Float = this.rotateMix;
         var translateMix : Float = this.translateMix;
         var translate : Bool = translateMix > 0;
@@ -105,7 +105,7 @@ class PathConstraint implements Updatable
         {
             return;
         }
-        
+
         var data : PathConstraintData = this._data;
         var spacingMode : SpacingMode = data.spacingMode;
         var lengthSpacing : Bool = spacingMode == SpacingMode.length;
@@ -115,7 +115,7 @@ class PathConstraint implements Updatable
         var boneCount : Int = this._bones.length;
         var spacesCount : Int = (tangents) ? boneCount : boneCount + 1;
         var bones : Array<Bone> = this._bones;
-        this._spaces.length = spacesCount;
+        spine.as3hx.Compat.setArrayLength(this._spaces, spacesCount);
         var spaces : Array<Float> = this._spaces;
         var lengths : Array<Float> = null;
         var spacing : Float = this.spacing;
@@ -123,7 +123,7 @@ class PathConstraint implements Updatable
         {
             if (scale)
             {
-                this._lengths.length = boneCount;
+                spine.as3hx.Compat.setArrayLength(this._lengths, boneCount);
                 lengths = this._lengths;
             }
             var i : Int = 0;
@@ -149,8 +149,8 @@ class PathConstraint implements Updatable
                 spaces[i] = spacing;
             }
         }
-        
-        var positions : Array<Float> = computeWorldPositions(attachment, spacesCount, tangents, 
+
+        var positions : Array<Float> = computeWorldPositions(attachment, spacesCount, tangents,
                 data.positionMode == PositionMode.percent, spacingMode == SpacingMode.percent
         );
         var skeleton : Skeleton = target.skeleton;
@@ -160,19 +160,20 @@ class PathConstraint implements Updatable
         var boneY : Float = positions[1];
         var offsetRotation : Float = data.offsetRotation;
         var tip : Bool = rotateMode == RotateMode.chain && offsetRotation == 0;
-        var p : Float;
-        i = 0;
-p = 3;
+        var p : Int;
+        var i = 0;
+        p = 3;
         while (i < boneCount)
         {
-            bone = bones[i];
+            var bone = bones[i];
             bone._worldX += (boneX - skeletonX - bone.worldX) * translateMix;
             bone._worldY += (boneY - skeletonY - bone.worldY) * translateMix;
-            x = Reflect.field(positions, Std.string(p));y = positions[p + 1];var dx : Float = x - boneX;
+            var x = Reflect.field(positions, Std.string(p));
+            var y = positions[p + 1];var dx : Float = x - boneX;
             var dy : Float = y - boneY;
             if (scale)
             {
-                length = lengths[i];
+                var length = lengths[i];
                 if (length != 0)
                 {
                     var s : Float = (Math.sqrt(dx * dx + dy * dy) / length - 1) * rotateMix + 1;
@@ -211,7 +212,7 @@ p = 3;
                 {
                     cos = Math.cos(r);
                     sin = Math.sin(r);
-                    length = bone.data.length;
+                    var length = bone.data.length;
                     boneX += (length * (cos * a - sin * c) - dx) * rotateMix;
                     boneY += (length * (sin * a + cos * c) - dy) * rotateMix;
                 }
@@ -239,25 +240,25 @@ p = 3;
             p += 3;
         }
     }
-    
+
     private function computeWorldPositions(path : PathAttachment, spacesCount : Int, tangents : Bool, percentPosition : Bool,
             percentSpacing : Bool) : Array<Float>
     {
         var target : Slot = this.target;
         var position : Float = this.position;
         var spaces : Array<Float> = this._spaces;
-        this._positions.length = spacesCount * 3 + 2;
+        spine.as3hx.Compat.setArrayLength(this._positions, spacesCount * 3 + 2);
         var out : Array<Float> = this._positions;
         var world : Array<Float>;
         var closed : Bool = path.closed;
         var verticesLength : Int = path.worldVerticesLength;
         var curveCount : Int = spine.as3hx.Compat.parseInt(verticesLength / 6);
         var prevCurve : Int = NONE;
-        
+
         if (!path.constantSpeed)
         {
             var lengths : Array<Float> = path.lengths;
-            (curveCount != 0 -= closed) ? 1 : 2;
+            curveCount -= closed ? 1 : 2;
             var pathLength : Float = lengths[curveCount];
             if (percentPosition)
             {
@@ -270,19 +271,19 @@ p = 3;
                     spaces[i] *= pathLength;
                 }
             }
-            this._world.length = 8;
+            spine.as3hx.Compat.setArrayLength(this._world, 8);
             world = this._world;
             var o : Int;
             var curve : Int;
-            i = 0;
-o = 0;
-curve = 0;
+            var i = 0;
+            o = 0;
+            curve = 0;
             while (i < spacesCount)
             {
                 var space : Float = spaces[i];
                 position += space;
                 var p : Float = position;
-                
+
                 if (closed)
                 {
                     p %= pathLength;
@@ -320,9 +321,9 @@ curve = 0;
                         }
                     }
                 }
-                
+
                 // Determine curve containing position.
-                                while (true)
+                while (true)
                 {
                     var length : Float = lengths[curve];
                     if (p > length)
@@ -355,7 +356,7 @@ curve = 0;
                         path.computeWorldVertices2(target, curve * 6 + 2, 8, world, 0);
                     }
                 }
-                addCurvePosition(p, world[0], world[1], world[2], world[3], world[4], world[5], world[6], world[7], out, o, 
+                addCurvePosition(p, world[0], world[1], world[2], world[3], world[4], world[5], world[6], world[7], out, o,
                         tangents || (i > 0 && space == 0)
             );
                 i++;
@@ -363,12 +364,12 @@ curve = 0;
             }
             return out;
         }
-        
+
         // World vertices.
         if (closed)
         {
             verticesLength += 2;
-            this._world.length = verticesLength;
+            spine.as3hx.Compat.setArrayLength(this._world, verticesLength);
             world = this._world;
             path.computeWorldVertices2(target, 2, verticesLength - 4, world, 0);
             path.computeWorldVertices2(target, 0, 2, world, verticesLength - 4);
@@ -379,15 +380,15 @@ curve = 0;
         {
             curveCount--;
             verticesLength -= 4;
-            this._world.length = verticesLength;
+            spine.as3hx.Compat.setArrayLength(this._world, verticesLength);
             world = this._world;
             path.computeWorldVertices2(target, 2, verticesLength, world, 0);
         }
-        
+
         // Curve lengths.
-        this._curves.length = curveCount;
+        spine.as3hx.Compat.setArrayLength(this._curves, curveCount);
         var curves : Array<Float> = this._curves;
-        pathLength = 0;
+        var pathLength:Float = 0;
         var x1 : Float = world[0];
         var y1 : Float = world[1];
         var cx1 : Float = 0;
@@ -405,8 +406,8 @@ curve = 0;
         var dfx : Float;
         var dfy : Float;
         var w : Int;
-        i = 0;
-w = 2;
+        var i = 0;
+        w = 2;
         while (i < curveCount)
         {
             cx1 = world[w];
@@ -452,20 +453,20 @@ w = 2;
                 spaces[i] *= pathLength;
             }
         }
-        
+
         var segments : Array<Float> = this._segments;
         var curveLength : Float = 0;
         var segment : Int;
         i = 0;
-o = 0;
-curve = 0;
-segment = 0;
+        var o = 0;
+        var curve = 0;
+        segment = 0;
         while (i < spacesCount)
         {
-            space = spaces[i];
+            var space = spaces[i];
             position += space;
-            p = position;
-            
+            var p = position;
+
             if (closed)
             {
                 p %= pathLength;
@@ -493,11 +494,11 @@ segment = 0;
                     }
                 }
             }
-            
+
             // Determine curve containing position.
-                        while (true)
+            while (true)
             {
-                length = curves[curve];
+                var length = curves[curve];
                 if (p > length)
                 {
                     {curve++;continue;
@@ -509,13 +510,13 @@ segment = 0;
                 }
                 else
                 {
-                    prev = curves[curve - 1];
+                    var prev = curves[curve - 1];
                     p = (p - prev) / (length - prev);
                 }
                 break;
                 curve++;
             }
-            
+
             // Curve segment lengths.
             if (curve != prevCurve)
             {
@@ -558,12 +559,12 @@ segment = 0;
                 segments[9] = curveLength;
                 segment = 0;
             }
-            
+
             // Weight by segment length.
             p *= curveLength;
-                        while (true)
+            while (true)
             {
-                length = segments[segment];
+                var length = segments[segment];
                 if (p > length)
                 {
                     {segment++;continue;
@@ -575,7 +576,7 @@ segment = 0;
                 }
                 else
                 {
-                    prev = segments[segment - 1];
+                    var prev = segments[segment - 1];
                     p = segment + (p - prev) / (length - prev);
                 }
                 break;
@@ -587,7 +588,7 @@ segment = 0;
         }
         return out;
     }
-    
+
     private function addBeforePosition(p : Float, temp : Array<Float>, i : Int, out : Array<Float>, o : Int) : Void
     {
         var x1 : Float = temp[i];
@@ -599,7 +600,7 @@ segment = 0;
         out[o + 1] = y1 + p * Math.sin(r);
         out[o + 2] = r;
     }
-    
+
     private function addAfterPosition(p : Float, temp : Array<Float>, i : Int, out : Array<Float>, o : Int) : Void
     {
         var x1 : Float = temp[i + 2];
@@ -611,7 +612,7 @@ segment = 0;
         out[o + 1] = y1 + p * Math.sin(r);
         out[o + 2] = r;
     }
-    
+
     private function addCurvePosition(p : Float, x1 : Float, y1 : Float, cx1 : Float, cy1 : Float, cx2 : Float, cy2 : Float, x2 : Float, y2 : Float,
             out : Array<Float>, o : Int, tangents : Bool) : Void
     {
@@ -637,21 +638,19 @@ segment = 0;
             out[o + 2] = Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt));
         }
     }
-    
+
     private function get_bones() : Array<Bone>
     {
         return _bones;
     }
-    
+
     private function get_data() : PathConstraintData
     {
         return _data;
     }
-    
+
     public function toString() : String
     {
         return _data.name;
     }
 }
-
-

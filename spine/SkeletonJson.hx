@@ -118,7 +118,7 @@ class SkeletonJson
 
         // Bones.
         var boneData : BoneData;
-        for (boneMap/* AS3HX WARNING could not determine type for var: boneMap exp: EArray(EIdent(root),EConst(CString(bones))) type: Dynamic */ in Reflect.field(root, "bones"))
+        for (boneMap in Reflect.field(root, "bones"))
         {
             var parent : BoneData = null;
             var parentName : String = boneMap["parent"];
@@ -145,7 +145,7 @@ class SkeletonJson
         }
 
         // Slots.
-        for (slotMap/* AS3HX WARNING could not determine type for var: slotMap exp: EArray(EIdent(root),EConst(CString(slots))) type: Dynamic */ in Reflect.field(root, "slots"))
+        for (slotMap in Reflect.field(root, "slots"))
         {
             var slotName : String = slotMap["name"];
             var boneName : String = slotMap["bone"];
@@ -171,11 +171,11 @@ class SkeletonJson
         }
 
         // IK constraints.
-        for (constraintMap/* AS3HX WARNING could not determine type for var: constraintMap exp: EArray(EIdent(root),EConst(CString(ik))) type: Dynamic */ in Reflect.field(root, "ik"))
+        for (constraintMap in Reflect.field(root, "ik"))
         {
             var ikConstraintData : IkConstraintData = new IkConstraintData(constraintMap["name"]);
 
-            for (boneName/* AS3HX WARNING could not determine type for var: boneName exp: EArray(EIdent(constraintMap),EConst(CString(bones))) type: null */ in constraintMap["bones"])
+            for (boneName in constraintMap["bones"])
             {
                 var bone : BoneData = skeletonData.findBone(boneName);
                 if (bone == null)

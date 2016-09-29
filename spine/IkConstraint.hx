@@ -43,9 +43,9 @@ class IkConstraint implements Updatable
     public var target : Bone;
     public var mix : Float;
     public var bendDirection : Int;
-    
+
     public var level : Int;
-    
+
     public function new(data : IkConstraintData, skeleton : Skeleton)
     {
         if (data == null)
@@ -59,7 +59,7 @@ class IkConstraint implements Updatable
         _data = data;
         mix = data.mix;
         bendDirection = data.bendDirection;
-        
+
         bones = new Array<Bone>();
         for (boneData/* AS3HX WARNING could not determine type for var: boneData exp: EField(EIdent(data),bones) type: null */ in data.bones)
         {
@@ -67,15 +67,15 @@ class IkConstraint implements Updatable
         }
         target = skeleton.findBone(data.target._name);
     }
-    
+
     public function apply() : Void
     {
         update();
     }
-    
+
     public function update() : Void
     {
-        var _sw0_ = (bones.length);        
+        var _sw0_ = (bones.length);
 
         switch (_sw0_)
         {
@@ -85,17 +85,17 @@ class IkConstraint implements Updatable
                 apply2(bones[0], bones[1], target._worldX, target._worldY, bendDirection, mix);
         }
     }
-    
+
     private function get_data() : IkConstraintData
     {
         return _data;
     }
-    
+
     public function toString() : String
     {
         return _data._name;
     }
-    
+
     /** Adjusts the bone rotation so the tip is as close to the target position as possible. The target is specified in the world
 	 * coordinate system. */
     public static function apply1(bone : Bone, targetX : Float, targetY : Float, alpha : Float) : Void
@@ -122,11 +122,11 @@ class IkConstraint implements Updatable
                 rotationIK += 360;
             }
         }
-        bone.updateWorldTransformWith(bone.x, bone.y, bone.rotation + rotationIK * alpha, bone.scaleX, bone.scaleY, bone.shearX, 
+        bone.updateWorldTransformWith(bone.x, bone.y, bone.rotation + rotationIK * alpha, bone.scaleX, bone.scaleY, bone.shearX,
                 bone.shearY
         );
     }
-    
+
     /** Adjusts the parent and child bone rotations so the tip of the child is as close to the target position as possible. The
 	 * target is specified in the world coordinate system.
 	 * @param child Any descendant bone of the parent. */
@@ -207,9 +207,9 @@ class IkConstraint implements Updatable
         var dy : Float = (y * a - x * c) * id - py;
         var l1 : Float = Math.sqrt(dx * dx + dy * dy);
         var l2 : Float = child.data.length * csx;
-        var a1 : Float;
-        var a2 : Float;
-        
+        var a1 : Float = 0;
+        var a2 : Float = 0;
+
         while (true)
         {
             //outer:
@@ -350,5 +350,3 @@ class IkConstraint implements Updatable
         child.updateWorldTransformWith(cx, cy, rotation + a2 * alpha, child.scaleX, child.scaleY, child.shearX, child.shearY);
     }
 }
-
-
