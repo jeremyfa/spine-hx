@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -49,16 +49,16 @@ class TransformConstraintTimeline extends CurveTimeline
     private static inline var TRANSLATE : Int = 2;@:allow(spine.animation)
     private static inline var SCALE : Int = 3;@:allow(spine.animation)
     private static inline var SHEAR : Int = 4;
-    
+
     public var transformConstraintIndex : Int;
-    public var frames : Array<Float>;  // time, rotate mix, translate mix, scale mix, shear mix, ...  
-    
+    public var frames : Array<Float>;  // time, rotate mix, translate mix, scale mix, shear mix, ...
+
     public function new(frameCount : Int)
     {
         super(frameCount);
         frames = new Array<Float>();
     }
-    
+
     /** Sets the time and mixes of the specified keyframe. */
     public function setFrame(frameIndex : Int, time : Float, rotateMix : Float, translateMix : Float, scaleMix : Float, shearMix : Float) : Void
     {
@@ -69,16 +69,16 @@ class TransformConstraintTimeline extends CurveTimeline
         frames[frameIndex + SCALE] = scaleMix;
         frames[frameIndex + SHEAR] = shearMix;
     }
-    
+
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
         if (time < frames[0])
         {
             return;
-        }  // Time is before first frame.  
-        
+        }  // Time is before first frame.
+
         var constraint : TransformConstraint = skeleton.transformConstraints[transformConstraintIndex];
-        
+
         if (time >= frames[frames.length - ENTRIES])
         {
             // Time is after last frame.
@@ -89,12 +89,12 @@ class TransformConstraintTimeline extends CurveTimeline
             constraint.shearMix += (frames[i + PREV_SHEAR] - constraint.shearMix) * alpha;
             return;
         }
-        
+
         // Interpolate between the previous frame and the current frame.
         var frame : Int = Animation.binarySearch(frames, time, ENTRIES);
         var frameTime : Float = frames[frame];
-        var percent : Float = getCurvePercent(frame / ENTRIES - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
-        
+        var percent : Float = getCurvePercent(cast frame / ENTRIES - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
+
         var rotate : Float = frames[frame + PREV_ROTATE];
         var translate : Float = frames[frame + PREV_TRANSLATE];
         var scale : Float = frames[frame + PREV_SCALE];

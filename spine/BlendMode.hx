@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -31,20 +31,10 @@
 
 package spine;
 
-
-class BlendMode
-{
-    public static var normal : BlendMode = new BlendMode(0);
-    public static var additive : BlendMode = new BlendMode(1);
-    public static var multiply : BlendMode = new BlendMode(2);
-    public static var screen : BlendMode = new BlendMode(3);
-    
-    public var ordinal : Int;
-    
-    public function new(ordinal : Int)
-    {
-        this.ordinal = ordinal;
-    }
+@:enum
+abstract BlendMode(String) from String to String {
+	var Normal = "normal";
+	var Additive = "additive";
+	var Multiply = "multiply";
+	var Screen = "screen";
 }
-
-

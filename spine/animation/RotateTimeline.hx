@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -40,16 +40,16 @@ class RotateTimeline extends CurveTimeline
     public static inline var ENTRIES : Int = 2;
     private static var PREV_TIME : Int = -2;private static var PREV_ROTATION : Int = -1;
     private static inline var ROTATION : Int = 1;
-    
+
     public var boneIndex : Int;
-    public var frames : Array<Float>;  // time, value, ...  
-    
+    public var frames : Array<Float>;  // time, value, ...
+
     public function new(frameCount : Int)
     {
         super(frameCount);
         frames = new Array<Float>();
     }
-    
+
     /** Sets the time and angle of the specified keyframe. */
     public function setFrame(frameIndex : Int, time : Float, degrees : Float) : Void
     {
@@ -57,16 +57,16 @@ class RotateTimeline extends CurveTimeline
         frames[frameIndex] = time;
         frames[spine.as3hx.Compat.parseInt(frameIndex + ROTATION)] = degrees;
     }
-    
+
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
         if (time < frames[0])
         {
             return;
-        }  // Time is before first frame.  
-        
+        }  // Time is before first frame.
+
         var bone : Bone = skeleton.bones[boneIndex];
-        
+
         if (time >= frames[spine.as3hx.Compat.parseInt(frames.length - 2)])
         {
             // Time is after last frame.
@@ -82,14 +82,14 @@ class RotateTimeline extends CurveTimeline
             bone.rotation += amount * alpha;
             return;
         }
-        
+
         // Interpolate between the previous frame and the current frame.
         var frame : Int = Animation.binarySearch(frames, time, ENTRIES);
         var prevRotation : Float = frames[spine.as3hx.Compat.parseInt(frame + PREV_ROTATION)];
         var frameTime : Float = frames[frame];
         var percent : Float = getCurvePercent((frame >> 1) - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
-        
-        amount = frames[spine.as3hx.Compat.parseInt(frame + ROTATION)] - prevRotation;
+
+        var amount = frames[spine.as3hx.Compat.parseInt(frame + ROTATION)] - prevRotation;
         while (amount > 180)
         {
             amount -= 360;
@@ -110,5 +110,3 @@ class RotateTimeline extends CurveTimeline
         bone.rotation += amount * alpha;
     }
 }
-
-

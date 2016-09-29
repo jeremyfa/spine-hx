@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -45,16 +45,16 @@ class TranslateTimeline extends CurveTimeline
     @:allow(spine.animation)
     private static inline var X : Int = 1;@:allow(spine.animation)
     private static inline var Y : Int = 2;
-    
+
     public var boneIndex : Int;
-    public var frames : Array<Float>;  // time, value, value, ...  
-    
+    public var frames : Array<Float>;  // time, value, value, ...
+
     public function new(frameCount : Int)
     {
         super(frameCount);
         frames = new Array<Float>();
     }
-    
+
     /** Sets the time and value of the specified keyframe. */
     public function setFrame(frameIndex : Int, time : Float, x : Float, y : Float) : Void
     {
@@ -63,16 +63,16 @@ class TranslateTimeline extends CurveTimeline
         frames[spine.as3hx.Compat.parseInt(frameIndex + X)] = x;
         frames[spine.as3hx.Compat.parseInt(frameIndex + Y)] = y;
     }
-    
+
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
         if (time < frames[0])
         {
             return;
-        }  // Time is before first frame.  
-        
+        }  // Time is before first frame.
+
         var bone : Bone = skeleton.bones[boneIndex];
-        
+
         if (time >= frames[spine.as3hx.Compat.parseInt(frames.length - ENTRIES)])
         {
             // Time is after last frame.
@@ -80,17 +80,15 @@ class TranslateTimeline extends CurveTimeline
             bone.y += (bone.data.y + frames[spine.as3hx.Compat.parseInt(frames.length + PREV_Y)] - bone.y) * alpha;
             return;
         }
-        
+
         // Interpolate between the previous frame and the current frame.
         var frame : Int = Animation.binarySearch(frames, time, ENTRIES);
         var prevX : Float = frames[frame + PREV_X];
         var prevY : Float = frames[frame + PREV_Y];
         var frameTime : Float = frames[frame];
-        var percent : Float = getCurvePercent(frame / ENTRIES - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
-        
+        var percent : Float = getCurvePercent(cast frame / ENTRIES - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
+
         bone.x += (bone.data.x + prevX + (frames[frame + X] - prevX) * percent - bone.x) * alpha;
         bone.y += (bone.data.y + prevY + (frames[frame + Y] - prevY) * percent - bone.y) * alpha;
     }
 }
-
-

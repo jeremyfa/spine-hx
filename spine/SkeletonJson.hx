@@ -112,16 +112,17 @@ class SkeletonJson
         {
             skeletonData.hash = Reflect.field(skeletonMap, "hash");
             skeletonData.version = Reflect.field(skeletonMap, "spine");
-            skeletonData.width = Reflect.field(skeletonMap, "width") || 0;
-            skeletonData.height = Reflect.field(skeletonMap, "height") || 0;
+            skeletonData.width = Reflect.field(skeletonMap, "width") != null ? Reflect.field(skeletonMap, "width") : 0;
+            skeletonData.height = Reflect.field(skeletonMap, "height") != null ? Reflect.field(skeletonMap, "height") : 0;
         }
 
         // Bones.
-        var boneData : BoneData;
-        for (boneMap in Reflect.field(root, "bones"))
+        var boneData:BoneData;
+        var bonesField:Array<Dynamic> = Reflect.field(root, "bones");
+        for (boneMap in bonesField)
         {
             var parent : BoneData = null;
-            var parentName : String = boneMap["parent"];
+            var parentName : String = Reflect.field(boneMap, "parent");
             if (parentName != null)
             {
                 parent = skeletonData.findBone(parentName);
@@ -130,25 +131,26 @@ class SkeletonJson
                     throw new Error("Parent bone not found: " + parentName);
                 }
             }
-            boneData = new BoneData(skeletonData.bones.length, boneMap["name"], parent);
-            boneData.length = spine.as3hx.Compat.parseFloat(boneMap["length"] || 0) * scale;
-            boneData.x = spine.as3hx.Compat.parseFloat(boneMap["x"] || 0) * scale;
-            boneData.y = spine.as3hx.Compat.parseFloat(boneMap["y"] || 0) * scale;
-            boneData.rotation = (boneMap["rotation"] || 0);
-            boneData.scaleX = (boneMap.exists("scaleX")) ? boneMap["scaleX"] : 1;
-            boneData.scaleY = (boneMap.exists("scaleY")) ? boneMap["scaleY"] : 1;
-            boneData.shearX = spine.as3hx.Compat.parseFloat(boneMap["shearX"] || 0);
-            boneData.shearY = spine.as3hx.Compat.parseFloat(boneMap["shearY"] || 0);
-            boneData.inheritRotation = (boneMap.exists("inheritRotation")) ? cast(boneMap["inheritRotation"], Bool) : true;
-            boneData.inheritScale = (boneMap.exists("inheritScale")) ? cast(boneMap["inheritScale"], Bool) : true;
+            boneData = new BoneData(skeletonData.bones.length, Reflect.field(boneMap, "name"), parent);
+            boneData.length = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "length") != null ? Reflect.field(boneMap, "length") : 0) * scale;
+            boneData.x = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "x") != null ? Reflect.field(boneMap, "x") : 0) * scale;
+            boneData.y = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "y") != null ? Reflect.field(boneMap, "y") : 0) * scale;
+            boneData.rotation = (Reflect.field(boneMap, "rotation") != null ? Reflect.field(boneMap, "rotation") : 0);
+            boneData.scaleX = (Reflect.field(boneMap, "scaleX") != null) ? Reflect.field(boneMap, "scaleX") : 1;
+            boneData.scaleX = (Reflect.field(boneMap, "scaleY") != null) ? Reflect.field(boneMap, "scaleY") : 1;
+            boneData.shearX = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearX") != null ? Reflect.field(boneMap, "shearX") : 0);
+            boneData.shearY = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearY") != null ? Reflect.field(boneMap, "shearY") : 0);
+            boneData.inheritRotation = Reflect.field(boneMap, "inheritRotation") != null ? Reflect.field(boneMap, "inheritRotation") : true;
+            boneData.inheritScale = Reflect.field(boneMap, "inheritScale") != null ? Reflect.field(boneMap, "inheritScale") : true;
             skeletonData.bones.push(boneData);
         }
 
         // Slots.
-        for (slotMap in Reflect.field(root, "slots"))
+        var slotsField:Array<Dynamic> = Reflect.field(root, "slots");
+        for (slotMap in slotsField)
         {
-            var slotName : String = slotMap["name"];
-            var boneName : String = slotMap["bone"];
+            var slotName : String = Reflect.field(slotMap, "name");
+            var boneName : String = Reflect.field(slotMap, "bone");
             boneData = skeletonData.findBone(boneName);
             if (boneData == null)
             {
@@ -156,7 +158,7 @@ class SkeletonJson
             }
             var slotData : SlotData = new SlotData(skeletonData.slots.length, slotName, boneData);
 
-            var color : String = slotMap["color"];
+            var color : String = Reflect.field(slotMap, "color");
             if (color != null)
             {
                 slotData.r = toColor(color, 0);
@@ -165,46 +167,52 @@ class SkeletonJson
                 slotData.a = toColor(color, 3);
             }
 
-            slotData.attachmentName = slotMap["attachment"];
-            slotData.blendMode = BlendMode[slotMap["blend"] || "normal"];
+            slotData.attachmentName = Reflect.field(slotMap, "attachment");
+            slotData.blendMode = Reflect.field(slotMap, "blend") != null ? Reflect.field(slotMap, "blend") : BlendMode.Normal;
             skeletonData.slots.push(slotData);
         }
 
         // IK constraints.
-        for (constraintMap in Reflect.field(root, "ik"))
-        {
-            var ikConstraintData : IkConstraintData = new IkConstraintData(constraintMap["name"]);
-
-            for (boneName in constraintMap["bones"])
+        var ikField:Array<Dynamic> = Reflect.field(root, "ik");
+        if (ikField != null) {
+            for (constraintMap in ikField)
             {
-                var bone : BoneData = skeletonData.findBone(boneName);
-                if (bone == null)
+                var ikConstraintData : IkConstraintData = new IkConstraintData(Reflect.field(constraintMap, "name"));
+
+                var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
+                for (boneName in bonesField)
                 {
-                    throw new Error("IK constraint bone not found: " + boneName);
+                    var bone : BoneData = skeletonData.findBone(boneName);
+                    if (bone == null)
+                    {
+                        throw new Error("IK constraint bone not found: " + boneName);
+                    }
+                    ikConstraintData.bones.push(bone);
                 }
-                ikConstraintData.bones.push(bone);
+
+                ikConstraintData.target = skeletonData.findBone(Reflect.field(constraintMap, "target"));
+                if (ikConstraintData.target == null)
+                {
+                    throw new Error("Target bone not found: " + Reflect.field(constraintMap, "target"));
+                }
+
+                ikConstraintData.bendDirection = Reflect.field(constraintMap, "bendPositive") != null && Reflect.field(constraintMap, "bendPositive") == true ? 1 : -1;
+                ikConstraintData.mix = Reflect.field(constraintMap, "mix") != null ? Reflect.field(constraintMap, "mix") : 1;
+
+                skeletonData.ikConstraints.push(ikConstraintData);
             }
-
-            ikConstraintData.target = skeletonData.findBone(constraintMap["target"]);
-            if (!ikConstraintData.target)
-            {
-                throw new Error("Target bone not found: " + constraintMap["target"]);
-            }
-
-            ikConstraintData.bendDirection = ((!constraintMap.exists("bendPositive") || constraintMap["bendPositive"] != null)) ? 1 : -1;
-            ikConstraintData.mix = (constraintMap.exists("mix")) ? constraintMap["mix"] : 1;
-
-            skeletonData.ikConstraints.push(ikConstraintData);
         }
 
         // Transform constraints.
-        for (constraintMap/* AS3HX WARNING could not determine type for var: constraintMap exp: EArray(EIdent(root),EConst(CString(transform))) type: Dynamic */ in Reflect.field(root, "transform"))
+        var transformField:Array<Dynamic> = Reflect.field(root, "transform");
+        for (constraintMap in transformField)
         {
-            var transformConstraintData : TransformConstraintData = new TransformConstraintData(constraintMap["name"]);
+            var transformConstraintData : TransformConstraintData = new TransformConstraintData(Reflect.field(constraintMap, "name"));
 
-            for (boneName/* AS3HX WARNING could not determine type for var: boneName exp: EArray(EIdent(constraintMap),EConst(CString(bones))) type: null */ in constraintMap["bones"])
+            var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
+            for (boneName in bonesField)
             {
-                bone = skeletonData.findBone(boneName);
+                var bone = skeletonData.findBone(boneName);
                 if (bone == null)
                 {
                     throw new Error("Transform constraint bone not found: " + boneName);
@@ -212,35 +220,37 @@ class SkeletonJson
                 transformConstraintData.bones.push(bone);
             }
 
-            transformConstraintData.target = skeletonData.findBone(constraintMap["target"]);
-            if (!transformConstraintData.target)
+            transformConstraintData.target = skeletonData.findBone(Reflect.field(constraintMap, "target"));
+            if (transformConstraintData.target == null)
             {
-                throw new Error("Target bone not found: " + constraintMap["target"]);
+                throw new Error("Target bone not found: " + Reflect.field(constraintMap, "target"));
             }
 
-            transformConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(constraintMap["rotation"] || 0);
-            transformConstraintData.offsetX = spine.as3hx.Compat.parseFloat(constraintMap["x"] || 0) * scale;
-            transformConstraintData.offsetY = spine.as3hx.Compat.parseFloat(constraintMap["y"] || 0) * scale;
-            transformConstraintData.offsetScaleX = spine.as3hx.Compat.parseFloat(constraintMap["scaleX"] || 0);
-            transformConstraintData.offsetScaleY = spine.as3hx.Compat.parseFloat(constraintMap["scaleY"] || 0);
-            transformConstraintData.offsetShearY = spine.as3hx.Compat.parseFloat(constraintMap["shearY"] || 0);
+            transformConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
+            transformConstraintData.offsetX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "x") != null ? Reflect.field(constraintMap, "x") : 0) * scale;
+            transformConstraintData.offsetY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "y") != null ? Reflect.field(constraintMap, "y") : 0) * scale;
+            transformConstraintData.offsetScaleX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleX") != null ? Reflect.field(constraintMap, "scaleX") : 0);
+            transformConstraintData.offsetScaleY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleY") != null ? Reflect.field(constraintMap, "scaleY") : 0);
+            transformConstraintData.offsetShearY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "shearY") != null ? Reflect.field(constraintMap, "shearY") : 0);
 
-            transformConstraintData.rotateMix = (constraintMap.exists("rotateMix")) ? constraintMap["rotateMix"] : 1;
-            transformConstraintData.translateMix = (constraintMap.exists("translateMix")) ? constraintMap["translateMix"] : 1;
-            transformConstraintData.scaleMix = (constraintMap.exists("scaleMix")) ? constraintMap["scaleMix"] : 1;
-            transformConstraintData.shearMix = (constraintMap.exists("shearMix")) ? constraintMap["shearMix"] : 1;
+            transformConstraintData.rotateMix = Reflect.field(constraintMap, "rotateMix") != null ? Reflect.field(constraintMap, "rotateMix") : 1;
+            transformConstraintData.translateMix = Reflect.field(constraintMap, "translateMix") != null ? Reflect.field(constraintMap, "translateMix") : 1;
+            transformConstraintData.scaleMix = Reflect.field(constraintMap, "scaleMix") != null ? Reflect.field(constraintMap, "scaleMix") : 1;
+            transformConstraintData.shearMix = Reflect.field(constraintMap, "shearMix") != null ? Reflect.field(constraintMap, "shearMix") : 1;
 
             skeletonData.transformConstraints.push(transformConstraintData);
         }
 
         // Path constraints.
-        for (constraintMap/* AS3HX WARNING could not determine type for var: constraintMap exp: EArray(EIdent(root),EConst(CString(path))) type: Dynamic */ in Reflect.field(root, "path"))
+        var pathMap:Array<Dynamic> = Reflect.field(root, "path");
+        for (constraintMap in pathMap)
         {
-            var pathConstraintData : PathConstraintData = new PathConstraintData(constraintMap["name"]);
+            var pathConstraintData : PathConstraintData = new PathConstraintData(Reflect.field(constraintMap, "name"));
 
-            for (boneName/* AS3HX WARNING could not determine type for var: boneName exp: EArray(EIdent(constraintMap),EConst(CString(bones))) type: null */ in constraintMap["bones"])
+            var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
+            for (boneName in bonesField)
             {
-                bone = skeletonData.findBone(boneName);
+                var bone = skeletonData.findBone(boneName);
                 if (bone == null)
                 {
                     throw new Error("Path constraint bone not found: " + boneName);
@@ -248,28 +258,28 @@ class SkeletonJson
                 pathConstraintData.bones.push(bone);
             }
 
-            pathConstraintData.target = skeletonData.findSlot(constraintMap["target"]);
-            if (!pathConstraintData.target)
+            pathConstraintData.target = skeletonData.findSlot(Reflect.field(constraintMap, "target"));
+            if (pathConstraintData.target == null)
             {
-                throw new Error("Path target slot not found: " + constraintMap["target"]);
+                throw new Error("Path target slot not found: " + Reflect.field(constraintMap, "target"));
             }
 
-            pathConstraintData.positionMode = PositionMode[constraintMap["positionMode"] || "percent"];
-            pathConstraintData.spacingMode = SpacingMode[constraintMap["spacingMode"] || "length"];
-            pathConstraintData.rotateMode = RotateMode[constraintMap["rotateMode"] || "rotateMode"];
-            pathConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(constraintMap["rotation"] || 0);
-            pathConstraintData.position = spine.as3hx.Compat.parseFloat(constraintMap["position"] || 0);
-            if (pathConstraintData.positionMode == PositionMode.fixed)
+            pathConstraintData.positionMode = Reflect.field(constraintMap, "positionMode") != null ? Reflect.field(constraintMap, "positionMode") : PositionMode.Percent;
+            pathConstraintData.spacingMode = Reflect.field(constraintMap, "spacingMode") != null ? Reflect.field(constraintMap, "spacingMode") : SpacingMode.Length;
+            pathConstraintData.rotateMode = Reflect.field(constraintMap, "rotateMode") != null ? Reflect.field(constraintMap, "rotateMode") : RotateMode.Tangent;
+            pathConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
+            pathConstraintData.position = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "position") != null ? Reflect.field(constraintMap, "position") : 0);
+            if (pathConstraintData.positionMode == PositionMode.Fixed)
             {
                 pathConstraintData.position *= scale;
             }
-            pathConstraintData.spacing = spine.as3hx.Compat.parseFloat(constraintMap["spacing"] || 0);
-            if (pathConstraintData.spacingMode == SpacingMode.length || pathConstraintData.spacingMode == SpacingMode.fixed)
+            pathConstraintData.spacing = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "spacing") != null ? Reflect.field(constraintMap, "spacing") : 0);
+            if (pathConstraintData.spacingMode == SpacingMode.Length || pathConstraintData.spacingMode == SpacingMode.Fixed)
             {
                 pathConstraintData.spacing *= scale;
             }
-            pathConstraintData.rotateMix = (constraintMap.exists("rotateMix")) ? constraintMap["rotateMix"] : 1;
-            pathConstraintData.translateMix = (constraintMap.exists("translateMix")) ? constraintMap["translateMix"] : 1;
+            pathConstraintData.rotateMix = Reflect.field(constraintMap, "rotateMix") != null ? Reflect.field(constraintMap, "rotateMix") : 1;
+            pathConstraintData.translateMix = Reflect.field(constraintMap, "translateMix") != null ? Reflect.field(constraintMap, "translateMix") : 1;
 
             skeletonData.pathConstraints.push(pathConstraintData);
         }
@@ -304,7 +314,7 @@ class SkeletonJson
         var linkedMeshes : Array<LinkedMesh> = this.linkedMeshes;
         for (linkedMesh in linkedMeshes)
         {
-            var parentSkin : Skin = !(linkedMesh.skin) ? skeletonData.defaultSkin : skeletonData.findSkin(linkedMesh.skin);
+            var parentSkin : Skin = linkedMesh.skin == null ? skeletonData.defaultSkin : skeletonData.findSkin(linkedMesh.skin);
             if (parentSkin == null)
             {
                 throw new Error("Skin not found: " + linkedMesh.skin);
@@ -327,9 +337,9 @@ class SkeletonJson
             {
                 var eventMap : Dynamic = Reflect.field(events, eventName);
                 var eventData : EventData = new EventData(eventName);
-                eventData.intValue = Reflect.field(eventMap, "int") || 0;
-                eventData.floatValue = Reflect.field(eventMap, "float") || 0;
-                eventData.stringValue = Reflect.field(eventMap, "string") || null;
+                eventData.intValue = Reflect.field(eventMap, "int") != null ? Reflect.field(eventMap, "int") : 0;
+                eventData.floatValue = Reflect.field(eventMap, "float") != null ? Reflect.field(eventMap, "float") : 0;
+                eventData.stringValue = Reflect.field(eventMap, "string") != null ? Reflect.field(eventMap, "string") : null;
                 skeletonData.events.push(eventData);
             }
         }
@@ -346,29 +356,29 @@ class SkeletonJson
 
     private function readAttachment(map : Dynamic, skin : Skin, slotIndex : Int, name : String) : Attachment
     {
-        name = Reflect.field(map, "name") || name;
+        name = Reflect.field(map, "name") != null ? Reflect.field(map, "name") : name;
 
-        var typeName : String = Reflect.field(map, "type") || "region";
-        var type : AttachmentType = AttachmentType[typeName];
+        var typeName : String = Reflect.field(map, "type") != null ? Reflect.field(map, "type") : "region";
+        var type : AttachmentType = typeName;
 
         var scale : Float = this.scale;
         var color : String;
         switch (type)
         {
-            case AttachmentType.region:
-                var region : RegionAttachment = attachmentLoader.newRegionAttachment(skin, name, Reflect.field(map, "path") || name);
+            case AttachmentType.Region:
+                var region : RegionAttachment = attachmentLoader.newRegionAttachment(skin, name, Reflect.field(map, "path") != null ? Reflect.field(map, "path") : name);
                 if (region == null)
                 {
                     return null;
                 }
-                region.path = Reflect.field(map, "path") || name;
-                region.x = spine.as3hx.Compat.parseFloat(Reflect.field(map, "x") || 0) * scale;
-                region.y = spine.as3hx.Compat.parseFloat(Reflect.field(map, "y") || 0) * scale;
-                region.scaleX = (map.exists("scaleX")) ? Reflect.field(map, "scaleX") : 1;
-                region.scaleY = (map.exists("scaleY")) ? Reflect.field(map, "scaleY") : 1;
-                region.rotation = Reflect.field(map, "rotation") || 0;
-                region.width = spine.as3hx.Compat.parseFloat(Reflect.field(map, "width") || 0) * scale;
-                region.height = spine.as3hx.Compat.parseFloat(Reflect.field(map, "height") || 0) * scale;
+                region.path = Reflect.field(map, "path") != null ? Reflect.field(map, "path") : name;
+                region.x = spine.as3hx.Compat.parseFloat(Reflect.field(map, "x") != null ? Reflect.field(map, "x") : 0) * scale;
+                region.y = spine.as3hx.Compat.parseFloat(Reflect.field(map, "y") != null ? Reflect.field(map, "y") : 0) * scale;
+                region.scaleX = Reflect.field(map, "scaleX") != null ? Reflect.field(map, "scaleX") : 1;
+                region.scaleY = Reflect.field(map, "scaleY") != null ? Reflect.field(map, "scaleY") : 1;
+                region.rotation = Reflect.field(map, "rotation") != null ? Reflect.field(map, "rotation") : 0;
+                region.width = spine.as3hx.Compat.parseFloat(Reflect.field(map, "width") != null ? Reflect.field(map, "width") : 0) * scale;
+                region.height = spine.as3hx.Compat.parseFloat(Reflect.field(map, "height") != null ? Reflect.field(map, "height") : 0) * scale;
                 color = Reflect.field(map, "color");
                 if (color != null)
                 {
@@ -379,13 +389,13 @@ class SkeletonJson
                 }
                 region.updateOffset();
                 return region;
-            case AttachmentType.mesh, AttachmentType.linkedmesh:
-                var mesh : MeshAttachment = attachmentLoader.newMeshAttachment(skin, name, Reflect.field(map, "path") || name);
+            case AttachmentType.Mesh, AttachmentType.LinkedMesh:
+                var mesh : MeshAttachment = attachmentLoader.newMeshAttachment(skin, name, Reflect.field(map, "path") != null ? Reflect.field(map, "path") : name);
                 if (mesh == null)
                 {
                     return null;
                 }
-                mesh.path = Reflect.field(map, "path") || name;
+                mesh.path = Reflect.field(map, "path") != null ? Reflect.field(map, "path") : name;
 
                 color = Reflect.field(map, "color");
                 if (color != null)
@@ -396,12 +406,12 @@ class SkeletonJson
                     mesh.a = toColor(color, 3);
                 }
 
-                mesh.width = spine.as3hx.Compat.parseFloat(Reflect.field(map, "width") || 0) * scale;
-                mesh.height = spine.as3hx.Compat.parseFloat(Reflect.field(map, "height") || 0) * scale;
+                mesh.width = spine.as3hx.Compat.parseFloat(Reflect.field(map, "width") != null ? Reflect.field(map, "width") : 0) * scale;
+                mesh.height = spine.as3hx.Compat.parseFloat(Reflect.field(map, "height") != null ? Reflect.field(map, "height") : 0) * scale;
 
                 if (Reflect.field(map, "parent") != null)
                 {
-                    mesh.inheritDeform = (map.exists("deform")) ? cast(Reflect.field(map, "deform"), Bool) : true;
+                    mesh.inheritDeform = (Reflect.field(map, "deform") != null) ? cast(Reflect.field(map, "deform"), Bool) : true;
                     linkedMeshes.push(new LinkedMesh(mesh, Reflect.field(map, "skin"), slotIndex, Reflect.field(map, "parent")));
                     return mesh;
                 }
@@ -412,13 +422,13 @@ class SkeletonJson
                 mesh.regionUVs = uvs;
                 mesh.updateUVs();
 
-                mesh.hullLength = spine.as3hx.Compat.parseInt(Reflect.field(map, "hull") || 0) * 2;
+                mesh.hullLength = spine.as3hx.Compat.parseInt(Reflect.field(map, "hull") ? Reflect.field(map, "hull") : 0) * 2;
                 if (Reflect.field(map, "edges") != null)
                 {
                     mesh.edges = getIntArray(map, "edges");
                 }
                 return mesh;
-            case AttachmentType.boundingbox:
+            case AttachmentType.BoundingBox:
                 var box : BoundingBoxAttachment = attachmentLoader.newBoundingBoxAttachment(skin, name);
                 if (box == null)
                 {
@@ -426,25 +436,27 @@ class SkeletonJson
                 }
                 readVertices(map, box, spine.as3hx.Compat.parseInt(Reflect.field(map, "vertexCount")) << 1);
                 return box;
-            case AttachmentType.path:
+            case AttachmentType.Path:
                 var path : PathAttachment = attachmentLoader.newPathAttachment(skin, name);
                 if (path == null)
                 {
                     return null;
                 }
-                path.closed = (map.exists("closed")) ? cast(Reflect.field(map, "closed"), Bool) : false;
-                path.constantSpeed = (map.exists("constantSpeed")) ? cast(Reflect.field(map, "constantSpeed"), Bool) : true;
+                path.closed = (Reflect.field(map, "closed") != null) ? cast(Reflect.field(map, "closed"), Bool) : false;
+                path.constantSpeed = (Reflect.field(map, "constantSpeed") != null) ? cast(Reflect.field(map, "constantSpeed"), Bool) : true;
 
                 var vertexCount : Int = spine.as3hx.Compat.parseInt(Reflect.field(map, "vertexCount"));
                 readVertices(map, path, vertexCount << 1);
 
                 var lengths : Array<Float> = new Array<Float>();
-                for (curves/* AS3HX WARNING could not determine type for var: curves exp: EArray(EIdent(map),EConst(CString(lengths))) type: Dynamic */ in Reflect.field(map, "lengths"))
+                var lengthsField:Array<Dynamic> = Reflect.field(map, "lengths");
+                for (curves in lengthsField)
                 {
                     lengths.push(spine.as3hx.Compat.parseFloat(curves) * scale);
                 }
                 path.lengths = lengths;
                 return path;
+            case AttachmentType.RegionSequence:
         }
 
         return null;
@@ -474,8 +486,8 @@ class SkeletonJson
         spine.as3hx.Compat.setArrayLength(weights, 0);
         var bones : Array<Int> = new Array<Int>();
         spine.as3hx.Compat.setArrayLength(bones, 0);
-        i = 0;
-n = vertices.length;
+        var i = 0;
+        var n = vertices.length;
         while (i < n)
         {
             var boneCount : Int = spine.as3hx.Compat.parseInt(vertices[i++]);
@@ -643,8 +655,8 @@ n = vertices.length;
             frameIndex = 0;
             for (valueMap in values)
             {
-                var mix : Float = (valueMap.exists("mix")) ? Reflect.field(valueMap, "mix") : 1;
-                var bendDirection : Int = ((!valueMap.exists("bendPositive") || Reflect.field(valueMap, "bendPositive") != null)) ? 1 : -1;
+                var mix : Float = (Reflect.field(valueMap, "mix") != null) ? Reflect.field(valueMap, "mix") : 1;
+                var bendDirection : Int = (Reflect.field(valueMap, "bendPositive") != null && Reflect.field(valueMap, "bendPositive") == true) ? 1 : -1;
                 ikTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), mix, bendDirection);
                 readCurve(valueMap, ikTimeline, frameIndex);
                 frameIndex++;
@@ -663,10 +675,10 @@ n = vertices.length;
             frameIndex = 0;
             for (valueMap in values)
             {
-                var rotateMix : Float = (valueMap.exists("rotateMix")) ? Reflect.field(valueMap, "rotateMix") : 1;
-                var translateMix : Float = (valueMap.exists("translateMix")) ? Reflect.field(valueMap, "translateMix") : 1;
-                var scaleMix : Float = (valueMap.exists("scaleMix")) ? Reflect.field(valueMap, "scaleMix") : 1;
-                var shearMix : Float = (valueMap.exists("shearMix")) ? Reflect.field(valueMap, "shearMix") : 1;
+                var rotateMix : Float = Reflect.field(valueMap, "rotateMix") != null ? Reflect.field(valueMap, "rotateMix") : 1;
+                var translateMix : Float = Reflect.field(valueMap, "translateMix") != null ? Reflect.field(valueMap, "translateMix") : 1;
+                var scaleMix : Float = Reflect.field(valueMap, "scaleMix") != null ? Reflect.field(valueMap, "scaleMix") : 1;
+                var shearMix : Float = Reflect.field(valueMap, "shearMix") != null ? Reflect.field(valueMap, "shearMix") : 1;
                 transformTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), rotateMix, translateMix, scaleMix, shearMix);
                 readCurve(valueMap, transformTimeline, frameIndex);
                 frameIndex++;
@@ -694,11 +706,11 @@ n = vertices.length;
                 if (timelineName == "position" || timelineName == "spacing")
                 {
                     var pathTimeline : PathConstraintPositionTimeline;
-                    timelineScale = 1;
+                    var timelineScale:Float = 1;
                     if (timelineName == "spacing")
                     {
                         pathTimeline = new PathConstraintSpacingTimeline(values.length);
-                        if (data.spacingMode == SpacingMode.length || data.spacingMode == SpacingMode.fixed)
+                        if (data.spacingMode == SpacingMode.Length || data.spacingMode == SpacingMode.Fixed)
                         {
                             timelineScale = scale;
                         }
@@ -706,7 +718,7 @@ n = vertices.length;
                     else
                     {
                         pathTimeline = new PathConstraintPositionTimeline(values.length);
-                        if (data.positionMode == PositionMode.fixed)
+                        if (data.positionMode == PositionMode.Fixed)
                         {
                             timelineScale = scale;
                         }
@@ -715,7 +727,7 @@ n = vertices.length;
                     frameIndex = 0;
                     for (valueMap in values)
                     {
-                        var value : Float = Reflect.field(valueMap, timelineName) || 0;
+                        var value : Float = Reflect.field(valueMap, timelineName) != null ? Reflect.field(valueMap, timelineName) : 0;
                         pathTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), value * timelineScale);
                         readCurve(valueMap, pathTimeline, frameIndex);
                         frameIndex++;
@@ -734,8 +746,8 @@ n = vertices.length;
                         frameIndex = 0;
                         for (valueMap in values)
                         {
-                            rotateMix = (valueMap.exists("rotateMix")) ? Reflect.field(valueMap, "rotateMix") : 1;
-                            translateMix = (valueMap.exists("translateMix")) ? Reflect.field(valueMap, "translateMix") : 1;
+                            var rotateMix = Reflect.field(valueMap, "rotateMix") != null ? Reflect.field(valueMap, "rotateMix") : 1;
+                            var translateMix = Reflect.field(valueMap, "translateMix") != null ? Reflect.field(valueMap, "translateMix") : 1;
                             pathMixTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), rotateMix, translateMix);
                             readCurve(valueMap, pathMixTimeline, frameIndex);
                             frameIndex++;
@@ -896,9 +908,9 @@ n = vertices.length;
                     throw new Error("Event not found: " + Reflect.field(eventMap, "name"));
                 }
                 var event : Event = new Event(Reflect.field(eventMap, "time"), eventData);
-                event.intValue = (eventMap.exists("int")) ? Reflect.field(eventMap, "int") : eventData.intValue;
-                event.floatValue = (eventMap.exists("float")) ? Reflect.field(eventMap, "float") : eventData.floatValue;
-                event.stringValue = (eventMap.exists("string")) ? Reflect.field(eventMap, "string") : eventData.stringValue;
+                event.intValue = Reflect.field(eventMap, "int") != null ? Reflect.field(eventMap, "int") : eventData.intValue;
+                event.floatValue = Reflect.field(eventMap, "float") != null ? Reflect.field(eventMap, "float") : eventData.floatValue;
+                event.stringValue = Reflect.field(eventMap, "string") != null ? Reflect.field(eventMap, "string") : eventData.stringValue;
                 eventTimeline.setFrame(frameIndex++, event);
             }
             timelines[timelines.length] = eventTimeline;
@@ -930,7 +942,7 @@ n = vertices.length;
 
     private static function toColor(hexString : String, colorIndex : Int) : Float
     {
-        if (hexString.length != 8) throw new IllegalArgumentException("Color hexidecimal length must be 8, recieved: " + hexString);
+        if (hexString.length != 8) throw "Color hexidecimal length must be 8, recieved: " + hexString;
         return Std.parseInt("0x" + hexString.substring(colorIndex * 2, colorIndex * 2 + 2)) / 255;
     }
 

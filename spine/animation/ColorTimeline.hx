@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -49,16 +49,16 @@ class ColorTimeline extends CurveTimeline
     private static inline var G : Int = 2;@:allow(spine.animation)
     private static inline var B : Int = 3;@:allow(spine.animation)
     private static inline var A : Int = 4;
-    
+
     public var slotIndex : Int;
-    public var frames : Array<Float>;  // time, r, g, b, a, ...  
-    
+    public var frames : Array<Float>;  // time, r, g, b, a, ...
+
     public function new(frameCount : Int)
     {
         super(frameCount);
         frames = new Array<Float>();
     }
-    
+
     /** Sets the time and value of the specified keyframe. */
     public function setFrame(frameIndex : Int, time : Float, r : Float, g : Float, b : Float, a : Float) : Void
     {
@@ -69,14 +69,14 @@ class ColorTimeline extends CurveTimeline
         frames[spine.as3hx.Compat.parseInt(frameIndex + B)] = b;
         frames[spine.as3hx.Compat.parseInt(frameIndex + A)] = a;
     }
-    
+
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
         if (time < frames[0])
         {
             return;
-        }  // Time is before first frame.  
-        
+        }  // Time is before first frame.
+
         var r : Float;
         var g : Float;
         var b : Float;
@@ -99,10 +99,10 @@ class ColorTimeline extends CurveTimeline
             b = frames[spine.as3hx.Compat.parseInt(frame + PREV_B)];
             a = frames[spine.as3hx.Compat.parseInt(frame + PREV_A)];
             var frameTime : Float = frames[frame];
-            var percent : Float = getCurvePercent(frame / ENTRIES - 1, 
+            var percent : Float = getCurvePercent(cast frame / ENTRIES - 1, 
                     1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime)
             );
-            
+
             r += (frames[frame + R] - r) * percent;
             g += (frames[frame + G] - g) * percent;
             b += (frames[frame + B] - b) * percent;
@@ -125,5 +125,3 @@ class ColorTimeline extends CurveTimeline
         }
     }
 }
-
-

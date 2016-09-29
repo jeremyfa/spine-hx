@@ -108,10 +108,10 @@ class PathConstraint implements Updatable
 
         var data : PathConstraintData = this._data;
         var spacingMode : SpacingMode = data.spacingMode;
-        var lengthSpacing : Bool = spacingMode == SpacingMode.length;
+        var lengthSpacing : Bool = spacingMode == SpacingMode.Length;
         var rotateMode : RotateMode = data.rotateMode;
-        var tangents : Bool = rotateMode == RotateMode.tangent;
-        var scale : Bool = rotateMode == RotateMode.chainScale;
+        var tangents : Bool = rotateMode == RotateMode.Tangent;
+        var scale : Bool = rotateMode == RotateMode.ChainScale;
         var boneCount : Int = this._bones.length;
         var spacesCount : Int = (tangents) ? boneCount : boneCount + 1;
         var bones : Array<Bone> = this._bones;
@@ -151,7 +151,7 @@ class PathConstraint implements Updatable
         }
 
         var positions : Array<Float> = computeWorldPositions(attachment, spacesCount, tangents,
-                data.positionMode == PositionMode.percent, spacingMode == SpacingMode.percent
+                data.positionMode == PositionMode.Percent, spacingMode == SpacingMode.Percent
         );
         var skeleton : Skeleton = target.skeleton;
         var skeletonX : Float = skeleton.x;
@@ -159,7 +159,7 @@ class PathConstraint implements Updatable
         var boneX : Float = positions[0];
         var boneY : Float = positions[1];
         var offsetRotation : Float = data.offsetRotation;
-        var tip : Bool = rotateMode == RotateMode.chain && offsetRotation == 0;
+        var tip : Bool = rotateMode == RotateMode.Chain && offsetRotation == 0;
         var p : Int;
         var i = 0;
         p = 3;

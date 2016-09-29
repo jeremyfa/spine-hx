@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -31,24 +31,12 @@
 
 package spine.attachments;
 
-
-class AttachmentType
-{
-    public static var region : AttachmentType = new AttachmentType(0, "region");
-    public static var regionsequence : AttachmentType = new AttachmentType(1, "regionsequence");
-    public static var boundingbox : AttachmentType = new AttachmentType(2, "boundingbox");
-    public static var mesh : AttachmentType = new AttachmentType(3, "mesh");
-    public static var linkedmesh : AttachmentType = new AttachmentType(3, "linkedmesh");
-    public static var path : AttachmentType = new AttachmentType(4, "path");
-    
-    public var ordinal : Int;
-    public var name : String;
-    
-    public function new(ordinal : Int, name : String)
-    {
-        this.ordinal = ordinal;
-        this.name = name;
-    }
+@:enum
+abstract AttachmentType(String) from String to String {
+	var Region = "region";
+	var RegionSequence = "regionsequence";
+	var BoundingBox = "boundingbox";
+	var Mesh = "mesh";
+	var LinkedMesh = "linkedmesh";
+	var Path = "path";
 }
-
-

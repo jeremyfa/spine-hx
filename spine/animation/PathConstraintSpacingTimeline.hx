@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -41,30 +41,30 @@ class PathConstraintSpacingTimeline extends PathConstraintPositionTimeline
     {
         super(frameCount);
     }
-    
+
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
         if (time < frames[0])
         {
             return;
-        }  // Time is before first frame.  
-        
+        }  // Time is before first frame.
+
         var constraint : PathConstraint = skeleton.pathConstraints[pathConstraintIndex];
-        
-        if (time >= frames[frames.length - ENTRIES])
+
+        if (time >= frames[frames.length - PathConstraintPositionTimeline.ENTRIES])
         {
             // Time is after last frame.
             var i : Int = frames.length;
-            constraint.spacing += (frames[i + PREV_VALUE] - constraint.spacing) * alpha;
+            constraint.spacing += (frames[i + PathConstraintPositionTimeline.PREV_VALUE] - constraint.spacing) * alpha;
             return;
         }
-        
+
         // Interpolate between the previous frame and the current frame.
-        var frame : Int = Animation.binarySearch(frames, time, ENTRIES);
-        var spacing : Float = frames[frame + PREV_VALUE];
+        var frame : Int = Animation.binarySearch(frames, time, PathConstraintPositionTimeline.ENTRIES);
+        var spacing : Float = frames[frame + PathConstraintPositionTimeline.PREV_VALUE];
         var frameTime : Float = frames[frame];
-        var percent : Float = getCurvePercent(frame / ENTRIES - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
-        
-        constraint.spacing += (spacing + (frames[frame + VALUE] - spacing) * percent - constraint.spacing) * alpha;
+        var percent : Float = getCurvePercent(cast frame / PathConstraintPositionTimeline.ENTRIES - 1, 1 - (time - frameTime) / (frames[frame + PathConstraintPositionTimeline.PREV_TIME] - frameTime));
+
+        constraint.spacing += (spacing + (frames[frame + PathConstraintPositionTimeline.VALUE] - spacing) * percent - constraint.spacing) * alpha;
     }
 }
