@@ -118,7 +118,7 @@ w = offset;
         if (deformArray.length == 0)
         {
             w = offset;
-            b = spine.as3hx.Compat.parseInt(skip * 3);
+            b = spine.compat.Compat.parseInt(skip * 3);
             while (w < count)
             {
                 wx = x;wy = y;
@@ -142,7 +142,7 @@ w = offset;
         {
             deform = deformArray;
             w = offset;
-            b = spine.as3hx.Compat.parseInt(skip * 3);
+            b = spine.compat.Compat.parseInt(skip * 3);
             f = skip << 1;
             while (w < count)
             {

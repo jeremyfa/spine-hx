@@ -31,7 +31,7 @@
 
 package spine;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 
 class IkConstraint implements Updatable
 {
@@ -265,7 +265,7 @@ class IkConstraint implements Updatable
                     }
                 }
                 var minAngle : Float = 0;
-                var minDist : Float = spine.as3hx.Compat.FLOAT_MAX;
+                var minDist : Float = spine.compat.Compat.FLOAT_MAX;
                 var minX : Float = 0;
                 var minY : Float = 0;
                 var maxAngle : Float = 0;

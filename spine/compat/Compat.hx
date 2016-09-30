@@ -1,4 +1,6 @@
-package spine.as3hx;
+package spine.compat;
+
+// From HaxeFoundation/as3hx, edited for spine runtime
 
 import Type;
 import haxe.macro.Expr;

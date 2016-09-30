@@ -31,7 +31,7 @@
 
 package spine;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 import spine.animation.Animation;
 
 class SkeletonData

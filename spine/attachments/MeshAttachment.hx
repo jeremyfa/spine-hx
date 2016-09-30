@@ -87,8 +87,8 @@ class MeshAttachment extends VertexAttachment
             i = 0;
             while (i < n)
             {
-                uvs[i] = regionU + regionUVs[spine.as3hx.Compat.parseInt(i + 1)] * width;
-                uvs[spine.as3hx.Compat.parseInt(i + 1)] = regionV + height - regionUVs[i] * height;
+                uvs[i] = regionU + regionUVs[spine.compat.Compat.parseInt(i + 1)] * width;
+                uvs[spine.compat.Compat.parseInt(i + 1)] = regionV + height - regionUVs[i] * height;
                 i += 2;
             }
         }
@@ -98,7 +98,7 @@ class MeshAttachment extends VertexAttachment
             while (i < n)
             {
                 uvs[i] = regionU + regionUVs[i] * width;
-                uvs[spine.as3hx.Compat.parseInt(i + 1)] = regionV + regionUVs[spine.as3hx.Compat.parseInt(i + 1)] * height;
+                uvs[spine.compat.Compat.parseInt(i + 1)] = regionV + regionUVs[spine.compat.Compat.parseInt(i + 1)] * height;
                 i += 2;
             }
         }

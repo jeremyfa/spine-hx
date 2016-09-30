@@ -50,11 +50,11 @@ class ScaleTimeline extends TranslateTimeline
         }  // Time is before first frame.
 
         var bone : Bone = skeleton.bones[boneIndex];
-        if (time >= frames[spine.as3hx.Compat.parseInt(frames.length - TranslateTimeline.ENTRIES)])
+        if (time >= frames[spine.compat.Compat.parseInt(frames.length - TranslateTimeline.ENTRIES)])
         {
             // Time is after last frame.
-            bone.scaleX += (bone.data.scaleX * frames[spine.as3hx.Compat.parseInt(frames.length + TranslateTimeline.PREV_X)] - bone.scaleX) * alpha;
-            bone.scaleY += (bone.data.scaleY * frames[spine.as3hx.Compat.parseInt(frames.length + TranslateTimeline.PREV_Y)] - bone.scaleY) * alpha;
+            bone.scaleX += (bone.data.scaleX * frames[spine.compat.Compat.parseInt(frames.length + TranslateTimeline.PREV_X)] - bone.scaleX) * alpha;
+            bone.scaleY += (bone.data.scaleY * frames[spine.compat.Compat.parseInt(frames.length + TranslateTimeline.PREV_Y)] - bone.scaleY) * alpha;
             return;
         }
 

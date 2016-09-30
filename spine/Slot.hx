@@ -31,7 +31,7 @@
 
 package spine;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 import spine.attachments.Attachment;
 
 class Slot
@@ -101,7 +101,7 @@ class Slot
         }
         _attachment = attachment;
         _attachmentTime = _bone._skeleton.time;
-        spine.as3hx.Compat.setArrayLength(attachmentVertices, 0);
+        spine.compat.Compat.setArrayLength(attachmentVertices, 0);
         return attachment;
     }
     

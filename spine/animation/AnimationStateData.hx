@@ -31,7 +31,7 @@
 
 package spine.animation;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 import spine.SkeletonData;
 
 class AnimationStateData
@@ -88,7 +88,7 @@ class AnimationStateData
         {
             return defaultMix;
         }
-        return spine.as3hx.Compat.parseFloat(time);
+        return spine.compat.Compat.parseFloat(time);
     }
 }
 

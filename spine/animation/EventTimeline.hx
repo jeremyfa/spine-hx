@@ -74,12 +74,12 @@ class EventTimeline implements Timeline
         if (lastTime > time)
         {
             // Fire events after last time for looped animations.
-            apply(skeleton, lastTime, spine.as3hx.Compat.INT_MAX, firedEvents, alpha);
+            apply(skeleton, lastTime, spine.compat.Compat.INT_MAX, firedEvents, alpha);
             lastTime = -1;
         }
         else
         {
-            if (lastTime >= frames[spine.as3hx.Compat.parseInt(frameCount - 1)])
+            if (lastTime >= frames[spine.compat.Compat.parseInt(frameCount - 1)])
             {
                 // Last time is after last frame.
                 return;
@@ -102,7 +102,7 @@ class EventTimeline implements Timeline
             while (frame > 0)
             {
                 // Fire multiple events with the same frame.
-                if (frames[spine.as3hx.Compat.parseInt(frame - 1)] != frameTime)
+                if (frames[spine.compat.Compat.parseInt(frame - 1)] != frameTime)
                 {
                     break;
                 }

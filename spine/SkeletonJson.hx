@@ -30,8 +30,8 @@
  *****************************************************************************/
 package spine;
 
-import flash.errors.ArgumentError;
-import flash.errors.Error;
+import spine.compat.ArgumentError;
+import spine.compat.Error;
 import spine.animation.PathConstraintMixTimeline;
 import spine.animation.PathConstraintSpacingTimeline;
 import spine.animation.PathConstraintPositionTimeline;
@@ -39,7 +39,7 @@ import spine.animation.TransformConstraintTimeline;
 import spine.animation.ShearTimeline;
 import spine.attachments.PathAttachment;
 import spine.attachments.VertexAttachment;
-import flash.utils.ByteArray;
+import spine.compat.ByteArray;
 import spine.animation.Animation;
 import spine.animation.AttachmentTimeline;
 import spine.animation.ColorTimeline;
@@ -133,14 +133,14 @@ class SkeletonJson
                     }
                 }
                 boneData = new BoneData(skeletonData.bones.length, Reflect.field(boneMap, "name"), parent);
-                boneData.length = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "length") != null ? Reflect.field(boneMap, "length") : 0) * scale;
-                boneData.x = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "x") != null ? Reflect.field(boneMap, "x") : 0) * scale;
-                boneData.y = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "y") != null ? Reflect.field(boneMap, "y") : 0) * scale;
+                boneData.length = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "length") != null ? Reflect.field(boneMap, "length") : 0) * scale;
+                boneData.x = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "x") != null ? Reflect.field(boneMap, "x") : 0) * scale;
+                boneData.y = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "y") != null ? Reflect.field(boneMap, "y") : 0) * scale;
                 boneData.rotation = (Reflect.field(boneMap, "rotation") != null ? Reflect.field(boneMap, "rotation") : 0);
                 boneData.scaleX = (Reflect.field(boneMap, "scaleX") != null) ? Reflect.field(boneMap, "scaleX") : 1;
                 boneData.scaleX = (Reflect.field(boneMap, "scaleY") != null) ? Reflect.field(boneMap, "scaleY") : 1;
-                boneData.shearX = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearX") != null ? Reflect.field(boneMap, "shearX") : 0);
-                boneData.shearY = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearY") != null ? Reflect.field(boneMap, "shearY") : 0);
+                boneData.shearX = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "shearX") != null ? Reflect.field(boneMap, "shearX") : 0);
+                boneData.shearY = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "shearY") != null ? Reflect.field(boneMap, "shearY") : 0);
                 boneData.inheritRotation = Reflect.field(boneMap, "inheritRotation") != null ? Reflect.field(boneMap, "inheritRotation") : true;
                 boneData.inheritScale = Reflect.field(boneMap, "inheritScale") != null ? Reflect.field(boneMap, "inheritScale") : true;
                 skeletonData.bones.push(boneData);
@@ -235,12 +235,12 @@ class SkeletonJson
                     throw new Error("Target bone not found: " + Reflect.field(constraintMap, "target"));
                 }
 
-                transformConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
-                transformConstraintData.offsetX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "x") != null ? Reflect.field(constraintMap, "x") : 0) * scale;
-                transformConstraintData.offsetY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "y") != null ? Reflect.field(constraintMap, "y") : 0) * scale;
-                transformConstraintData.offsetScaleX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleX") != null ? Reflect.field(constraintMap, "scaleX") : 0);
-                transformConstraintData.offsetScaleY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleY") != null ? Reflect.field(constraintMap, "scaleY") : 0);
-                transformConstraintData.offsetShearY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "shearY") != null ? Reflect.field(constraintMap, "shearY") : 0);
+                transformConstraintData.offsetRotation = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
+                transformConstraintData.offsetX = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "x") != null ? Reflect.field(constraintMap, "x") : 0) * scale;
+                transformConstraintData.offsetY = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "y") != null ? Reflect.field(constraintMap, "y") : 0) * scale;
+                transformConstraintData.offsetScaleX = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "scaleX") != null ? Reflect.field(constraintMap, "scaleX") : 0);
+                transformConstraintData.offsetScaleY = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "scaleY") != null ? Reflect.field(constraintMap, "scaleY") : 0);
+                transformConstraintData.offsetShearY = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "shearY") != null ? Reflect.field(constraintMap, "shearY") : 0);
 
                 transformConstraintData.rotateMix = Reflect.field(constraintMap, "rotateMix") != null ? Reflect.field(constraintMap, "rotateMix") : 1;
                 transformConstraintData.translateMix = Reflect.field(constraintMap, "translateMix") != null ? Reflect.field(constraintMap, "translateMix") : 1;
@@ -278,13 +278,13 @@ class SkeletonJson
                 pathConstraintData.positionMode = Reflect.field(constraintMap, "positionMode") != null ? Reflect.field(constraintMap, "positionMode") : PositionMode.Percent;
                 pathConstraintData.spacingMode = Reflect.field(constraintMap, "spacingMode") != null ? Reflect.field(constraintMap, "spacingMode") : SpacingMode.Length;
                 pathConstraintData.rotateMode = Reflect.field(constraintMap, "rotateMode") != null ? Reflect.field(constraintMap, "rotateMode") : RotateMode.Tangent;
-                pathConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
-                pathConstraintData.position = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "position") != null ? Reflect.field(constraintMap, "position") : 0);
+                pathConstraintData.offsetRotation = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
+                pathConstraintData.position = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "position") != null ? Reflect.field(constraintMap, "position") : 0);
                 if (pathConstraintData.positionMode == PositionMode.Fixed)
                 {
                     pathConstraintData.position *= scale;
                 }
-                pathConstraintData.spacing = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "spacing") != null ? Reflect.field(constraintMap, "spacing") : 0);
+                pathConstraintData.spacing = spine.compat.Compat.parseFloat(Reflect.field(constraintMap, "spacing") != null ? Reflect.field(constraintMap, "spacing") : 0);
                 if (pathConstraintData.spacingMode == SpacingMode.Length || pathConstraintData.spacingMode == SpacingMode.Fixed)
                 {
                     pathConstraintData.spacing *= scale;
@@ -341,7 +341,7 @@ class SkeletonJson
             linkedMesh.mesh.parentMesh = cast((parentMesh), MeshAttachment);
             linkedMesh.mesh.updateUVs();
         }
-        spine.as3hx.Compat.setArrayLength(linkedMeshes, 0);
+        spine.compat.Compat.setArrayLength(linkedMeshes, 0);
 
         // Events.
         var events : Dynamic = Reflect.field(root, "events");
@@ -388,13 +388,13 @@ class SkeletonJson
                     return null;
                 }
                 region.path = Reflect.field(map, "path") != null ? Reflect.field(map, "path") : name;
-                region.x = spine.as3hx.Compat.parseFloat(Reflect.field(map, "x") != null ? Reflect.field(map, "x") : 0) * scale;
-                region.y = spine.as3hx.Compat.parseFloat(Reflect.field(map, "y") != null ? Reflect.field(map, "y") : 0) * scale;
+                region.x = spine.compat.Compat.parseFloat(Reflect.field(map, "x") != null ? Reflect.field(map, "x") : 0) * scale;
+                region.y = spine.compat.Compat.parseFloat(Reflect.field(map, "y") != null ? Reflect.field(map, "y") : 0) * scale;
                 region.scaleX = Reflect.field(map, "scaleX") != null ? Reflect.field(map, "scaleX") : 1;
                 region.scaleY = Reflect.field(map, "scaleY") != null ? Reflect.field(map, "scaleY") : 1;
                 region.rotation = Reflect.field(map, "rotation") != null ? Reflect.field(map, "rotation") : 0;
-                region.width = spine.as3hx.Compat.parseFloat(Reflect.field(map, "width") != null ? Reflect.field(map, "width") : 0) * scale;
-                region.height = spine.as3hx.Compat.parseFloat(Reflect.field(map, "height") != null ? Reflect.field(map, "height") : 0) * scale;
+                region.width = spine.compat.Compat.parseFloat(Reflect.field(map, "width") != null ? Reflect.field(map, "width") : 0) * scale;
+                region.height = spine.compat.Compat.parseFloat(Reflect.field(map, "height") != null ? Reflect.field(map, "height") : 0) * scale;
                 color = Reflect.field(map, "color");
                 if (color != null)
                 {
@@ -422,8 +422,8 @@ class SkeletonJson
                     mesh.a = toColor(color, 3);
                 }
 
-                mesh.width = spine.as3hx.Compat.parseFloat(Reflect.field(map, "width") != null ? Reflect.field(map, "width") : 0) * scale;
-                mesh.height = spine.as3hx.Compat.parseFloat(Reflect.field(map, "height") != null ? Reflect.field(map, "height") : 0) * scale;
+                mesh.width = spine.compat.Compat.parseFloat(Reflect.field(map, "width") != null ? Reflect.field(map, "width") : 0) * scale;
+                mesh.height = spine.compat.Compat.parseFloat(Reflect.field(map, "height") != null ? Reflect.field(map, "height") : 0) * scale;
 
                 if (Reflect.field(map, "parent") != null)
                 {
@@ -438,7 +438,7 @@ class SkeletonJson
                 mesh.regionUVs = uvs;
                 mesh.updateUVs();
 
-                mesh.hullLength = spine.as3hx.Compat.parseInt(Reflect.field(map, "hull") ? Reflect.field(map, "hull") : 0) * 2;
+                mesh.hullLength = spine.compat.Compat.parseInt(Reflect.field(map, "hull") ? Reflect.field(map, "hull") : 0) * 2;
                 if (Reflect.field(map, "edges") != null)
                 {
                     mesh.edges = getIntArray(map, "edges");
@@ -450,7 +450,7 @@ class SkeletonJson
                 {
                     return null;
                 }
-                readVertices(map, box, spine.as3hx.Compat.parseInt(Reflect.field(map, "vertexCount")) << 1);
+                readVertices(map, box, spine.compat.Compat.parseInt(Reflect.field(map, "vertexCount")) << 1);
                 return box;
             case AttachmentType.Path:
                 var path : PathAttachment = attachmentLoader.newPathAttachment(skin, name);
@@ -461,14 +461,14 @@ class SkeletonJson
                 path.closed = (Reflect.field(map, "closed") != null) ? cast(Reflect.field(map, "closed"), Bool) : false;
                 path.constantSpeed = (Reflect.field(map, "constantSpeed") != null) ? cast(Reflect.field(map, "constantSpeed"), Bool) : true;
 
-                var vertexCount : Int = spine.as3hx.Compat.parseInt(Reflect.field(map, "vertexCount"));
+                var vertexCount : Int = spine.compat.Compat.parseInt(Reflect.field(map, "vertexCount"));
                 readVertices(map, path, vertexCount << 1);
 
                 var lengths : Array<Float> = new Array<Float>();
                 var lengthsField:Array<Dynamic> = Reflect.field(map, "lengths");
                 for (curves in lengthsField)
                 {
-                    lengths.push(spine.as3hx.Compat.parseFloat(curves) * scale);
+                    lengths.push(spine.compat.Compat.parseFloat(curves) * scale);
                 }
                 path.lengths = lengths;
                 return path;
@@ -499,19 +499,19 @@ class SkeletonJson
         }
 
         var weights : Array<Float> = new Array<Float>();
-        spine.as3hx.Compat.setArrayLength(weights, 0);
+        spine.compat.Compat.setArrayLength(weights, 0);
         var bones : Array<Int> = new Array<Int>();
-        spine.as3hx.Compat.setArrayLength(bones, 0);
+        spine.compat.Compat.setArrayLength(bones, 0);
         var i = 0;
         var n = vertices.length;
         while (i < n)
         {
-            var boneCount : Int = spine.as3hx.Compat.parseInt(vertices[i++]);
+            var boneCount : Int = spine.compat.Compat.parseInt(vertices[i++]);
             bones.push(boneCount);
-            var nn : Int = spine.as3hx.Compat.parseInt(i + boneCount * 4);
+            var nn : Int = spine.compat.Compat.parseInt(i + boneCount * 4);
             while (i < nn)
             {
-                bones.push(spine.as3hx.Compat.parseInt(vertices[i]));
+                bones.push(spine.compat.Compat.parseInt(vertices[i]));
                 weights.push(vertices[i + 1] * scale);
                 weights.push(vertices[i + 2] * scale);
                 weights.push(vertices[i + 3]);
@@ -647,8 +647,8 @@ class SkeletonJson
                             frameIndex = 0;
                             for (valueMap in values)
                             {
-                                var x : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "x") != null ? Reflect.field(valueMap, "x") : 0) * timelineScale;
-                                var y : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "y") != null ? Reflect.field(valueMap, "y") : 0) * timelineScale;
+                                var x : Float = spine.compat.Compat.parseFloat(Reflect.field(valueMap, "x") != null ? Reflect.field(valueMap, "x") : 0) * timelineScale;
+                                var y : Float = spine.compat.Compat.parseFloat(Reflect.field(valueMap, "y") != null ? Reflect.field(valueMap, "y") : 0) * timelineScale;
                                 translateTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), x, y);
                                 readCurve(valueMap, translateTimeline, frameIndex);
                                 frameIndex++;
@@ -826,7 +826,7 @@ class SkeletonJson
                             else
                             {
                                 deform = new Array<Float>();
-                                var start : Int = Math.round(spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "offset") != null ? Reflect.field(valueMap, "offset") : 0));
+                                var start : Int = Math.round(spine.compat.Compat.parseFloat(Reflect.field(valueMap, "offset") != null ? Reflect.field(valueMap, "offset") : 0));
                                 var temp : Array<Float> = getFloatArray(valueMap, "vertices", 1);
                                 for (i in 0...temp.length)
                                 {
@@ -877,7 +877,7 @@ class SkeletonJson
                 if (Reflect.field(drawOrderMap, "offsets") != null)
                 {
                     drawOrder = new Array<Int>();
-                    i = spine.as3hx.Compat.parseInt(slotCount - 1);
+                    i = spine.compat.Compat.parseInt(slotCount - 1);
                     while (i >= 0)
                     {
                         drawOrder[i] = -1;
@@ -910,7 +910,7 @@ class SkeletonJson
                         unchanged[unchangedIndex++] = originalIndex++;
                     }
                     // Fill in unchanged items.
-                    i = spine.as3hx.Compat.parseInt(slotCount - 1);
+                    i = spine.compat.Compat.parseInt(slotCount - 1);
                     while (i >= 0)
                     {
                         if (drawOrder[i] == -1)
@@ -1010,7 +1010,7 @@ class SkeletonJson
         var n : Int = list.length;
         while (i < n)
         {
-            values[i] = spine.as3hx.Compat.parseInt(list[i]);
+            values[i] = spine.compat.Compat.parseInt(list[i]);
             i++;
         }
         return values;
@@ -1024,7 +1024,7 @@ class SkeletonJson
         var n : Int = list.length;
         while (i < n)
         {
-            values[i] = spine.as3hx.Compat.parseInt(list[i]);
+            values[i] = spine.compat.Compat.parseInt(list[i]);
             i++;
         }
         return values;

@@ -45,7 +45,7 @@ class Polygon
     {
         var nn : Int = vertices.length;
         
-        var prevIndex : Int = spine.as3hx.Compat.parseInt(nn - 2);
+        var prevIndex : Int = spine.compat.Compat.parseInt(nn - 2);
         var inside : Bool = false;
         var ii : Int = 0;
         while (ii < nn)

@@ -74,8 +74,8 @@ class RegionAttachment extends Attachment
     public function new(name : String)
     {
         super(name);
-        spine.as3hx.Compat.setArrayLength(offset, 8);
-        spine.as3hx.Compat.setArrayLength(uvs, 8);
+        spine.compat.Compat.setArrayLength(offset, 8);
+        spine.compat.Compat.setArrayLength(uvs, 8);
     }
 
     public function setUVs(u : Float, v : Float, u2 : Float, v2 : Float, rotate : Bool) : Void

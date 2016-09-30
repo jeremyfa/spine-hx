@@ -31,8 +31,8 @@
 
 package spine;
 
-import flash.errors.ArgumentError;
-import flash.utils.Dictionary;
+import spine.compat.ArgumentError;
+import spine.compat.Dictionary;
 import spine.attachments.Attachment;
 
 /** Stores attachments by slot index and attachment name. */
@@ -62,7 +62,7 @@ class Skin
         }
         if (slotIndex >= attachments.length)
         {
-            spine.as3hx.Compat.setArrayLength(attachments, slotIndex + 1);
+            spine.compat.Compat.setArrayLength(attachments, slotIndex + 1);
         }
         if (attachments[slotIndex] == null)
         {
@@ -101,7 +101,7 @@ class Skin
     public function attachAll(skeleton : Skeleton, oldSkin : Skin) : Void
     {
         var slotIndex : Int = 0;
-        for (slot/* AS3HX WARNING could not determine type for var: slot exp: EField(EIdent(skeleton),slots) type: null */ in skeleton.slots)
+        for (slot in skeleton.slots)
         {
             var slotAttachment : Attachment = slot.attachment;
             if (slotAttachment != null && slotIndex < oldSkin.attachments.length)

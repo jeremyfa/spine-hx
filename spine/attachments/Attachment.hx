@@ -31,7 +31,7 @@
 
 package spine.attachments;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 
 class Attachment
 {

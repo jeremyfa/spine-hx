@@ -31,7 +31,7 @@
 
 package spine;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 
 class TransformConstraint implements Updatable
 {
@@ -66,7 +66,7 @@ class TransformConstraint implements Updatable
         scaleMix = data.scaleMix;
         shearMix = data.shearMix;
         _bones = new Array<Bone>();
-        for (boneData/* AS3HX WARNING could not determine type for var: boneData exp: EField(EIdent(data),bones) type: null */ in data.bones)
+        for (boneData in data.bones)
         {
             _bones.push(skeleton.findBone(boneData.name));
         }

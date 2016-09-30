@@ -72,14 +72,14 @@ class DrawOrderTimeline implements Timeline
         }  // Time is before first frame.
 
         var frameIndex : Int;
-        if (time >= frames[spine.as3hx.Compat.parseInt(frames.length - 1)])
+        if (time >= frames[spine.compat.Compat.parseInt(frames.length - 1)])
         {
             // Time is after last frame.
-            frameIndex = spine.as3hx.Compat.parseInt(frames.length - 1);
+            frameIndex = spine.compat.Compat.parseInt(frames.length - 1);
         }
         else
         {
-            frameIndex = spine.as3hx.Compat.parseInt(Animation.binarySearch1(frames, time) - 1);
+            frameIndex = spine.compat.Compat.parseInt(Animation.binarySearch1(frames, time) - 1);
         }
 
         var drawOrder : Array<Slot> = skeleton.drawOrder;

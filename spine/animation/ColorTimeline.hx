@@ -72,10 +72,10 @@ class ColorTimeline extends CurveTimeline
     {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
-        frames[spine.as3hx.Compat.parseInt(frameIndex + R)] = r;
-        frames[spine.as3hx.Compat.parseInt(frameIndex + G)] = g;
-        frames[spine.as3hx.Compat.parseInt(frameIndex + B)] = b;
-        frames[spine.as3hx.Compat.parseInt(frameIndex + A)] = a;
+        frames[spine.compat.Compat.parseInt(frameIndex + R)] = r;
+        frames[spine.compat.Compat.parseInt(frameIndex + G)] = g;
+        frames[spine.compat.Compat.parseInt(frameIndex + B)] = b;
+        frames[spine.compat.Compat.parseInt(frameIndex + A)] = a;
     }
 
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
@@ -89,23 +89,23 @@ class ColorTimeline extends CurveTimeline
         var g : Float;
         var b : Float;
         var a : Float;
-        if (time >= frames[spine.as3hx.Compat.parseInt(frames.length - ENTRIES)])
+        if (time >= frames[spine.compat.Compat.parseInt(frames.length - ENTRIES)])
         {
             // Time is after last frame.
             var i : Int = frames.length;
-            r = frames[spine.as3hx.Compat.parseInt(i + PREV_R)];
-            g = frames[spine.as3hx.Compat.parseInt(i + PREV_G)];
-            b = frames[spine.as3hx.Compat.parseInt(i + PREV_B)];
-            a = frames[spine.as3hx.Compat.parseInt(i + PREV_A)];
+            r = frames[spine.compat.Compat.parseInt(i + PREV_R)];
+            g = frames[spine.compat.Compat.parseInt(i + PREV_G)];
+            b = frames[spine.compat.Compat.parseInt(i + PREV_B)];
+            a = frames[spine.compat.Compat.parseInt(i + PREV_A)];
         }
         else
         {
             // Interpolate between the previous frame and the current frame.
             var frame : Int = Animation.binarySearch(frames, time, ENTRIES);
-            r = frames[spine.as3hx.Compat.parseInt(frame + PREV_R)];
-            g = frames[spine.as3hx.Compat.parseInt(frame + PREV_G)];
-            b = frames[spine.as3hx.Compat.parseInt(frame + PREV_B)];
-            a = frames[spine.as3hx.Compat.parseInt(frame + PREV_A)];
+            r = frames[spine.compat.Compat.parseInt(frame + PREV_R)];
+            g = frames[spine.compat.Compat.parseInt(frame + PREV_G)];
+            b = frames[spine.compat.Compat.parseInt(frame + PREV_B)];
+            a = frames[spine.compat.Compat.parseInt(frame + PREV_A)];
             var frameTime : Float = frames[frame];
             var percent : Float = getCurvePercent(cast frame / ENTRIES - 1,
                     1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime)

@@ -31,9 +31,9 @@
 
 package spine.atlas;
 
-import flash.errors.ArgumentError;
-import flash.errors.Error;
-import flash.utils.ByteArray;
+import spine.compat.ArgumentError;
+import spine.compat.Error;
+import spine.compat.ByteArray;
 
 using StringTools;
 
@@ -77,7 +77,7 @@ class Atlas
 
         var reader : Reader = new Reader(atlasText);
         var tuple : Array<Dynamic> = new Array<Dynamic>();
-        spine.as3hx.Compat.setArrayLength(tuple, 4);
+        spine.compat.Compat.setArrayLength(tuple, 4);
         var page : AtlasPage = null;
         while (true)
         {
@@ -101,8 +101,8 @@ class Atlas
                     if (reader.readTuple(tuple) == 2)
                     {
                         // size is only optional for an atlas packed with an old TexturePacker.
-                        page.width = spine.as3hx.Compat.parseInt(tuple[0]);
-                        page.height = spine.as3hx.Compat.parseInt(tuple[1]);
+                        page.width = spine.compat.Compat.parseInt(tuple[0]);
+                        page.height = spine.compat.Compat.parseInt(tuple[1]);
                         reader.readTuple(tuple);
                     }
                     page.format = tuple[0];
@@ -146,12 +146,12 @@ class Atlas
                     region.rotate = reader.readValue() == "true";
 
                     reader.readTuple(tuple);
-                    var x : Int = spine.as3hx.Compat.parseInt(tuple[0]);
-                    var y : Int = spine.as3hx.Compat.parseInt(tuple[1]);
+                    var x : Int = spine.compat.Compat.parseInt(tuple[0]);
+                    var y : Int = spine.compat.Compat.parseInt(tuple[1]);
 
                     reader.readTuple(tuple);
-                    var width : Int = spine.as3hx.Compat.parseInt(tuple[0]);
-                    var height : Int = spine.as3hx.Compat.parseInt(tuple[1]);
+                    var width : Int = spine.compat.Compat.parseInt(tuple[0]);
+                    var height : Int = spine.compat.Compat.parseInt(tuple[1]);
 
                     region.u = x / page.width;
                     region.v = y / page.height;
@@ -178,20 +178,20 @@ class Atlas
                         if (reader.readTuple(tuple) == 4)
                         {
                             // pad is optional, but only present with splits
-                            region.pads = [spine.as3hx.Compat.parseInt(tuple[0]), spine.as3hx.Compat.parseInt(tuple[1]), spine.as3hx.Compat.parseInt(tuple[2]), spine.as3hx.Compat.parseInt(tuple[3])];
+                            region.pads = [spine.compat.Compat.parseInt(tuple[0]), spine.compat.Compat.parseInt(tuple[1]), spine.compat.Compat.parseInt(tuple[2]), spine.compat.Compat.parseInt(tuple[3])];
 
                             reader.readTuple(tuple);
                         }
                     }
 
-                    region.originalWidth = spine.as3hx.Compat.parseInt(tuple[0]);
-                    region.originalHeight = spine.as3hx.Compat.parseInt(tuple[1]);
+                    region.originalWidth = spine.compat.Compat.parseInt(tuple[0]);
+                    region.originalHeight = spine.compat.Compat.parseInt(tuple[1]);
 
                     reader.readTuple(tuple);
-                    region.offsetX = spine.as3hx.Compat.parseInt(tuple[0]);
-                    region.offsetY = spine.as3hx.Compat.parseInt(tuple[1]);
+                    region.offsetX = spine.compat.Compat.parseInt(tuple[0]);
+                    region.offsetY = spine.compat.Compat.parseInt(tuple[1]);
 
-                    region.index = spine.as3hx.Compat.parseInt(reader.readValue());
+                    region.index = spine.compat.Compat.parseInt(reader.readValue());
 
                     textureLoader.loadRegion(region);
                     regions[regions.length] = region;
@@ -244,7 +244,7 @@ class Reader
 
     public function trim(value : String) : String
     {
-        return new spine.as3hx.Compat.Regex('^\\s+|\\s+$', "gs").replace(value, "");
+        return new spine.compat.Compat.Regex('^\\s+|\\s+$', "gs").replace(value, "");
     }
 
     public function readLine() : String
@@ -277,7 +277,7 @@ class Reader
             throw new Error("Invalid line: " + line);
         }
         var i : Int = 0;
-        var lastMatch : Int = spine.as3hx.Compat.parseInt(colon + 1);
+        var lastMatch : Int = spine.compat.Compat.parseInt(colon + 1);
                 while (i < 3)
         {
             var comma : Int = line.indexOf(",", lastMatch);
@@ -286,10 +286,10 @@ class Reader
                 break;
             }
             tuple[i] = trim(line.substr(lastMatch, comma - lastMatch));
-            lastMatch = spine.as3hx.Compat.parseInt(comma + 1);
+            lastMatch = spine.compat.Compat.parseInt(comma + 1);
             i++;
         }
         tuple[i] = trim(line.substring(lastMatch));
-        return spine.as3hx.Compat.parseInt(i + 1);
+        return spine.compat.Compat.parseInt(i + 1);
     }
 }

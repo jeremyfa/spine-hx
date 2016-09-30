@@ -31,7 +31,7 @@
 
 package spine.animation;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 import spine.Event;
 import spine.Skeleton;
 
@@ -104,7 +104,7 @@ class AnimationState
                 continue;
             }
 
-            spine.as3hx.Compat.setArrayLength(_events, 0);
+            spine.compat.Compat.setArrayLength(_events, 0);
 
             var time : Float = current.time;
             var lastTime : Float = current.lastTime;
@@ -157,7 +157,7 @@ class AnimationState
             // Check if completed the animation or a loop iteration.
             if ((loop) ? (lastTime % endTime > time % endTime) : (lastTime < endTime && time >= endTime))
             {
-                var count : Int = spine.as3hx.Compat.parseInt(time / endTime);
+                var count : Int = spine.compat.Compat.parseInt(time / endTime);
                 if (current.onComplete != null)
                 {
                     current.onComplete(i, count);
@@ -178,7 +178,7 @@ class AnimationState
             clearTrack(i);
             i++;
         }
-        spine.as3hx.Compat.setArrayLength(_tracks, 0);
+        spine.compat.Compat.setArrayLength(_tracks, 0);
     }
 
     public function clearTrack(trackIndex : Int) : Void

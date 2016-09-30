@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -31,8 +31,8 @@
 
 package spine.attachments;
 
-import flash.errors.ArgumentError;
-import flash.errors.Error;
+import spine.compat.ArgumentError;
+import spine.compat.Error;
 import spine.Skin;
 import spine.atlas.Atlas;
 import spine.atlas.AtlasRegion;
@@ -40,7 +40,7 @@ import spine.atlas.AtlasRegion;
 class AtlasAttachmentLoader implements AttachmentLoader
 {
     private var atlas : Atlas;
-    
+
     public function new(atlas : Atlas)
     {
         if (atlas == null)
@@ -49,7 +49,7 @@ class AtlasAttachmentLoader implements AttachmentLoader
         }
         this.atlas = atlas;
     }
-    
+
     public function newRegionAttachment(skin : Skin, name : String, path : String) : RegionAttachment
     {
         var region : AtlasRegion = atlas.findRegion(path);
@@ -70,7 +70,7 @@ class AtlasAttachmentLoader implements AttachmentLoader
         attachment.regionOriginalHeight = region.originalHeight;
         return attachment;
     }
-    
+
     public function newMeshAttachment(skin : Skin, name : String, path : String) : MeshAttachment
     {
         var region : AtlasRegion = atlas.findRegion(path);
@@ -95,27 +95,25 @@ class AtlasAttachmentLoader implements AttachmentLoader
         attachment.regionOriginalHeight = region.originalHeight;
         return attachment;
     }
-    
+
     public function newBoundingBoxAttachment(skin : Skin, name : String) : BoundingBoxAttachment
     {
         return new BoundingBoxAttachment(name);
     }
-    
+
     public function newPathAttachment(skin : Skin, name : String) : PathAttachment
     {
         return new PathAttachment(name);
     }
-    
+
     public static function nextPOT(value : Int) : Int
     {
         value--;
-        value = value | spine.as3hx.Compat.parseInt(value >> 1);
-        value = value | spine.as3hx.Compat.parseInt(value >> 2);
-        value = value | spine.as3hx.Compat.parseInt(value >> 4);
-        value = value | spine.as3hx.Compat.parseInt(value >> 8);
-        value = value | spine.as3hx.Compat.parseInt(value >> 16);
-        return spine.as3hx.Compat.parseInt(value + 1);
+        value = value | spine.compat.Compat.parseInt(value >> 1);
+        value = value | spine.compat.Compat.parseInt(value >> 2);
+        value = value | spine.compat.Compat.parseInt(value >> 4);
+        value = value | spine.compat.Compat.parseInt(value >> 8);
+        value = value | spine.compat.Compat.parseInt(value >> 16);
+        return spine.compat.Compat.parseInt(value + 1);
     }
 }
-
-

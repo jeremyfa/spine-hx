@@ -31,7 +31,7 @@
 
 package spine.animation;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 import spine.Event;
 import spine.Skeleton;
 
@@ -132,7 +132,7 @@ class Animation
     public static function binarySearch(values : Array<Float>, target : Float, step : Int) : Int
     {
         var low : Int = 0;
-        var high : Int = spine.as3hx.Compat.parseInt(values.length / step - 2);
+        var high : Int = spine.compat.Compat.parseInt(values.length / step - 2);
         if (high == 0)
         {
             return step;
@@ -140,9 +140,9 @@ class Animation
         var current : Int = high >>> 1;
         while (true)
         {
-            if (values[spine.as3hx.Compat.parseInt((current + 1) * step)] <= target)
+            if (values[spine.compat.Compat.parseInt((current + 1) * step)] <= target)
             {
-                low = spine.as3hx.Compat.parseInt(current + 1);
+                low = spine.compat.Compat.parseInt(current + 1);
             }
             else
             {
@@ -150,9 +150,9 @@ class Animation
             }
             if (low == high)
             {
-                return spine.as3hx.Compat.parseInt((low + 1) * step);
+                return spine.compat.Compat.parseInt((low + 1) * step);
             }
-            current = spine.as3hx.Compat.parseInt(low + high) >>> 1;
+            current = spine.compat.Compat.parseInt(low + high) >>> 1;
         }
         return 0;
     }
@@ -161,7 +161,7 @@ class Animation
     public static function binarySearch1(values : Array<Float>, target : Float) : Int
     {
         var low : Int = 0;
-        var high : Int = spine.as3hx.Compat.parseInt(values.length - 2);
+        var high : Int = spine.compat.Compat.parseInt(values.length - 2);
         if (high == 0)
         {
             return 1;
@@ -169,9 +169,9 @@ class Animation
         var current : Int = high >>> 1;
         while (true)
         {
-            if (values[spine.as3hx.Compat.parseInt(current + 1)] <= target)
+            if (values[spine.compat.Compat.parseInt(current + 1)] <= target)
             {
-                low = spine.as3hx.Compat.parseInt(current + 1);
+                low = spine.compat.Compat.parseInt(current + 1);
             }
             else
             {
@@ -179,9 +179,9 @@ class Animation
             }
             if (low == high)
             {
-                return spine.as3hx.Compat.parseInt(low + 1);
+                return spine.compat.Compat.parseInt(low + 1);
             }
-            current = spine.as3hx.Compat.parseInt(low + high) >>> 1;
+            current = spine.compat.Compat.parseInt(low + high) >>> 1;
         }
         return 0;
     }
@@ -189,7 +189,7 @@ class Animation
     public static function linearSearch(values : Array<Float>, target : Float, step : Int) : Int
     {
         var i : Int = 0;
-        var last : Int = spine.as3hx.Compat.parseInt(values.length - step);
+        var last : Int = spine.compat.Compat.parseInt(values.length - step);
         while (i <= last)
         {
             if (values[i] > target)

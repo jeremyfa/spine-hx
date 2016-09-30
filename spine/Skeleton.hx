@@ -31,8 +31,8 @@
 
 package spine;
 
-import flash.errors.ArgumentError;
-import flash.utils.Dictionary;
+import spine.compat.ArgumentError;
+import spine.compat.Dictionary;
 import spine.attachments.PathAttachment;
 import spine.attachments.Attachment;
 
@@ -132,7 +132,7 @@ class Skeleton
     public function updateCache() : Void
     {
         var updateCache : Array<Updatable> = this._updateCache;
-        spine.as3hx.Compat.setArrayLength(updateCache, 0);
+        spine.compat.Compat.setArrayLength(updateCache, 0);
 
         var bones : Array<Bone> = this.bones;
         var i : Int = 0;
@@ -145,7 +145,7 @@ class Skeleton
 
         // IK first, lowest hierarchy depth first.
         var ikConstraints : Array<IkConstraint> = this.ikConstraintsSorted;
-        spine.as3hx.Compat.setArrayLength(ikConstraints, 0);
+        spine.compat.Compat.setArrayLength(ikConstraints, 0);
         for (c in this.ikConstraints)
         {
             ikConstraints.push(c);
@@ -169,7 +169,7 @@ class Skeleton
         {
             var ik = ikConstraints[i];
             level = ik.level;
-            ii = spine.as3hx.Compat.parseInt(i - 1);
+            ii = spine.compat.Compat.parseInt(i - 1);
             while (ii >= 0)
             {
                 var other : IkConstraint = ikConstraints[ii];

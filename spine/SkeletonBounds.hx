@@ -53,12 +53,12 @@ class SkeletonBounds
         var slots : Array<Slot> = skeleton.slots;
         var slotCount : Int = slots.length;
         
-        spine.as3hx.Compat.setArrayLength(boundingBoxes, 0);
+        spine.compat.Compat.setArrayLength(boundingBoxes, 0);
         for (polygon in polygons)
         {
             polygonPool[polygonPool.length] = polygon;
         }
-        spine.as3hx.Compat.setArrayLength(polygons, 0);
+        spine.compat.Compat.setArrayLength(polygons, 0);
         
         for (i in 0...slotCount)
         {
@@ -94,10 +94,10 @@ class SkeletonBounds
     
     private function aabbCompute() : Void
     {
-        var minX : Float = spine.as3hx.Compat.FLOAT_MAX;
-        var minY : Float = spine.as3hx.Compat.FLOAT_MAX;
-        var maxX : Float = -spine.as3hx.Compat.FLOAT_MAX;
-        var maxY : Float = -spine.as3hx.Compat.FLOAT_MAX;
+        var minX : Float = spine.compat.Compat.FLOAT_MAX;
+        var minY : Float = spine.compat.Compat.FLOAT_MAX;
+        var maxX : Float = -spine.compat.Compat.FLOAT_MAX;
+        var maxY : Float = -spine.compat.Compat.FLOAT_MAX;
         var i : Int = 0;
         var n : Int = polygons.length;
         while (i < n)

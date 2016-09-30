@@ -31,7 +31,7 @@
 
 package spine.flash;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import spine.atlas.AtlasPage;

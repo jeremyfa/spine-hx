@@ -31,7 +31,7 @@
 
 package spine;
 
-import flash.errors.ArgumentError;
+import spine.compat.ArgumentError;
 import spine.attachments.PathAttachment;
 
 class PathConstraint implements Updatable
@@ -115,7 +115,7 @@ class PathConstraint implements Updatable
         var boneCount : Int = this._bones.length;
         var spacesCount : Int = (tangents) ? boneCount : boneCount + 1;
         var bones : Array<Bone> = this._bones;
-        spine.as3hx.Compat.setArrayLength(this._spaces, spacesCount);
+        spine.compat.Compat.setArrayLength(this._spaces, spacesCount);
         var spaces : Array<Float> = this._spaces;
         var lengths : Array<Float> = null;
         var spacing : Float = this.spacing;
@@ -123,11 +123,11 @@ class PathConstraint implements Updatable
         {
             if (scale)
             {
-                spine.as3hx.Compat.setArrayLength(this._lengths, boneCount);
+                spine.compat.Compat.setArrayLength(this._lengths, boneCount);
                 lengths = this._lengths;
             }
             var i : Int = 0;
-            var n : Int = spine.as3hx.Compat.parseInt(spacesCount - 1);
+            var n : Int = spine.compat.Compat.parseInt(spacesCount - 1);
             while (i < n)
             {
                 var bone : Bone = bones[i];
@@ -247,12 +247,12 @@ class PathConstraint implements Updatable
         var target : Slot = this.target;
         var position : Float = this.position;
         var spaces : Array<Float> = this._spaces;
-        spine.as3hx.Compat.setArrayLength(this._positions, spacesCount * 3 + 2);
+        spine.compat.Compat.setArrayLength(this._positions, spacesCount * 3 + 2);
         var out : Array<Float> = this._positions;
         var world : Array<Float>;
         var closed : Bool = path.closed;
         var verticesLength : Int = path.worldVerticesLength;
-        var curveCount : Int = spine.as3hx.Compat.parseInt(verticesLength / 6);
+        var curveCount : Int = spine.compat.Compat.parseInt(verticesLength / 6);
         var prevCurve : Int = NONE;
 
         if (!path.constantSpeed)
@@ -271,7 +271,7 @@ class PathConstraint implements Updatable
                     spaces[i] *= pathLength;
                 }
             }
-            spine.as3hx.Compat.setArrayLength(this._world, 8);
+            spine.compat.Compat.setArrayLength(this._world, 8);
             world = this._world;
             var o : Int;
             var curve : Int;
@@ -369,7 +369,7 @@ class PathConstraint implements Updatable
         if (closed)
         {
             verticesLength += 2;
-            spine.as3hx.Compat.setArrayLength(this._world, verticesLength);
+            spine.compat.Compat.setArrayLength(this._world, verticesLength);
             world = this._world;
             path.computeWorldVertices2(target, 2, verticesLength - 4, world, 0);
             path.computeWorldVertices2(target, 0, 2, world, verticesLength - 4);
@@ -380,13 +380,13 @@ class PathConstraint implements Updatable
         {
             curveCount--;
             verticesLength -= 4;
-            spine.as3hx.Compat.setArrayLength(this._world, verticesLength);
+            spine.compat.Compat.setArrayLength(this._world, verticesLength);
             world = this._world;
             path.computeWorldVertices2(target, 2, verticesLength, world, 0);
         }
 
         // Curve lengths.
-        spine.as3hx.Compat.setArrayLength(this._curves, curveCount);
+        spine.compat.Compat.setArrayLength(this._curves, curveCount);
         var curves : Array<Float> = this._curves;
         var pathLength:Float = 0;
         var x1 : Float = world[0];
@@ -521,7 +521,7 @@ class PathConstraint implements Updatable
             if (curve != prevCurve)
             {
                 prevCurve = curve;
-                var ii : Int = spine.as3hx.Compat.parseInt(curve * 6);
+                var ii : Int = spine.compat.Compat.parseInt(curve * 6);
                 x1 = world[ii];
                 y1 = world[ii + 1];
                 cx1 = world[ii + 2];
