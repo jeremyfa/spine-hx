@@ -966,7 +966,7 @@ class SkeletonJson
         {
             if (Std.is(curve, Array))
             {
-                timeline.setCurve(frameIndex, Reflect.field(curve, Std.string(0)), Reflect.field(curve, Std.string(1)), Reflect.field(curve, Std.string(2)), Reflect.field(curve, Std.string(3)));
+                timeline.setCurve(frameIndex, curve[0], curve[1], curve[2], curve[3]);
             }
         }
     }

@@ -69,6 +69,7 @@ class RegionAttachment extends Attachment
     public var uvs : Array<Float> = new Array<Float>();
 
     public var wrapperSprite : Dynamic = null;
+    public var wrapperStrip : Dynamic = null;
 
     public function new(name : String)
     {

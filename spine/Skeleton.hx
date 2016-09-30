@@ -152,6 +152,7 @@ class Skeleton
         }
         var ikCount : Int = ikConstraints.length;
         var level : Int = 0;
+        n = ikCount;
         for (i in 0...n)
         {
             var ik : IkConstraint = ikConstraints[i];
@@ -181,6 +182,7 @@ class Skeleton
             }
             ikConstraints[ii + 1] = ik;
         }
+        n = ikConstraints.length;
         for (i in 0...n)
         {
             var ikConstraint : IkConstraint = ikConstraints[i];
@@ -198,6 +200,7 @@ class Skeleton
         }
 
         var pathConstraints : Array<PathConstraint> = this.pathConstraints;
+        n = pathConstraints.length;
         for (i in 0...n)
         {
             var pathConstraint : PathConstraint = pathConstraints[i];
@@ -246,6 +249,7 @@ class Skeleton
         }
 
         var transformConstraints : Array<TransformConstraint> = this.transformConstraints;
+        n = transformConstraints.length;
         for (i in 0...n)
         {
             var transformConstraint : TransformConstraint = transformConstraints[i];
@@ -271,6 +275,7 @@ class Skeleton
             }
         }
 
+        n = bones.length;
         for (i in 0...n)
         {
             sortBone(bones[i]);

@@ -118,7 +118,7 @@ w = offset;
         if (deformArray.length == 0)
         {
             w = offset;
-b = spine.as3hx.Compat.parseInt(skip * 3);
+            b = spine.as3hx.Compat.parseInt(skip * 3);
             while (w < count)
             {
                 wx = x;wy = y;
@@ -126,7 +126,7 @@ b = spine.as3hx.Compat.parseInt(skip * 3);
                 n += v;
                                 while (v < n)
                 {
-                    bone = Reflect.field(skeletonBones, Std.string(bones[v]));
+                    bone = skeletonBones[bones[v]];
                     vx = vertices[b];vy = vertices[b + 1];var weight : Float = vertices[b + 2];
                     wx += (vx * bone.a + vy * bone.b + bone.worldX) * weight;
                     wy += (vx * bone.c + vy * bone.d + bone.worldY) * weight;
@@ -142,16 +142,16 @@ b = spine.as3hx.Compat.parseInt(skip * 3);
         {
             deform = deformArray;
             w = offset;
-b = spine.as3hx.Compat.parseInt(skip * 3);
-f = skip << 1;
+            b = spine.as3hx.Compat.parseInt(skip * 3);
+            f = skip << 1;
             while (w < count)
             {
                 wx = x;wy = y;
                 n = bones[v++];
                 n += v;
-                                while (v < n)
+                while (v < n)
                 {
-                    bone = Reflect.field(skeletonBones, Std.string(bones[v]));
+                    bone = skeletonBones[bones[v]];
                     vx = vertices[b] + deform[f];vy = vertices[b + 1] + deform[f + 1];
                     var weight = vertices[b + 2];
                     wx += (vx * bone.a + vy * bone.b + bone.worldX) * weight;

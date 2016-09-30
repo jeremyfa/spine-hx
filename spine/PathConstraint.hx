@@ -168,7 +168,7 @@ class PathConstraint implements Updatable
             var bone = bones[i];
             bone._worldX += (boneX - skeletonX - bone.worldX) * translateMix;
             bone._worldY += (boneY - skeletonY - bone.worldY) * translateMix;
-            var x = Reflect.field(positions, Std.string(p));
+            var x = positions[p];
             var y = positions[p + 1];var dx : Float = x - boneX;
             var dy : Float = y - boneY;
             if (scale)

@@ -68,7 +68,7 @@ class Skin
         {
             attachments[slotIndex] = new Dictionary<String,Attachment>();
         }
-        Reflect.setField(attachments[slotIndex], name, attachment);
+        attachments[slotIndex][name] = attachment;
     }
 
     /** @return May be null. */
