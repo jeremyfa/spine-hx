@@ -39,7 +39,8 @@ class PathConstraintPositionTimeline extends CurveTimeline
 {
     public static inline var ENTRIES : Int = 2;
     @:allow(spine.animation)
-    private static var PREV_TIME : Int = -2;@:allow(spine.animation)
+    private static var PREV_TIME : Int = -2;
+    @:allow(spine.animation)
     private static var PREV_VALUE : Int = -1;
     @:allow(spine.animation)
     private static inline var VALUE : Int = 1;
@@ -52,6 +53,7 @@ class PathConstraintPositionTimeline extends CurveTimeline
     {
         super(frameCount);
         frames = new Array<Float>();
+        for (i in 0...frameCount * ENTRIES) frames.push(0);
     }
 
     /** Sets the time and value of the specified keyframe. */

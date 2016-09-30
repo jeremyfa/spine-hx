@@ -39,15 +39,22 @@ class ColorTimeline extends CurveTimeline
 {
     public static inline var ENTRIES : Int = 5;
     @:allow(spine.animation)
-    private static var PREV_TIME : Int = -5;@:allow(spine.animation)
-    private static var PREV_R : Int = -4;@:allow(spine.animation)
-    private static var PREV_G : Int = -3;@:allow(spine.animation)
-    private static var PREV_B : Int = -2;@:allow(spine.animation)
+    private static var PREV_TIME : Int = -5;
+    @:allow(spine.animation)
+    private static var PREV_R : Int = -4;
+    @:allow(spine.animation)
+    private static var PREV_G : Int = -3;
+    @:allow(spine.animation)
+    private static var PREV_B : Int = -2;
+    @:allow(spine.animation)
     private static var PREV_A : Int = -1;
     @:allow(spine.animation)
-    private static inline var R : Int = 1;@:allow(spine.animation)
-    private static inline var G : Int = 2;@:allow(spine.animation)
-    private static inline var B : Int = 3;@:allow(spine.animation)
+    private static inline var R : Int = 1;
+    @:allow(spine.animation)
+    private static inline var G : Int = 2;
+    @:allow(spine.animation)
+    private static inline var B : Int = 3;
+    @:allow(spine.animation)
     private static inline var A : Int = 4;
 
     public var slotIndex : Int;
@@ -57,6 +64,7 @@ class ColorTimeline extends CurveTimeline
     {
         super(frameCount);
         frames = new Array<Float>();
+        for (i in 0...frameCount * ENTRIES) frames.push(0);
     }
 
     /** Sets the time and value of the specified keyframe. */
@@ -99,7 +107,7 @@ class ColorTimeline extends CurveTimeline
             b = frames[spine.as3hx.Compat.parseInt(frame + PREV_B)];
             a = frames[spine.as3hx.Compat.parseInt(frame + PREV_A)];
             var frameTime : Float = frames[frame];
-            var percent : Float = getCurvePercent(cast frame / ENTRIES - 1, 
+            var percent : Float = getCurvePercent(cast frame / ENTRIES - 1,
                     1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime)
             );
 

@@ -48,6 +48,7 @@ class RotateTimeline extends CurveTimeline
     {
         super(frameCount);
         frames = new Array<Float>();
+        for (i in 0...frameCount * ENTRIES) frames.push(0);
     }
 
     /** Sets the time and angle of the specified keyframe. */

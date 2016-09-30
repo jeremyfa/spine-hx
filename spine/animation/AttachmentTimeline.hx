@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -39,35 +39,39 @@ class AttachmentTimeline implements Timeline
     public var frameCount(get, never) : Int;
 
     public var slotIndex : Int;
-    public var frames : Array<Float>;  // time, ...  
+    public var frames : Array<Float>;  // time, ...
     public var attachmentNames : Array<String>;
-    
+
     public function new(frameCount : Int)
     {
         frames = new Array<Float>();
         attachmentNames = new Array<String>();
+        for (i in 0...frameCount) {
+            frames.push(0);
+            attachmentNames.push(null);
+        }
     }
-    
+
     private function get_frameCount() : Int
     {
         return frames.length;
     }
-    
+
     /** Sets the time and value of the specified keyframe. */
     public function setFrame(frameIndex : Int, time : Float, attachmentName : String) : Void
     {
         frames[frameIndex] = time;
         attachmentNames[frameIndex] = attachmentName;
     }
-    
+
     public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
         var frames : Array<Float> = this.frames;
         if (time < frames[0])
         {
             return;
-        }  // Time is before first frame.  
-        
+        }  // Time is before first frame.
+
         var frameIndex : Int;
         if (time >= frames[frames.length - 1])
         {
@@ -78,10 +82,8 @@ class AttachmentTimeline implements Timeline
         {
             frameIndex = spine.as3hx.Compat.parseInt(Animation.binarySearch(frames, time, 1) - 1);
         }
-        
+
         var attachmentName : String = attachmentNames[frameIndex];
         skeleton.slots[slotIndex].attachment = (attachmentName == null) ? null : skeleton.getAttachmentForSlotIndex(slotIndex, attachmentName);
     }
 }
-
-

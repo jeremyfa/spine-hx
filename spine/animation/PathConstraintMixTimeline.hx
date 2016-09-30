@@ -39,11 +39,14 @@ class PathConstraintMixTimeline extends CurveTimeline
 {
     public static inline var ENTRIES : Int = 3;
     @:allow(spine.animation)
-    private static var PREV_TIME : Int = -3;@:allow(spine.animation)
-    private static var PREV_ROTATE : Int = -2;@:allow(spine.animation)
+    private static var PREV_TIME : Int = -3;
+    @:allow(spine.animation)
+    private static var PREV_ROTATE : Int = -2;
+    @:allow(spine.animation)
     private static var PREV_TRANSLATE : Int = -1;
     @:allow(spine.animation)
-    private static inline var ROTATE : Int = 1;@:allow(spine.animation)
+    private static inline var ROTATE : Int = 1;
+    @:allow(spine.animation)
     private static inline var TRANSLATE : Int = 2;
 
     public var pathConstraintIndex : Int;
@@ -54,6 +57,7 @@ class PathConstraintMixTimeline extends CurveTimeline
     {
         super(frameCount);
         frames = new Array<Float>();
+        for (i in 0...frameCount * ENTRIES) frames.push(0);
     }
 
     /** Sets the time and mixes of the specified keyframe. */

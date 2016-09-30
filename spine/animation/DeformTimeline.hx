@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -42,21 +42,25 @@ class DeformTimeline extends CurveTimeline
     public var frames : Array<Float>;
     public var frameVertices : Array<Array<Float>>;
     public var attachment : VertexAttachment;
-    
+
     public function new(frameCount : Int)
     {
         super(frameCount);
         frames = new Array<Float>();
         frameVertices = new Array<Array<Float>>();
+        for (i in 0...frameCount) {
+            frames.push(0);
+            frameVertices.push(null);
+        }
     }
-    
+
     /** Sets the time and value of the specified keyframe. */
     public function setFrame(frameIndex : Int, time : Float, vertices : Array<Float>) : Void
     {
         frames[frameIndex] = time;
         frameVertices[frameIndex] = vertices;
     }
-    
+
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
         var slot : Slot = skeleton.slots[slotIndex];
@@ -65,23 +69,23 @@ class DeformTimeline extends CurveTimeline
         {
             return;
         }
-        
+
         var frames : Array<Float> = this.frames;
         if (time < frames[0])
         {
             return;
-        }  // Time is before first frame.  
-        
+        }  // Time is before first frame.
+
         var frameVertices : Array<Array<Float>> = this.frameVertices;
         var vertexCount : Int = frameVertices[0].length;
-        
+
         var vertices : Array<Float> = slot.attachmentVertices;
         if (vertices.length != vertexCount)
         {
             alpha = 1;
-        }  // Don't mix from uninitialized slot vertices.  
+        }  // Don't mix from uninitialized slot vertices.
         spine.as3hx.Compat.setArrayLength(vertices, vertexCount);
-        
+
         var i : Int;
         if (time >= frames[frames.length - 1])
         {
@@ -103,14 +107,14 @@ class DeformTimeline extends CurveTimeline
             }
             return;
         }
-        
+
         // Interpolate between the previous frame and the current frame.
         var frame : Int = Animation.binarySearch1(frames, time);
         var prevVertices : Array<Float> = frameVertices[spine.as3hx.Compat.parseInt(frame - 1)];
         var nextVertices : Array<Float> = frameVertices[frame];
         var frameTime : Float = frames[frame];
         var percent : Float = getCurvePercent(frame - 1, 1 - (time - frameTime) / (frames[frame - 1] - frameTime));
-        
+
         var prev : Float;
         if (alpha < 1)
         {
@@ -130,5 +134,3 @@ class DeformTimeline extends CurveTimeline
         }
     }
 }
-
-

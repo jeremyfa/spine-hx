@@ -53,6 +53,7 @@ class IkConstraintTimeline extends CurveTimeline
     {
         super(frameCount);
         frames = new Array<Float>();
+        for (i in 0...frameCount * ENTRIES) frames.push(0);
     }
 
     /** Sets the time, mix and bend direction of the specified keyframe. */

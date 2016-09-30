@@ -1,10 +1,10 @@
 /******************************************************************************
  * Spine Runtimes Software License
  * Version 2.3
- * 
+ *
  * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
- * 
+ *
  * You are granted a perpetual, non-exclusive, non-sublicensable and
  * non-transferable license to use, install, execute and perform the Spine
  * Runtimes Software (the "Software") and derivative works solely for personal
@@ -16,7 +16,7 @@
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -44,33 +44,34 @@ class CurveTimeline implements Timeline
     private static inline var STEPPED : Float = 1;
     private static inline var BEZIER : Float = 2;
     private static var BEZIER_SIZE : Int = 10 * 2 - 1;
-    
-    private var curves : Array<Float>;  // type, x, y, ...  
-    
+
+    private var curves : Array<Float>;  // type, x, y, ...
+
     public function new(frameCount : Int)
     {
         curves = new Array<Float>();
+        for (i in 0...(frameCount - 1) * BEZIER_SIZE) curves.push(0);
     }
-    
+
     public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
     {
     }
-    
+
     private function get_frameCount() : Int
     {
         return spine.as3hx.Compat.parseInt(curves.length / BEZIER_SIZE + 1);
     }
-    
+
     public function setLinear(frameIndex : Int) : Void
     {
         curves[spine.as3hx.Compat.parseInt(frameIndex * BEZIER_SIZE)] = LINEAR;
     }
-    
+
     public function setStepped(frameIndex : Int) : Void
     {
         curves[spine.as3hx.Compat.parseInt(frameIndex * BEZIER_SIZE)] = STEPPED;
     }
-    
+
     /** Sets the control handle positions for an interpolation bezier curve used to transition from this keyframe to the next.
 	 * cx1 and cx2 are from 0 to 1, representing the percent of time between the two keyframes. cy1 and cy2 are the percent of
 	 * the difference between the keyframe's values. */
@@ -84,11 +85,11 @@ class CurveTimeline implements Timeline
         var ddfy : Float = tmpy * 2 + dddfy;
         var dfx : Float = cx1 * 0.3 + tmpx + dddfx * 0.16666667;
         var dfy : Float = cy1 * 0.3 + tmpy + dddfy * 0.16666667;
-        
+
         var i : Int = spine.as3hx.Compat.parseInt(frameIndex * BEZIER_SIZE);
         var curves : Array<Float> = this.curves;
         curves[i++] = BEZIER;
-        
+
         var x : Float = dfx;
         var y : Float = dfy;
         var n : Int = spine.as3hx.Compat.parseInt(i + BEZIER_SIZE - 1);
@@ -105,7 +106,7 @@ class CurveTimeline implements Timeline
             i += 2;
         }
     }
-    
+
     public function getCurvePercent(frameIndex : Int, percent : Float) : Float
     {
         percent = MathUtils.clamp(percent, 0, 1);
@@ -149,5 +150,3 @@ class CurveTimeline implements Timeline
         return y + (1 - y) * (percent - x) / (1 - x);
     }
 }
-
-
