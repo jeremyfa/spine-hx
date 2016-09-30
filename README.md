@@ -2,7 +2,7 @@
 
 Spine runtime for Haxe ported from official AS3 runtime.
 
-This repository was created because the other most recent spine runtime for haxe ([spinehaxe](https://github.com/bendmorris/spinehaxe)]) doesn't seem to be updated anymore and is missing various new Spine features.
+This repository was created because the other most recent spine runtime for haxe ([spinehaxe](https://github.com/bendmorris/spinehaxe)) doesn't seem to be updated anymore and is missing various new Spine features.
 
 In order to be up to date and make it easy to add new updates, the code is staying as close as possible to the official ActionScript 3 runtime.
 
