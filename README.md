@@ -29,4 +29,4 @@ spine-hx does not yet support loading the binary format.
 
 In order to stay close to the ActionScript 3 implementation, a `spine.compat` package is included in the library. The library should work fine with OpenFl or plain js/flash target (if not, please file an issue).
 
-The compatibility layer was made possible by including some (edited) files from [OpenFl](https://github.com/openfl/openfl) and [as3hx](https://github.com/HaxeFoundation/as3hx) projects.
+The compatibility layer was made possible by including some (edited) files from [OpenFl](https://github.com/openfl/openfl) and [as3hx](https://github.com/HaxeFoundation/as3hx) projects. Thanks for their work!
