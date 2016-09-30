@@ -119,57 +119,61 @@ class SkeletonJson
         // Bones.
         var boneData:BoneData;
         var bonesField:Array<Dynamic> = Reflect.field(root, "bones");
-        for (boneMap in bonesField)
-        {
-            var parent : BoneData = null;
-            var parentName : String = Reflect.field(boneMap, "parent");
-            if (parentName != null)
+        if (bonesField != null) {
+            for (boneMap in bonesField)
             {
-                parent = skeletonData.findBone(parentName);
-                if (parent == null)
+                var parent : BoneData = null;
+                var parentName : String = Reflect.field(boneMap, "parent");
+                if (parentName != null)
                 {
-                    throw new Error("Parent bone not found: " + parentName);
+                    parent = skeletonData.findBone(parentName);
+                    if (parent == null)
+                    {
+                        throw new Error("Parent bone not found: " + parentName);
+                    }
                 }
+                boneData = new BoneData(skeletonData.bones.length, Reflect.field(boneMap, "name"), parent);
+                boneData.length = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "length") != null ? Reflect.field(boneMap, "length") : 0) * scale;
+                boneData.x = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "x") != null ? Reflect.field(boneMap, "x") : 0) * scale;
+                boneData.y = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "y") != null ? Reflect.field(boneMap, "y") : 0) * scale;
+                boneData.rotation = (Reflect.field(boneMap, "rotation") != null ? Reflect.field(boneMap, "rotation") : 0);
+                boneData.scaleX = (Reflect.field(boneMap, "scaleX") != null) ? Reflect.field(boneMap, "scaleX") : 1;
+                boneData.scaleX = (Reflect.field(boneMap, "scaleY") != null) ? Reflect.field(boneMap, "scaleY") : 1;
+                boneData.shearX = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearX") != null ? Reflect.field(boneMap, "shearX") : 0);
+                boneData.shearY = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearY") != null ? Reflect.field(boneMap, "shearY") : 0);
+                boneData.inheritRotation = Reflect.field(boneMap, "inheritRotation") != null ? Reflect.field(boneMap, "inheritRotation") : true;
+                boneData.inheritScale = Reflect.field(boneMap, "inheritScale") != null ? Reflect.field(boneMap, "inheritScale") : true;
+                skeletonData.bones.push(boneData);
             }
-            boneData = new BoneData(skeletonData.bones.length, Reflect.field(boneMap, "name"), parent);
-            boneData.length = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "length") != null ? Reflect.field(boneMap, "length") : 0) * scale;
-            boneData.x = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "x") != null ? Reflect.field(boneMap, "x") : 0) * scale;
-            boneData.y = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "y") != null ? Reflect.field(boneMap, "y") : 0) * scale;
-            boneData.rotation = (Reflect.field(boneMap, "rotation") != null ? Reflect.field(boneMap, "rotation") : 0);
-            boneData.scaleX = (Reflect.field(boneMap, "scaleX") != null) ? Reflect.field(boneMap, "scaleX") : 1;
-            boneData.scaleX = (Reflect.field(boneMap, "scaleY") != null) ? Reflect.field(boneMap, "scaleY") : 1;
-            boneData.shearX = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearX") != null ? Reflect.field(boneMap, "shearX") : 0);
-            boneData.shearY = spine.as3hx.Compat.parseFloat(Reflect.field(boneMap, "shearY") != null ? Reflect.field(boneMap, "shearY") : 0);
-            boneData.inheritRotation = Reflect.field(boneMap, "inheritRotation") != null ? Reflect.field(boneMap, "inheritRotation") : true;
-            boneData.inheritScale = Reflect.field(boneMap, "inheritScale") != null ? Reflect.field(boneMap, "inheritScale") : true;
-            skeletonData.bones.push(boneData);
         }
 
         // Slots.
         var slotsField:Array<Dynamic> = Reflect.field(root, "slots");
-        for (slotMap in slotsField)
-        {
-            var slotName : String = Reflect.field(slotMap, "name");
-            var boneName : String = Reflect.field(slotMap, "bone");
-            boneData = skeletonData.findBone(boneName);
-            if (boneData == null)
+        if (slotsField != null) {
+            for (slotMap in slotsField)
             {
-                throw new Error("Slot bone not found: " + boneName);
-            }
-            var slotData : SlotData = new SlotData(skeletonData.slots.length, slotName, boneData);
+                var slotName : String = Reflect.field(slotMap, "name");
+                var boneName : String = Reflect.field(slotMap, "bone");
+                boneData = skeletonData.findBone(boneName);
+                if (boneData == null)
+                {
+                    throw new Error("Slot bone not found: " + boneName);
+                }
+                var slotData : SlotData = new SlotData(skeletonData.slots.length, slotName, boneData);
 
-            var color : String = Reflect.field(slotMap, "color");
-            if (color != null)
-            {
-                slotData.r = toColor(color, 0);
-                slotData.g = toColor(color, 1);
-                slotData.b = toColor(color, 2);
-                slotData.a = toColor(color, 3);
-            }
+                var color : String = Reflect.field(slotMap, "color");
+                if (color != null)
+                {
+                    slotData.r = toColor(color, 0);
+                    slotData.g = toColor(color, 1);
+                    slotData.b = toColor(color, 2);
+                    slotData.a = toColor(color, 3);
+                }
 
-            slotData.attachmentName = Reflect.field(slotMap, "attachment");
-            slotData.blendMode = Reflect.field(slotMap, "blend") != null ? Reflect.field(slotMap, "blend") : BlendMode.Normal;
-            skeletonData.slots.push(slotData);
+                slotData.attachmentName = Reflect.field(slotMap, "attachment");
+                slotData.blendMode = Reflect.field(slotMap, "blend") != null ? Reflect.field(slotMap, "blend") : BlendMode.Normal;
+                skeletonData.slots.push(slotData);
+            }
         }
 
         // IK constraints.
@@ -180,14 +184,16 @@ class SkeletonJson
                 var ikConstraintData : IkConstraintData = new IkConstraintData(Reflect.field(constraintMap, "name"));
 
                 var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
-                for (boneName in bonesField)
-                {
-                    var bone : BoneData = skeletonData.findBone(boneName);
-                    if (bone == null)
+                if (bonesField != null) {
+                    for (boneName in bonesField)
                     {
-                        throw new Error("IK constraint bone not found: " + boneName);
+                        var bone : BoneData = skeletonData.findBone(boneName);
+                        if (bone == null)
+                        {
+                            throw new Error("IK constraint bone not found: " + boneName);
+                        }
+                        ikConstraintData.bones.push(bone);
                     }
-                    ikConstraintData.bones.push(bone);
                 }
 
                 ikConstraintData.target = skeletonData.findBone(Reflect.field(constraintMap, "target"));
@@ -205,108 +211,116 @@ class SkeletonJson
 
         // Transform constraints.
         var transformField:Array<Dynamic> = Reflect.field(root, "transform");
-        for (constraintMap in transformField)
-        {
-            var transformConstraintData : TransformConstraintData = new TransformConstraintData(Reflect.field(constraintMap, "name"));
-
-            var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
-            for (boneName in bonesField)
+        if (transformField != null) {
+            for (constraintMap in transformField)
             {
-                var bone = skeletonData.findBone(boneName);
-                if (bone == null)
-                {
-                    throw new Error("Transform constraint bone not found: " + boneName);
+                var transformConstraintData : TransformConstraintData = new TransformConstraintData(Reflect.field(constraintMap, "name"));
+
+                var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
+                if (bonesField != null) {
+                    for (boneName in bonesField)
+                    {
+                        var bone = skeletonData.findBone(boneName);
+                        if (bone == null)
+                        {
+                            throw new Error("Transform constraint bone not found: " + boneName);
+                        }
+                        transformConstraintData.bones.push(bone);
+                    }
                 }
-                transformConstraintData.bones.push(bone);
+
+                transformConstraintData.target = skeletonData.findBone(Reflect.field(constraintMap, "target"));
+                if (transformConstraintData.target == null)
+                {
+                    throw new Error("Target bone not found: " + Reflect.field(constraintMap, "target"));
+                }
+
+                transformConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
+                transformConstraintData.offsetX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "x") != null ? Reflect.field(constraintMap, "x") : 0) * scale;
+                transformConstraintData.offsetY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "y") != null ? Reflect.field(constraintMap, "y") : 0) * scale;
+                transformConstraintData.offsetScaleX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleX") != null ? Reflect.field(constraintMap, "scaleX") : 0);
+                transformConstraintData.offsetScaleY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleY") != null ? Reflect.field(constraintMap, "scaleY") : 0);
+                transformConstraintData.offsetShearY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "shearY") != null ? Reflect.field(constraintMap, "shearY") : 0);
+
+                transformConstraintData.rotateMix = Reflect.field(constraintMap, "rotateMix") != null ? Reflect.field(constraintMap, "rotateMix") : 1;
+                transformConstraintData.translateMix = Reflect.field(constraintMap, "translateMix") != null ? Reflect.field(constraintMap, "translateMix") : 1;
+                transformConstraintData.scaleMix = Reflect.field(constraintMap, "scaleMix") != null ? Reflect.field(constraintMap, "scaleMix") : 1;
+                transformConstraintData.shearMix = Reflect.field(constraintMap, "shearMix") != null ? Reflect.field(constraintMap, "shearMix") : 1;
+
+                skeletonData.transformConstraints.push(transformConstraintData);
             }
-
-            transformConstraintData.target = skeletonData.findBone(Reflect.field(constraintMap, "target"));
-            if (transformConstraintData.target == null)
-            {
-                throw new Error("Target bone not found: " + Reflect.field(constraintMap, "target"));
-            }
-
-            transformConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
-            transformConstraintData.offsetX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "x") != null ? Reflect.field(constraintMap, "x") : 0) * scale;
-            transformConstraintData.offsetY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "y") != null ? Reflect.field(constraintMap, "y") : 0) * scale;
-            transformConstraintData.offsetScaleX = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleX") != null ? Reflect.field(constraintMap, "scaleX") : 0);
-            transformConstraintData.offsetScaleY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "scaleY") != null ? Reflect.field(constraintMap, "scaleY") : 0);
-            transformConstraintData.offsetShearY = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "shearY") != null ? Reflect.field(constraintMap, "shearY") : 0);
-
-            transformConstraintData.rotateMix = Reflect.field(constraintMap, "rotateMix") != null ? Reflect.field(constraintMap, "rotateMix") : 1;
-            transformConstraintData.translateMix = Reflect.field(constraintMap, "translateMix") != null ? Reflect.field(constraintMap, "translateMix") : 1;
-            transformConstraintData.scaleMix = Reflect.field(constraintMap, "scaleMix") != null ? Reflect.field(constraintMap, "scaleMix") : 1;
-            transformConstraintData.shearMix = Reflect.field(constraintMap, "shearMix") != null ? Reflect.field(constraintMap, "shearMix") : 1;
-
-            skeletonData.transformConstraints.push(transformConstraintData);
         }
 
         // Path constraints.
-        var pathMap:Array<Dynamic> = Reflect.field(root, "path");
-        for (constraintMap in pathMap)
-        {
-            var pathConstraintData : PathConstraintData = new PathConstraintData(Reflect.field(constraintMap, "name"));
-
-            var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
-            for (boneName in bonesField)
+        var pathField:Array<Dynamic> = Reflect.field(root, "path");
+        if (pathField != null) {
+            for (constraintMap in pathField)
             {
-                var bone = skeletonData.findBone(boneName);
-                if (bone == null)
+                var pathConstraintData : PathConstraintData = new PathConstraintData(Reflect.field(constraintMap, "name"));
+
+                var bonesField:Array<String> = Reflect.field(constraintMap, "bones");
+                for (boneName in bonesField)
                 {
-                    throw new Error("Path constraint bone not found: " + boneName);
+                    var bone = skeletonData.findBone(boneName);
+                    if (bone == null)
+                    {
+                        throw new Error("Path constraint bone not found: " + boneName);
+                    }
+                    pathConstraintData.bones.push(bone);
                 }
-                pathConstraintData.bones.push(bone);
-            }
 
-            pathConstraintData.target = skeletonData.findSlot(Reflect.field(constraintMap, "target"));
-            if (pathConstraintData.target == null)
-            {
-                throw new Error("Path target slot not found: " + Reflect.field(constraintMap, "target"));
-            }
+                pathConstraintData.target = skeletonData.findSlot(Reflect.field(constraintMap, "target"));
+                if (pathConstraintData.target == null)
+                {
+                    throw new Error("Path target slot not found: " + Reflect.field(constraintMap, "target"));
+                }
 
-            pathConstraintData.positionMode = Reflect.field(constraintMap, "positionMode") != null ? Reflect.field(constraintMap, "positionMode") : PositionMode.Percent;
-            pathConstraintData.spacingMode = Reflect.field(constraintMap, "spacingMode") != null ? Reflect.field(constraintMap, "spacingMode") : SpacingMode.Length;
-            pathConstraintData.rotateMode = Reflect.field(constraintMap, "rotateMode") != null ? Reflect.field(constraintMap, "rotateMode") : RotateMode.Tangent;
-            pathConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
-            pathConstraintData.position = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "position") != null ? Reflect.field(constraintMap, "position") : 0);
-            if (pathConstraintData.positionMode == PositionMode.Fixed)
-            {
-                pathConstraintData.position *= scale;
-            }
-            pathConstraintData.spacing = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "spacing") != null ? Reflect.field(constraintMap, "spacing") : 0);
-            if (pathConstraintData.spacingMode == SpacingMode.Length || pathConstraintData.spacingMode == SpacingMode.Fixed)
-            {
-                pathConstraintData.spacing *= scale;
-            }
-            pathConstraintData.rotateMix = Reflect.field(constraintMap, "rotateMix") != null ? Reflect.field(constraintMap, "rotateMix") : 1;
-            pathConstraintData.translateMix = Reflect.field(constraintMap, "translateMix") != null ? Reflect.field(constraintMap, "translateMix") : 1;
+                pathConstraintData.positionMode = Reflect.field(constraintMap, "positionMode") != null ? Reflect.field(constraintMap, "positionMode") : PositionMode.Percent;
+                pathConstraintData.spacingMode = Reflect.field(constraintMap, "spacingMode") != null ? Reflect.field(constraintMap, "spacingMode") : SpacingMode.Length;
+                pathConstraintData.rotateMode = Reflect.field(constraintMap, "rotateMode") != null ? Reflect.field(constraintMap, "rotateMode") : RotateMode.Tangent;
+                pathConstraintData.offsetRotation = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "rotation") != null ? Reflect.field(constraintMap, "rotation") : 0);
+                pathConstraintData.position = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "position") != null ? Reflect.field(constraintMap, "position") : 0);
+                if (pathConstraintData.positionMode == PositionMode.Fixed)
+                {
+                    pathConstraintData.position *= scale;
+                }
+                pathConstraintData.spacing = spine.as3hx.Compat.parseFloat(Reflect.field(constraintMap, "spacing") != null ? Reflect.field(constraintMap, "spacing") : 0);
+                if (pathConstraintData.spacingMode == SpacingMode.Length || pathConstraintData.spacingMode == SpacingMode.Fixed)
+                {
+                    pathConstraintData.spacing *= scale;
+                }
+                pathConstraintData.rotateMix = Reflect.field(constraintMap, "rotateMix") != null ? Reflect.field(constraintMap, "rotateMix") : 1;
+                pathConstraintData.translateMix = Reflect.field(constraintMap, "translateMix") != null ? Reflect.field(constraintMap, "translateMix") : 1;
 
-            skeletonData.pathConstraints.push(pathConstraintData);
+                skeletonData.pathConstraints.push(pathConstraintData);
+            }
         }
 
         // Skins.
         var skins : Dynamic = Reflect.field(root, "skins");
-        for (skinName in Reflect.fields(skins))
-        {
-            var skinMap : Dynamic = Reflect.field(skins, skinName);
-            var skin : Skin = new Skin(skinName);
-            for (slotName in Reflect.fields(skinMap))
+        if (skins != null) {
+            for (skinName in Reflect.fields(skins))
             {
-                var slotIndex : Int = skeletonData.findSlotIndex(slotName);
-                var slotEntry : Dynamic = Reflect.field(skinMap, slotName);
-                for (attachmentName in Reflect.fields(slotEntry))
+                var skinMap : Dynamic = Reflect.field(skins, skinName);
+                var skin : Skin = new Skin(skinName);
+                for (slotName in Reflect.fields(skinMap))
                 {
-                    var attachment : Attachment = readAttachment(Reflect.field(slotEntry, attachmentName), skin, slotIndex, attachmentName);
-                    if (attachment != null)
+                    var slotIndex : Int = skeletonData.findSlotIndex(slotName);
+                    var slotEntry : Dynamic = Reflect.field(skinMap, slotName);
+                    for (attachmentName in Reflect.fields(slotEntry))
                     {
-                        skin.addAttachment(slotIndex, attachmentName, attachment);
+                        var attachment : Attachment = readAttachment(Reflect.field(slotEntry, attachmentName), skin, slotIndex, attachmentName);
+                        if (attachment != null)
+                        {
+                            skin.addAttachment(slotIndex, attachmentName, attachment);
+                        }
                     }
                 }
-            }
-            skeletonData.skins[skeletonData.skins.length] = skin;
-            if (skin.name == "default")
-            {
-                skeletonData.defaultSkin = skin;
+                skeletonData.skins[skeletonData.skins.length] = skin;
+                if (skin.name == "default")
+                {
+                    skeletonData.defaultSkin = skin;
+                }
             }
         }
 
@@ -346,9 +360,11 @@ class SkeletonJson
 
         // Animations.
         var animations : Dynamic = Reflect.field(root, "animations");
-        for (animationName in Reflect.fields(animations))
-        {
-            readAnimation(Reflect.field(animations, animationName), animationName, skeletonData);
+        if (animations != null) {
+            for (animationName in Reflect.fields(animations))
+            {
+                readAnimation(Reflect.field(animations, animationName), animationName, skeletonData);
+            }
         }
 
         return skeletonData;
@@ -522,313 +538,325 @@ class SkeletonJson
         var timelineName : String;
 
         var slots : Dynamic = Reflect.field(map, "slots");
-        for (slotName in Reflect.fields(slots))
-        {
-            slotMap = Reflect.field(slots, slotName);
-            slotIndex = skeletonData.findSlotIndex(slotName);
-
-            for (timelineName in Reflect.fields(slotMap))
+        if (slots != null) {
+            for (slotName in Reflect.fields(slots))
             {
-                values = Reflect.field(slotMap, timelineName);
-                if (timelineName == "color")
-                {
-                    var colorTimeline : ColorTimeline = new ColorTimeline(values.length);
-                    colorTimeline.slotIndex = slotIndex;
+                slotMap = Reflect.field(slots, slotName);
+                slotIndex = skeletonData.findSlotIndex(slotName);
 
-                    frameIndex = 0;
-                    for (valueMap in values)
-                    {
-                        var color : String = Reflect.field(valueMap, "color");
-                        var r : Float = toColor(color, 0);
-                        var g : Float = toColor(color, 1);
-                        var b : Float = toColor(color, 2);
-                        var a : Float = toColor(color, 3);
-                        colorTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), r, g, b, a);
-                        readCurve(valueMap, colorTimeline, frameIndex);
-                        frameIndex++;
-                    }
-                    timelines[timelines.length] = colorTimeline;
-                    duration = Math.max(duration, colorTimeline.frames[(colorTimeline.frameCount - 1) * ColorTimeline.ENTRIES]);
-                }
-                else
+                for (timelineName in Reflect.fields(slotMap))
                 {
-                    if (timelineName == "attachment")
+                    values = Reflect.field(slotMap, timelineName);
+                    if (timelineName == "color")
                     {
-                        var attachmentTimeline : AttachmentTimeline = new AttachmentTimeline(values.length);
-                        attachmentTimeline.slotIndex = slotIndex;
+                        var colorTimeline : ColorTimeline = new ColorTimeline(values.length);
+                        colorTimeline.slotIndex = slotIndex;
 
                         frameIndex = 0;
                         for (valueMap in values)
                         {
-                            attachmentTimeline.setFrame(frameIndex++, Reflect.field(valueMap, "time"), Reflect.field(valueMap, "name"));
+                            var color : String = Reflect.field(valueMap, "color");
+                            var r : Float = toColor(color, 0);
+                            var g : Float = toColor(color, 1);
+                            var b : Float = toColor(color, 2);
+                            var a : Float = toColor(color, 3);
+                            colorTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), r, g, b, a);
+                            readCurve(valueMap, colorTimeline, frameIndex);
+                            frameIndex++;
                         }
-                        timelines[timelines.length] = attachmentTimeline;
-                        duration = Math.max(duration, attachmentTimeline.frames[attachmentTimeline.frameCount - 1]);
+                        timelines[timelines.length] = colorTimeline;
+                        duration = Math.max(duration, colorTimeline.frames[(colorTimeline.frameCount - 1) * ColorTimeline.ENTRIES]);
                     }
                     else
                     {
-                        throw new Error("Invalid timeline type for a slot: " + timelineName + " (" + slotName + ")");
+                        if (timelineName == "attachment")
+                        {
+                            var attachmentTimeline : AttachmentTimeline = new AttachmentTimeline(values.length);
+                            attachmentTimeline.slotIndex = slotIndex;
+
+                            frameIndex = 0;
+                            for (valueMap in values)
+                            {
+                                attachmentTimeline.setFrame(frameIndex++, Reflect.field(valueMap, "time"), Reflect.field(valueMap, "name"));
+                            }
+                            timelines[timelines.length] = attachmentTimeline;
+                            duration = Math.max(duration, attachmentTimeline.frames[attachmentTimeline.frameCount - 1]);
+                        }
+                        else
+                        {
+                            throw new Error("Invalid timeline type for a slot: " + timelineName + " (" + slotName + ")");
+                        }
                     }
                 }
             }
         }
 
         var bones : Dynamic = Reflect.field(map, "bones");
-        for (boneName in Reflect.fields(bones))
-        {
-            var boneIndex : Int = skeletonData.findBoneIndex(boneName);
-            if (boneIndex == -1)
+        if (bones != null) {
+            for (boneName in Reflect.fields(bones))
             {
-                throw new Error("Bone not found: " + boneName);
-            }
-            var boneMap : Dynamic = Reflect.field(bones, boneName);
-
-            for (timelineName in Reflect.fields(boneMap))
-            {
-                values = Reflect.field(boneMap, timelineName);
-                if (timelineName == "rotate")
+                var boneIndex : Int = skeletonData.findBoneIndex(boneName);
+                if (boneIndex == -1)
                 {
-                    var rotateTimeline : RotateTimeline = new RotateTimeline(values.length);
-                    rotateTimeline.boneIndex = boneIndex;
-
-                    frameIndex = 0;
-                    for (valueMap in values)
-                    {
-                        rotateTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), Reflect.field(valueMap, "angle"));
-                        readCurve(valueMap, rotateTimeline, frameIndex);
-                        frameIndex++;
-                    }
-                    timelines[timelines.length] = rotateTimeline;
-                    duration = Math.max(duration, rotateTimeline.frames[(rotateTimeline.frameCount - 1) * RotateTimeline.ENTRIES]);
+                    throw new Error("Bone not found: " + boneName);
                 }
-                else
+                var boneMap : Dynamic = Reflect.field(bones, boneName);
+
+                for (timelineName in Reflect.fields(boneMap))
                 {
-                    if (timelineName == "translate" || timelineName == "scale" || timelineName == "shear")
+                    values = Reflect.field(boneMap, timelineName);
+                    if (timelineName == "rotate")
                     {
-                        var translateTimeline : TranslateTimeline;
-                        var timelineScale : Float = 1;
-                        if (timelineName == "scale")
-                        {
-                            translateTimeline = new ScaleTimeline(values.length);
-                        }
-                        else
-                        {
-                            if (timelineName == "shear")
-                            {
-                                translateTimeline = new ShearTimeline(values.length);
-                            }
-                            else
-                            {
-                                translateTimeline = new TranslateTimeline(values.length);
-                                timelineScale = scale;
-                            }
-                        }
-                        translateTimeline.boneIndex = boneIndex;
+                        var rotateTimeline : RotateTimeline = new RotateTimeline(values.length);
+                        rotateTimeline.boneIndex = boneIndex;
 
                         frameIndex = 0;
                         for (valueMap in values)
                         {
-                            var x : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "x") != null ? Reflect.field(valueMap, "x") : 0) * timelineScale;
-                            var y : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "y") != null ? Reflect.field(valueMap, "y") : 0) * timelineScale;
-                            translateTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), x, y);
-                            readCurve(valueMap, translateTimeline, frameIndex);
+                            rotateTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), Reflect.field(valueMap, "angle"));
+                            readCurve(valueMap, rotateTimeline, frameIndex);
                             frameIndex++;
                         }
-                        timelines[timelines.length] = translateTimeline;
-                        duration = Math.max(duration, translateTimeline.frames[(translateTimeline.frameCount - 1) * TranslateTimeline.ENTRIES]);
+                        timelines[timelines.length] = rotateTimeline;
+                        duration = Math.max(duration, rotateTimeline.frames[(rotateTimeline.frameCount - 1) * RotateTimeline.ENTRIES]);
                     }
                     else
                     {
-                        throw new Error("Invalid timeline type for a bone: " + timelineName + " (" + boneName + ")");
+                        if (timelineName == "translate" || timelineName == "scale" || timelineName == "shear")
+                        {
+                            var translateTimeline : TranslateTimeline;
+                            var timelineScale : Float = 1;
+                            if (timelineName == "scale")
+                            {
+                                translateTimeline = new ScaleTimeline(values.length);
+                            }
+                            else
+                            {
+                                if (timelineName == "shear")
+                                {
+                                    translateTimeline = new ShearTimeline(values.length);
+                                }
+                                else
+                                {
+                                    translateTimeline = new TranslateTimeline(values.length);
+                                    timelineScale = scale;
+                                }
+                            }
+                            translateTimeline.boneIndex = boneIndex;
+
+                            frameIndex = 0;
+                            for (valueMap in values)
+                            {
+                                var x : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "x") != null ? Reflect.field(valueMap, "x") : 0) * timelineScale;
+                                var y : Float = spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "y") != null ? Reflect.field(valueMap, "y") : 0) * timelineScale;
+                                translateTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), x, y);
+                                readCurve(valueMap, translateTimeline, frameIndex);
+                                frameIndex++;
+                            }
+                            timelines[timelines.length] = translateTimeline;
+                            duration = Math.max(duration, translateTimeline.frames[(translateTimeline.frameCount - 1) * TranslateTimeline.ENTRIES]);
+                        }
+                        else
+                        {
+                            throw new Error("Invalid timeline type for a bone: " + timelineName + " (" + boneName + ")");
+                        }
                     }
                 }
             }
         }
 
         var ikMap : Dynamic = Reflect.field(map, "ik");
-        for (ikConstraintName in Reflect.fields(ikMap))
-        {
-            var ikConstraint : IkConstraintData = skeletonData.findIkConstraint(ikConstraintName);
-            values = Reflect.field(ikMap, ikConstraintName);
-            var ikTimeline : IkConstraintTimeline = new IkConstraintTimeline(values.length);
-            ikTimeline.ikConstraintIndex = skeletonData.ikConstraints.indexOf(ikConstraint);
-            frameIndex = 0;
-            for (valueMap in values)
+        if (ikMap != null) {
+            for (ikConstraintName in Reflect.fields(ikMap))
             {
-                var mix : Float = (Reflect.field(valueMap, "mix") != null) ? Reflect.field(valueMap, "mix") : 1;
-                var bendDirection : Int = (Reflect.field(valueMap, "bendPositive") != null && Reflect.field(valueMap, "bendPositive") == true) ? 1 : -1;
-                ikTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), mix, bendDirection);
-                readCurve(valueMap, ikTimeline, frameIndex);
-                frameIndex++;
+                var ikConstraint : IkConstraintData = skeletonData.findIkConstraint(ikConstraintName);
+                values = Reflect.field(ikMap, ikConstraintName);
+                var ikTimeline : IkConstraintTimeline = new IkConstraintTimeline(values.length);
+                ikTimeline.ikConstraintIndex = skeletonData.ikConstraints.indexOf(ikConstraint);
+                frameIndex = 0;
+                for (valueMap in values)
+                {
+                    var mix : Float = (Reflect.field(valueMap, "mix") != null) ? Reflect.field(valueMap, "mix") : 1;
+                    var bendDirection : Int = (Reflect.field(valueMap, "bendPositive") != null && Reflect.field(valueMap, "bendPositive") == true) ? 1 : -1;
+                    ikTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), mix, bendDirection);
+                    readCurve(valueMap, ikTimeline, frameIndex);
+                    frameIndex++;
+                }
+                timelines[timelines.length] = ikTimeline;
+                duration = Math.max(duration, ikTimeline.frames[(ikTimeline.frameCount - 1) * IkConstraintTimeline.ENTRIES]);
             }
-            timelines[timelines.length] = ikTimeline;
-            duration = Math.max(duration, ikTimeline.frames[(ikTimeline.frameCount - 1) * IkConstraintTimeline.ENTRIES]);
         }
 
         var transformMap : Dynamic = Reflect.field(map, "transform");
-        for (transformName in Reflect.fields(transformMap))
-        {
-            var transformConstraint : TransformConstraintData = skeletonData.findTransformConstraint(transformName);
-            values = Reflect.field(transformMap, transformName);
-            var transformTimeline : TransformConstraintTimeline = new TransformConstraintTimeline(values.length);
-            transformTimeline.transformConstraintIndex = skeletonData.transformConstraints.indexOf(transformConstraint);
-            frameIndex = 0;
-            for (valueMap in values)
+        if (transformMap != null) {
+            for (transformName in Reflect.fields(transformMap))
             {
-                var rotateMix : Float = Reflect.field(valueMap, "rotateMix") != null ? Reflect.field(valueMap, "rotateMix") : 1;
-                var translateMix : Float = Reflect.field(valueMap, "translateMix") != null ? Reflect.field(valueMap, "translateMix") : 1;
-                var scaleMix : Float = Reflect.field(valueMap, "scaleMix") != null ? Reflect.field(valueMap, "scaleMix") : 1;
-                var shearMix : Float = Reflect.field(valueMap, "shearMix") != null ? Reflect.field(valueMap, "shearMix") : 1;
-                transformTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), rotateMix, translateMix, scaleMix, shearMix);
-                readCurve(valueMap, transformTimeline, frameIndex);
-                frameIndex++;
+                var transformConstraint : TransformConstraintData = skeletonData.findTransformConstraint(transformName);
+                values = Reflect.field(transformMap, transformName);
+                var transformTimeline : TransformConstraintTimeline = new TransformConstraintTimeline(values.length);
+                transformTimeline.transformConstraintIndex = skeletonData.transformConstraints.indexOf(transformConstraint);
+                frameIndex = 0;
+                for (valueMap in values)
+                {
+                    var rotateMix : Float = Reflect.field(valueMap, "rotateMix") != null ? Reflect.field(valueMap, "rotateMix") : 1;
+                    var translateMix : Float = Reflect.field(valueMap, "translateMix") != null ? Reflect.field(valueMap, "translateMix") : 1;
+                    var scaleMix : Float = Reflect.field(valueMap, "scaleMix") != null ? Reflect.field(valueMap, "scaleMix") : 1;
+                    var shearMix : Float = Reflect.field(valueMap, "shearMix") != null ? Reflect.field(valueMap, "shearMix") : 1;
+                    transformTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), rotateMix, translateMix, scaleMix, shearMix);
+                    readCurve(valueMap, transformTimeline, frameIndex);
+                    frameIndex++;
+                }
+                timelines.push(transformTimeline);
+                duration = Math.max(duration, transformTimeline.frames[(transformTimeline.frameCount - 1) * TransformConstraintTimeline.ENTRIES]);
             }
-            timelines.push(transformTimeline);
-            duration = Math.max(duration, transformTimeline.frames[(transformTimeline.frameCount - 1) * TransformConstraintTimeline.ENTRIES]);
         }
 
         // Path constraint timelines.
         var paths : Dynamic = Reflect.field(map, "paths");
-        for (pathName in Reflect.fields(paths))
-        {
-            var index : Int = skeletonData.findPathConstraintIndex(pathName);
-            if (index == -1)
+        if (paths != null) {
+            for (pathName in Reflect.fields(paths))
             {
-                throw new Error("Path constraint not found: " + pathName);
-            }
-            var data : PathConstraintData = skeletonData.pathConstraints[index];
-
-            var pathMap : Dynamic = Reflect.field(paths, pathName);
-            for (timelineName in Reflect.fields(pathMap))
-            {
-                values = Reflect.field(pathMap, timelineName);
-
-                if (timelineName == "position" || timelineName == "spacing")
+                var index : Int = skeletonData.findPathConstraintIndex(pathName);
+                if (index == -1)
                 {
-                    var pathTimeline : PathConstraintPositionTimeline;
-                    var timelineScale:Float = 1;
-                    if (timelineName == "spacing")
-                    {
-                        pathTimeline = new PathConstraintSpacingTimeline(values.length);
-                        if (data.spacingMode == SpacingMode.Length || data.spacingMode == SpacingMode.Fixed)
-                        {
-                            timelineScale = scale;
-                        }
-                    }
-                    else
-                    {
-                        pathTimeline = new PathConstraintPositionTimeline(values.length);
-                        if (data.positionMode == PositionMode.Fixed)
-                        {
-                            timelineScale = scale;
-                        }
-                    }
-                    pathTimeline.pathConstraintIndex = index;
-                    frameIndex = 0;
-                    for (valueMap in values)
-                    {
-                        var value : Float = Reflect.field(valueMap, timelineName) != null ? Reflect.field(valueMap, timelineName) : 0;
-                        pathTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), value * timelineScale);
-                        readCurve(valueMap, pathTimeline, frameIndex);
-                        frameIndex++;
-                    }
-                    timelines.push(pathTimeline);
-                    duration = Math.max(duration,
-                                    pathTimeline.frames[(pathTimeline.frameCount - 1) * PathConstraintPositionTimeline.ENTRIES]
-                    );
+                    throw new Error("Path constraint not found: " + pathName);
                 }
-                else
+                var data : PathConstraintData = skeletonData.pathConstraints[index];
+
+                var pathMap : Dynamic = Reflect.field(paths, pathName);
+                for (timelineName in Reflect.fields(pathMap))
                 {
-                    if (timelineName == "mix")
+                    values = Reflect.field(pathMap, timelineName);
+
+                    if (timelineName == "position" || timelineName == "spacing")
                     {
-                        var pathMixTimeline : PathConstraintMixTimeline = new PathConstraintMixTimeline(values.length);
-                        pathMixTimeline.pathConstraintIndex = index;
+                        var pathTimeline : PathConstraintPositionTimeline;
+                        var timelineScale:Float = 1;
+                        if (timelineName == "spacing")
+                        {
+                            pathTimeline = new PathConstraintSpacingTimeline(values.length);
+                            if (data.spacingMode == SpacingMode.Length || data.spacingMode == SpacingMode.Fixed)
+                            {
+                                timelineScale = scale;
+                            }
+                        }
+                        else
+                        {
+                            pathTimeline = new PathConstraintPositionTimeline(values.length);
+                            if (data.positionMode == PositionMode.Fixed)
+                            {
+                                timelineScale = scale;
+                            }
+                        }
+                        pathTimeline.pathConstraintIndex = index;
                         frameIndex = 0;
                         for (valueMap in values)
                         {
-                            var rotateMix = Reflect.field(valueMap, "rotateMix") != null ? Reflect.field(valueMap, "rotateMix") : 1;
-                            var translateMix = Reflect.field(valueMap, "translateMix") != null ? Reflect.field(valueMap, "translateMix") : 1;
-                            pathMixTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), rotateMix, translateMix);
-                            readCurve(valueMap, pathMixTimeline, frameIndex);
+                            var value : Float = Reflect.field(valueMap, timelineName) != null ? Reflect.field(valueMap, timelineName) : 0;
+                            pathTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), value * timelineScale);
+                            readCurve(valueMap, pathTimeline, frameIndex);
                             frameIndex++;
                         }
-                        timelines.push(pathMixTimeline);
+                        timelines.push(pathTimeline);
                         duration = Math.max(duration,
-                                        pathMixTimeline.frames[(pathMixTimeline.frameCount - 1) * PathConstraintMixTimeline.ENTRIES]
-                    );
+                                        pathTimeline.frames[(pathTimeline.frameCount - 1) * PathConstraintPositionTimeline.ENTRIES]
+                        );
+                    }
+                    else
+                    {
+                        if (timelineName == "mix")
+                        {
+                            var pathMixTimeline : PathConstraintMixTimeline = new PathConstraintMixTimeline(values.length);
+                            pathMixTimeline.pathConstraintIndex = index;
+                            frameIndex = 0;
+                            for (valueMap in values)
+                            {
+                                var rotateMix = Reflect.field(valueMap, "rotateMix") != null ? Reflect.field(valueMap, "rotateMix") : 1;
+                                var translateMix = Reflect.field(valueMap, "translateMix") != null ? Reflect.field(valueMap, "translateMix") : 1;
+                                pathMixTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), rotateMix, translateMix);
+                                readCurve(valueMap, pathMixTimeline, frameIndex);
+                                frameIndex++;
+                            }
+                            timelines.push(pathMixTimeline);
+                            duration = Math.max(duration,
+                                            pathMixTimeline.frames[(pathMixTimeline.frameCount - 1) * PathConstraintMixTimeline.ENTRIES]
+                        );
+                        }
                     }
                 }
             }
         }
 
         var deformMap : Dynamic = Reflect.field(map, "deform");
-        for (skinName in Reflect.fields(deformMap))
-        {
-            var skin : Skin = skeletonData.findSkin(skinName);
-            slotMap = Reflect.field(deformMap, skinName);
-            for (slotName in Reflect.fields(slotMap))
+        if (deformMap != null) {
+            for (skinName in Reflect.fields(deformMap))
             {
-                slotIndex = skeletonData.findSlotIndex(slotName);
-                var timelineMap : Dynamic = Reflect.field(slotMap, slotName);
-                for (timelineName in Reflect.fields(timelineMap))
+                var skin : Skin = skeletonData.findSkin(skinName);
+                slotMap = Reflect.field(deformMap, skinName);
+                for (slotName in Reflect.fields(slotMap))
                 {
-                    values = Reflect.field(timelineMap, timelineName);
-
-                    var attachment : VertexAttachment = try cast(skin.getAttachment(slotIndex, timelineName), VertexAttachment) catch(e:Dynamic) null;
-                    if (attachment == null)
+                    slotIndex = skeletonData.findSlotIndex(slotName);
+                    var timelineMap : Dynamic = Reflect.field(slotMap, slotName);
+                    for (timelineName in Reflect.fields(timelineMap))
                     {
-                        throw new Error("Deform attachment not found: " + timelineName);
-                    }
-                    var weighted : Bool = attachment.bones != null;
-                    var vertices : Array<Float> = attachment.vertices;
-                    var deformLength : Int = (weighted) ? Math.round(vertices.length / 3 * 2) : vertices.length;
+                        values = Reflect.field(timelineMap, timelineName);
 
-                    var deformTimeline : DeformTimeline = new DeformTimeline(values.length);
-                    deformTimeline.slotIndex = slotIndex;
-                    deformTimeline.attachment = attachment;
-
-                    frameIndex = 0;
-                    for (valueMap in values)
-                    {
-                        var deform : Array<Float>;
-                        var verticesValue : Dynamic = Reflect.field(valueMap, "vertices");
-                        if (verticesValue == null)
+                        var attachment : VertexAttachment = try cast(skin.getAttachment(slotIndex, timelineName), VertexAttachment) catch(e:Dynamic) null;
+                        if (attachment == null)
                         {
-                            deform = (weighted) ? new Array<Float>() : vertices;
+                            throw new Error("Deform attachment not found: " + timelineName);
                         }
-                        else
+                        var weighted : Bool = attachment.bones != null;
+                        var vertices : Array<Float> = attachment.vertices;
+                        var deformLength : Int = (weighted) ? Math.round(vertices.length / 3 * 2) : vertices.length;
+
+                        var deformTimeline : DeformTimeline = new DeformTimeline(values.length);
+                        deformTimeline.slotIndex = slotIndex;
+                        deformTimeline.attachment = attachment;
+
+                        frameIndex = 0;
+                        for (valueMap in values)
                         {
-                            deform = new Array<Float>();
-                            var start : Int = Math.round(spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "offset") != null ? Reflect.field(valueMap, "offset") : 0));
-                            var temp : Array<Float> = getFloatArray(valueMap, "vertices", 1);
-                            for (i in 0...temp.length)
+                            var deform : Array<Float>;
+                            var verticesValue : Dynamic = Reflect.field(valueMap, "vertices");
+                            if (verticesValue == null)
                             {
-                                deform[start + i] = temp[i];
+                                deform = (weighted) ? new Array<Float>() : vertices;
                             }
-                            if (scale != 1)
+                            else
                             {
-                                var i = start;
-                                var n : Int = i + temp.length;
-                                for (i in start...n)
+                                deform = new Array<Float>();
+                                var start : Int = Math.round(spine.as3hx.Compat.parseFloat(Reflect.field(valueMap, "offset") != null ? Reflect.field(valueMap, "offset") : 0));
+                                var temp : Array<Float> = getFloatArray(valueMap, "vertices", 1);
+                                for (i in 0...temp.length)
                                 {
-                                    deform[i] *= scale;
+                                    deform[start + i] = temp[i];
+                                }
+                                if (scale != 1)
+                                {
+                                    var i = start;
+                                    var n : Int = i + temp.length;
+                                    for (i in start...n)
+                                    {
+                                        deform[i] *= scale;
+                                    }
+                                }
+                                if (!weighted)
+                                {
+                                    for (i in 0...deformLength)
+                                    {
+                                        deform[i] += vertices[i];
+                                    }
                                 }
                             }
-                            if (!weighted)
-                            {
-                                for (i in 0...deformLength)
-                                {
-                                    deform[i] += vertices[i];
-                                }
-                            }
-                        }
 
-                        deformTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), deform);
-                        readCurve(valueMap, deformTimeline, frameIndex);
-                        frameIndex++;
+                            deformTimeline.setFrame(frameIndex, Reflect.field(valueMap, "time"), deform);
+                            readCurve(valueMap, deformTimeline, frameIndex);
+                            frameIndex++;
+                        }
+                        timelines[timelines.length] = deformTimeline;
+                        duration = Math.max(duration, deformTimeline.frames[deformTimeline.frameCount - 1]);
                     }
-                    timelines[timelines.length] = deformTimeline;
-                    duration = Math.max(duration, deformTimeline.frames[deformTimeline.frameCount - 1]);
                 }
             }
         }
@@ -859,20 +887,22 @@ class SkeletonJson
                     var unchanged : Array<Int> = new Array<Int>();
                     var originalIndex : Int = 0;
                     var unchangedIndex : Int = 0;
-                    for (offsetMap in offsets)
-                    {
-                        slotIndex = skeletonData.findSlotIndex(Reflect.field(offsetMap, "slot"));
-                        if (slotIndex == -1)
+                    if (offsets != null) {
+                        for (offsetMap in offsets)
                         {
-                            throw new Error("Slot not found: " + Reflect.field(offsetMap, "slot"));
+                            slotIndex = skeletonData.findSlotIndex(Reflect.field(offsetMap, "slot"));
+                            if (slotIndex == -1)
+                            {
+                                throw new Error("Slot not found: " + Reflect.field(offsetMap, "slot"));
+                            }
+                            // Collect unchanged items.
+                            while (originalIndex != slotIndex)
+                            {
+                                unchanged[unchangedIndex++] = originalIndex++;
+                            }
+                            // Set changed items.
+                            drawOrder[originalIndex + Reflect.field(offsetMap, "offset")] = originalIndex++;
                         }
-                        // Collect unchanged items.
-                        while (originalIndex != slotIndex)
-                        {
-                            unchanged[unchangedIndex++] = originalIndex++;
-                        }
-                        // Set changed items.
-                        drawOrder[originalIndex + Reflect.field(offsetMap, "offset")] = originalIndex++;
                     }
                     // Collect remaining unchanged items.
                     while (originalIndex < slotCount)
