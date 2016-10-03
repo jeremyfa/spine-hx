@@ -9,7 +9,7 @@ In order to be up to date and make it easy to add new updates, the code is stayi
 Current code is converted from: https://github.com/EsotericSoftware/spine-runtimes/tree/16489aaf58aac43b1b3ebd9bf76fb47c6a2cd1b0
 (Spine runtime v3.4, commit July 18 2016)
 
-Updates will be possible by following the changes on the as3 runtime and simply applying them on the haxe code.
+Updates will be possible by following the [changes on the as3 runtime](https://github.com/EsotericSoftware/spine-runtimes/commits/master/spine-as3) and simply applying them on the haxe code.
 
 ## Licensing
 
