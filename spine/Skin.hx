@@ -66,7 +66,7 @@ class Skin
         }
         if (attachments[slotIndex] == null)
         {
-            attachments[slotIndex] = new Dictionary<String,Attachment>();
+            attachments[slotIndex] = new Dictionary<String,Attachment>(false);
         }
         attachments[slotIndex][name] = attachment;
     }

@@ -1,4 +1,4 @@
-package spine.compat; #if (!flash || display)
+package spine.compat; #if ((!openfl && !flash) || display)
 
 
 import haxe.ds.StringMap;
@@ -92,41 +92,16 @@ abstract Dictionary<K, V> (IMap<K, V>) {
 }
 
 
+#elseif openfl
+
+
+typedef Dictionary<K,V> = openfl.utils.Dictionary<K,V>;
+
+
 #else
 
 
-abstract Dictionary <K, V> (flash.utils.Dictionary) from flash.utils.Dictionary to flash.utils.Dictionary {
-
-
-	public function new (weakKeys:Bool = false) {
-
-		this = new flash.utils.Dictionary (weakKeys);
-
-	}
-
-
-	@:arrayAccess public inline function get (key:K):V {
-
-		return untyped this[key];
-
-	}
-
-
-	@:arrayAccess public inline function set (key:K, value:V):V {
-
-		return untyped this[key] = value;
-
-	}
-
-
-	public inline function iterator ():Iterator<K> {
-
-		return untyped __keys__ (this).iterator ();
-
-	}
-
-
-}
+typedef Dictionary<K,V> = flash.utils.Dictionary<K,V>;
 
 
 #end
