@@ -229,7 +229,7 @@ class Reader
 
     public function trim(value : String) : String
     {
-        return new spine.compat.Compat.Regex('^\\s+|\\s+$', "gs").replace(value, "");
+        return value.trim();
     }
 
     public function readLine() : String
