@@ -68,8 +68,8 @@ class RegionAttachment extends Attachment
     public var offset : Array<Float> = new Array<Float>();
     public var uvs : Array<Float> = new Array<Float>();
 
-    public var wrapperSprite : Dynamic = null;
-    public var wrapperStrip : Dynamic = null;
+    // Wrapper object depending on the renderer
+    public var wrapper : Dynamic = null;
 
     public function new(name : String)
     {
