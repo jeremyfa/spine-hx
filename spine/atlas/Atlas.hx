@@ -33,7 +33,6 @@ package spine.atlas;
 
 import spine.compat.ArgumentError;
 import spine.compat.Error;
-import spine.compat.ByteArray;
 
 using StringTools;
 
@@ -43,28 +42,14 @@ class Atlas
     private var regions : Array<AtlasRegion> = new Array<AtlasRegion>();
     private var textureLoader : TextureLoader;
 
-    /** @param object A String or ByteArray. */
-    public function new(object : Dynamic, textureLoader : TextureLoader)
+    /** @param object A String. */
+    public function new(object : String, textureLoader : TextureLoader)
     {
         if (object == null)
         {
             return;
         }
-        if (Std.is(object, String))
-        {
-            load(Std.string(object), textureLoader);
-        }
-        else
-        {
-            if (Std.is(object, ByteArray))
-            {
-                load(cast((object), ByteArray).readUTFBytes(cast((object), ByteArray).length), textureLoader);
-            }
-            else
-            {
-                throw new ArgumentError("object must be a TextureAtlas or AttachmentLoader.");
-            }
-        }
+        load(Std.string(object), textureLoader);
     }
 
     private function load(atlasText : String, textureLoader : TextureLoader) : Void

@@ -39,7 +39,6 @@ import spine.animation.TransformConstraintTimeline;
 import spine.animation.ShearTimeline;
 import spine.attachments.PathAttachment;
 import spine.attachments.VertexAttachment;
-import spine.compat.ByteArray;
 import spine.animation.Animation;
 import spine.animation.AttachmentTimeline;
 import spine.animation.ColorTimeline;
@@ -71,8 +70,8 @@ class SkeletonJson
         this.attachmentLoader = attachmentLoader;
     }
 
-    /** @param object A String or ByteArray. */
-    public function readSkeletonData(object : Dynamic, name : String = null) : SkeletonData
+    /** @param object A String. */
+    public function readSkeletonData(object : String, name : String = null) : SkeletonData
     {
         if (object == null)
         {
@@ -80,28 +79,7 @@ class SkeletonJson
         }
 
         var root : Dynamic;
-        if (Std.is(object, String))
-        {
-            root = haxe.Json.parse(Std.string(object));
-        }
-        else
-        {
-            if (Std.is(object, ByteArray))
-            {
-                root = haxe.Json.parse(cast((object), ByteArray).readUTFBytes(cast((object), ByteArray).length));
-            }
-            else
-            {
-                if (Std.is(object, Dynamic))
-                {
-                    root = object;
-                }
-                else
-                {
-                    throw new ArgumentError("object must be a String, ByteArray or Object.");
-                }
-            }
-        }
+        root = haxe.Json.parse(Std.string(object));
 
         var skeletonData : SkeletonData = new SkeletonData();
         skeletonData.name = name;
