@@ -31,7 +31,7 @@
 
 package spine.flash;
 
-import spine.compat.Dictionary;
+import flash.utils.Dictionary;
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.display.BlendMode;

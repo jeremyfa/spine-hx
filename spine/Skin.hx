@@ -32,18 +32,17 @@
 package spine;
 
 import spine.compat.ArgumentError;
-import spine.compat.Dictionary;
 import spine.attachments.Attachment;
 
 /** Stores attachments by slot index and attachment name. */
 class Skin
 {
-    public var attachments(get, never) : Array<Dictionary<String,Attachment>>;
+    public var attachments(get, never) : Array<Map<String,Attachment>>;
     public var name(get, never) : String;
 
     @:allow(spine)
     private var _name : String;
-    private var _attachments : Array<Dictionary<String,Attachment>> = new Array<Dictionary<String,Attachment>>();
+    private var _attachments : Array<Map<String,Attachment>> = new Array<Map<String,Attachment>>();
 
     public function new(name : String)
     {
@@ -66,7 +65,7 @@ class Skin
         }
         if (attachments[slotIndex] == null)
         {
-            attachments[slotIndex] = new Dictionary<String,Attachment>(false);
+            attachments[slotIndex] = new Map<String,Attachment>(/*false*/);
         }
         attachments[slotIndex][name] = attachment;
     }
@@ -78,11 +77,11 @@ class Skin
         {
             return null;
         }
-        var dictionary : Dictionary<String,Attachment> = attachments[slotIndex];
-        return (dictionary != null) ? dictionary[name] : null;
+        var Map : Map<String,Attachment> = attachments[slotIndex];
+        return (Map != null) ? Map[name] : null;
     }
 
-    private function get_attachments() : Array<Dictionary<String,Attachment>>
+    private function get_attachments() : Array<Map<String,Attachment>>
     {
         return _attachments;
     }
@@ -106,10 +105,10 @@ class Skin
             var slotAttachment : Attachment = slot.attachment;
             if (slotAttachment != null && slotIndex < oldSkin.attachments.length)
             {
-                var dictionary : Dictionary<String,Attachment> = oldSkin.attachments[slotIndex];
-                for (name in Reflect.fields(dictionary))
+                var Map : Map<String,Attachment> = oldSkin.attachments[slotIndex];
+                for (name in Map.keys())
                 {
-                    var skinAttachment : Attachment = dictionary[name];
+                    var skinAttachment : Attachment = Map[name];
                     if (slotAttachment == skinAttachment)
                     {
                         var attachment : Attachment = getAttachment(slotIndex, name);

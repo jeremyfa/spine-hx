@@ -32,7 +32,6 @@
 package spine;
 
 import spine.compat.ArgumentError;
-import spine.compat.Dictionary;
 import spine.attachments.PathAttachment;
 import spine.attachments.Attachment;
 
@@ -79,7 +78,7 @@ class Skeleton
         _data = data;
 
         bones = new Array<Bone>();
-        for (boneData/* AS3HX WARNING could not determine type for var: boneData exp: EField(EIdent(data),bones) type: null */ in data.bones)
+        for (boneData in data.bones)
         {
             var bone : Bone;
             if (boneData.parent == null)
@@ -97,7 +96,7 @@ class Skeleton
 
         slots = new Array<Slot>();
         drawOrder = new Array<Slot>();
-        for (slotData/* AS3HX WARNING could not determine type for var: slotData exp: EField(EIdent(data),slots) type: null */ in data.slots)
+        for (slotData in data.slots)
         {
             var bone = bones[slotData.boneData.index];
             var slot : Slot = new Slot(slotData, bone);
@@ -107,19 +106,19 @@ class Skeleton
 
         ikConstraints = new Array<IkConstraint>();
         ikConstraintsSorted = new Array<IkConstraint>();
-        for (ikConstraintData/* AS3HX WARNING could not determine type for var: ikConstraintData exp: EField(EIdent(data),ikConstraints) type: null */ in data.ikConstraints)
+        for (ikConstraintData in data.ikConstraints)
         {
             ikConstraints.push(new IkConstraint(ikConstraintData, this));
         }
 
         transformConstraints = new Array<TransformConstraint>();
-        for (transformConstraintData/* AS3HX WARNING could not determine type for var: transformConstraintData exp: EField(EIdent(data),transformConstraints) type: null */ in data.transformConstraints)
+        for (transformConstraintData in data.transformConstraints)
         {
             transformConstraints.push(new TransformConstraint(transformConstraintData, this));
         }
 
         pathConstraints = new Array<PathConstraint>();
-        for (pathConstraintData/* AS3HX WARNING could not determine type for var: pathConstraintData exp: EField(EIdent(data),pathConstraints) type: null */ in data.pathConstraints)
+        for (pathConstraintData in data.pathConstraints)
         {
             pathConstraints.push(new PathConstraint(pathConstraintData, this));
         }
@@ -284,13 +283,13 @@ class Skeleton
 
     private function sortPathConstraintAttachment(skin : Skin, slotIndex : Int, slotBone : Bone) : Void
     {
-        var dict : Dictionary<String,Attachment> = skin.attachments[slotIndex];
+        var dict : Map<String,Attachment> = skin.attachments[slotIndex];
         if (dict == null)
         {
             return;
         }
 
-        for (value in dict)
+        for (value in dict.keys())
         {
             sortPathConstraintAttachment2(dict.get(value), slotBone);
         }
