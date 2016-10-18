@@ -310,9 +310,14 @@ class Skeleton
         else
         {
             var bones : Array<Bone> = this.bones;
-            for (boneIndex in pathBones)
-            {
-                sortBone(bones[boneIndex]);
+            var i:Int = 0;
+            while (i < pathBones.length) {
+                var boneCount:Int = pathBones[i++];
+                var n:Int = i + boneCount;
+                while (i < n) {
+                    sortBone(bones[pathBones[i]]);
+                    i++;
+                }
             }
         }
     }
