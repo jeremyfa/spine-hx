@@ -94,7 +94,7 @@ class VertexAttachment extends Attachment
             var c : Float = bone.c;
             var d : Float = bone.d;
             v = start;
-w = offset;
+            w = offset;
             while (w < count)
             {
                 vx = vertices[v];vy = vertices[v + 1];

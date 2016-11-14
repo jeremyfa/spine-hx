@@ -90,7 +90,7 @@ class DeformTimeline extends CurveTimeline
         if (time >= frames[frames.length - 1])
         {
             // Time is after last frame.
-            var lastVertices : Array<Float> = frameVertices[spine.compat.Compat.parseInt(frames.length - 1)];
+            var lastVertices : Array<Float> = frameVertices[frames.length - 1];
             if (alpha < 1)
             {
                 for (i in 0...vertexCount)
@@ -110,7 +110,7 @@ class DeformTimeline extends CurveTimeline
 
         // Interpolate between the previous frame and the current frame.
         var frame : Int = Animation.binarySearch1(frames, time);
-        var prevVertices : Array<Float> = frameVertices[spine.compat.Compat.parseInt(frame - 1)];
+        var prevVertices : Array<Float> = frameVertices[frame - 1];
         var nextVertices : Array<Float> = frameVertices[frame];
         var frameTime : Float = frames[frame];
         var percent : Float = getCurvePercent(frame - 1, 1 - (time - frameTime) / (frames[frame - 1] - frameTime));

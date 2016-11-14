@@ -127,7 +127,7 @@ class PathConstraint implements Updatable
                 lengths = this._lengths;
             }
             var i : Int = 0;
-            var n : Int = spine.compat.Compat.parseInt(spacesCount - 1);
+            var n : Int = spacesCount - 1;
             while (i < n)
             {
                 var bone : Bone = bones[i];
@@ -252,7 +252,7 @@ class PathConstraint implements Updatable
         var world : Array<Float>;
         var closed : Bool = path.closed;
         var verticesLength : Int = path.worldVerticesLength;
-        var curveCount : Int = spine.compat.Compat.parseInt(verticesLength / 6);
+        var curveCount : Int = Std.int(verticesLength / 6);
         var prevCurve : Int = NONE;
 
         if (!path.constantSpeed)

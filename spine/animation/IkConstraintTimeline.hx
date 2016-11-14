@@ -61,8 +61,8 @@ class IkConstraintTimeline extends CurveTimeline
     {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
-        frames[spine.compat.Compat.parseInt(frameIndex + MIX)] = mix;
-        frames[spine.compat.Compat.parseInt(frameIndex + BEND_DIRECTION)] = bendDirection;
+        frames[frameIndex + MIX] = mix;
+        frames[frameIndex + BEND_DIRECTION] = bendDirection;
     }
 
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
@@ -74,21 +74,21 @@ class IkConstraintTimeline extends CurveTimeline
 
         var constraint : IkConstraint = skeleton.ikConstraints[ikConstraintIndex];
 
-        if (time >= frames[spine.compat.Compat.parseInt(frames.length - ENTRIES)])
+        if (time >= frames[frames.length - ENTRIES])
         {
             // Time is after last frame.
-            constraint.mix += (frames[spine.compat.Compat.parseInt(frames.length + PREV_MIX)] - constraint.mix) * alpha;
-            constraint.bendDirection = spine.compat.Compat.parseInt(frames[spine.compat.Compat.parseInt(frames.length + PREV_BEND_DIRECTION)]);
+            constraint.mix += (frames[frames.length + PREV_MIX] - constraint.mix) * alpha;
+            constraint.bendDirection = Std.int(frames[frames.length + PREV_BEND_DIRECTION]);
             return;
         }
 
         // Interpolate between the previous frame and the current frame.
         var frame : Int = Animation.binarySearch(frames, time, ENTRIES);
-        var mix : Float = frames[spine.compat.Compat.parseInt(frame + PREV_MIX)];
+        var mix : Float = frames[frame + PREV_MIX];
         var frameTime : Float = frames[frame];
         var percent : Float = getCurvePercent(cast frame / ENTRIES - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
 
         constraint.mix += (mix + (frames[frame + MIX] - mix) * percent - constraint.mix) * alpha;
-        constraint.bendDirection = spine.compat.Compat.parseInt(frames[frame + PREV_BEND_DIRECTION]);
+        constraint.bendDirection = Std.int(frames[frame + PREV_BEND_DIRECTION]);
     }
 }

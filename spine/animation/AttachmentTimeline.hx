@@ -76,11 +76,11 @@ class AttachmentTimeline implements Timeline
         if (time >= frames[frames.length - 1])
         {
             // Time is after last frame.
-            frameIndex = spine.compat.Compat.parseInt(frames.length - 1);
+            frameIndex = frames.length - 1;
         }
         else
         {
-            frameIndex = spine.compat.Compat.parseInt(Animation.binarySearch(frames, time, 1) - 1);
+            frameIndex = Animation.binarySearch(frames, time, 1) - 1;
         }
 
         var attachmentName : String = attachmentNames[frameIndex];

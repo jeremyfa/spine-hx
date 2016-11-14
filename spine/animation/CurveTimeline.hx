@@ -59,17 +59,17 @@ class CurveTimeline implements Timeline
 
     private function get_frameCount() : Int
     {
-        return spine.compat.Compat.parseInt(curves.length / BEZIER_SIZE + 1);
+        return Std.int(curves.length / BEZIER_SIZE + 1);
     }
 
     public function setLinear(frameIndex : Int) : Void
     {
-        curves[spine.compat.Compat.parseInt(frameIndex * BEZIER_SIZE)] = LINEAR;
+        curves[frameIndex * BEZIER_SIZE] = LINEAR;
     }
 
     public function setStepped(frameIndex : Int) : Void
     {
-        curves[spine.compat.Compat.parseInt(frameIndex * BEZIER_SIZE)] = STEPPED;
+        curves[frameIndex * BEZIER_SIZE] = STEPPED;
     }
 
     /** Sets the control handle positions for an interpolation bezier curve used to transition from this keyframe to the next.
@@ -86,17 +86,17 @@ class CurveTimeline implements Timeline
         var dfx : Float = cx1 * 0.3 + tmpx + dddfx * 0.16666667;
         var dfy : Float = cy1 * 0.3 + tmpy + dddfy * 0.16666667;
 
-        var i : Int = spine.compat.Compat.parseInt(frameIndex * BEZIER_SIZE);
+        var i : Int = frameIndex * BEZIER_SIZE;
         var curves : Array<Float> = this.curves;
         curves[i++] = BEZIER;
 
         var x : Float = dfx;
         var y : Float = dfy;
-        var n : Int = spine.compat.Compat.parseInt(i + BEZIER_SIZE - 1);
+        var n : Int = i + BEZIER_SIZE - 1;
         while (i < n)
         {
             curves[i] = x;
-            curves[spine.compat.Compat.parseInt(i + 1)] = y;
+            curves[i + 1] = y;
             dfx += ddfx;
             dfy += ddfy;
             ddfx += dddfx;
@@ -111,7 +111,7 @@ class CurveTimeline implements Timeline
     {
         percent = MathUtils.clamp(percent, 0, 1);
         var curves : Array<Float> = this.curves;
-        var i : Int = spine.compat.Compat.parseInt(frameIndex * BEZIER_SIZE);
+        var i : Int = frameIndex * BEZIER_SIZE;
         var type : Float = curves[i];
         if (type == LINEAR)
         {
@@ -124,7 +124,7 @@ class CurveTimeline implements Timeline
         i++;
         var x : Float = 0;
         var start : Int = i;
-        var n : Int = spine.compat.Compat.parseInt(i + BEZIER_SIZE - 1);
+        var n : Int = i + BEZIER_SIZE - 1;
         while (i < n)
         {
             x = curves[i];
@@ -139,14 +139,14 @@ class CurveTimeline implements Timeline
                 }
                 else
                 {
-                    prevX = curves[spine.compat.Compat.parseInt(i - 2)];
-                    prevY = curves[spine.compat.Compat.parseInt(i - 1)];
+                    prevX = curves[i - 2];
+                    prevY = curves[i - 1];
                 }
-                return prevY + (curves[spine.compat.Compat.parseInt(i + 1)] - prevY) * (percent - prevX) / (x - prevX);
+                return prevY + (curves[i + 1] - prevY) * (percent - prevX) / (x - prevX);
             }
             i += 2;
         }
-        var y : Float = curves[spine.compat.Compat.parseInt(i - 1)];
+        var y : Float = curves[i - 1];
         return y + (1 - y) * (percent - x) / (1 - x);
     }
 }

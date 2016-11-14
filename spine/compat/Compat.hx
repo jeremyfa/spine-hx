@@ -12,6 +12,7 @@ import haxe.macro.Context;
 class Compat {
 
 #if !macro
+
     /**
      * According to Adobe:
      * The result is limited to six possible string values:

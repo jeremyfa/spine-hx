@@ -56,7 +56,7 @@ class RotateTimeline extends CurveTimeline
     {
         frameIndex <<= 1;
         frames[frameIndex] = time;
-        frames[spine.compat.Compat.parseInt(frameIndex + ROTATION)] = degrees;
+        frames[frameIndex + ROTATION] = degrees;
     }
 
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
@@ -68,10 +68,10 @@ class RotateTimeline extends CurveTimeline
 
         var bone : Bone = skeleton.bones[boneIndex];
 
-        if (time >= frames[spine.compat.Compat.parseInt(frames.length - 2)])
+        if (time >= frames[frames.length - 2])
         {
             // Time is after last frame.
-            var amount : Float = bone.data.rotation + frames[spine.compat.Compat.parseInt(frames.length + PREV_ROTATION)] - bone.rotation;
+            var amount : Float = bone.data.rotation + frames[frames.length + PREV_ROTATION] - bone.rotation;
             while (amount > 180)
             {
                 amount -= 360;
@@ -86,11 +86,11 @@ class RotateTimeline extends CurveTimeline
 
         // Interpolate between the previous frame and the current frame.
         var frame : Int = Animation.binarySearch(frames, time, ENTRIES);
-        var prevRotation : Float = frames[spine.compat.Compat.parseInt(frame + PREV_ROTATION)];
+        var prevRotation : Float = frames[frame + PREV_ROTATION];
         var frameTime : Float = frames[frame];
         var percent : Float = getCurvePercent((frame >> 1) - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
 
-        var amount = frames[spine.compat.Compat.parseInt(frame + ROTATION)] - prevRotation;
+        var amount = frames[frame + ROTATION] - prevRotation;
         while (amount > 180)
         {
             amount -= 360;

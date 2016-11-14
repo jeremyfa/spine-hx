@@ -79,7 +79,7 @@ class EventTimeline implements Timeline
         }
         else
         {
-            if (lastTime >= frames[spine.compat.Compat.parseInt(frameCount - 1)])
+            if (lastTime >= frames[frameCount - 1])
             {
                 // Last time is after last frame.
                 return;
@@ -102,7 +102,7 @@ class EventTimeline implements Timeline
             while (frame > 0)
             {
                 // Fire multiple events with the same frame.
-                if (frames[spine.compat.Compat.parseInt(frame - 1)] != frameTime)
+                if (frames[frame - 1] != frameTime)
                 {
                     break;
                 }

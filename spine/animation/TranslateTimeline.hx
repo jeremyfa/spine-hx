@@ -61,8 +61,8 @@ class TranslateTimeline extends CurveTimeline
     {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
-        frames[spine.compat.Compat.parseInt(frameIndex + X)] = x;
-        frames[spine.compat.Compat.parseInt(frameIndex + Y)] = y;
+        frames[frameIndex + X] = x;
+        frames[frameIndex + Y] = y;
     }
 
     override public function apply(skeleton : Skeleton, lastTime : Float, time : Float, firedEvents : Array<Event>, alpha : Float) : Void
@@ -74,11 +74,11 @@ class TranslateTimeline extends CurveTimeline
 
         var bone : Bone = skeleton.bones[boneIndex];
 
-        if (time >= frames[spine.compat.Compat.parseInt(frames.length - ENTRIES)])
+        if (time >= frames[frames.length - ENTRIES])
         {
             // Time is after last frame.
-            bone.x += (bone.data.x + frames[spine.compat.Compat.parseInt(frames.length + PREV_X)] - bone.x) * alpha;
-            bone.y += (bone.data.y + frames[spine.compat.Compat.parseInt(frames.length + PREV_Y)] - bone.y) * alpha;
+            bone.x += (bone.data.x + frames[frames.length + PREV_X] - bone.x) * alpha;
+            bone.y += (bone.data.y + frames[frames.length + PREV_Y] - bone.y) * alpha;
             return;
         }
 
