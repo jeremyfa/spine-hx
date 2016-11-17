@@ -19,9 +19,9 @@ The Spine Runtimes are developed with the intent to be used with data exported f
 
 ## Spine version
 
-spine-hx works with data exported from the latest Spine version.
+spine-hx works with data exported from Spine 3.4.02.
 
-spine-hx supports all Spine features until v3.4, including meshes. If using the `spine.flash` classes for rendering, meshes are not supported.
+spine-hx supports all Spine features until 3.4.02, including meshes. If using the `spine.flash` classes for rendering, meshes are not supported.
 
 spine-hx does not yet support loading the binary format.
 
