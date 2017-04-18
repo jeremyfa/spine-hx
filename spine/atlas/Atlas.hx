@@ -224,7 +224,8 @@ class Reader
 
     public function new(text : String)
     {
-        lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n");
+        lines = text.trim().replace("\r\n", "\n").replace("\r", "\n").split("\n");
+        index = 0;
     }
 
     public function trim(value : String) : String
