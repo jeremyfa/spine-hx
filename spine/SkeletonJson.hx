@@ -116,7 +116,7 @@ class SkeletonJson
                 boneData.y = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "y") != null ? Reflect.field(boneMap, "y") : 0) * scale;
                 boneData.rotation = (Reflect.field(boneMap, "rotation") != null ? Reflect.field(boneMap, "rotation") : 0);
                 boneData.scaleX = (Reflect.field(boneMap, "scaleX") != null) ? Reflect.field(boneMap, "scaleX") : 1;
-                boneData.scaleX = (Reflect.field(boneMap, "scaleY") != null) ? Reflect.field(boneMap, "scaleY") : 1;
+                boneData.scaleY = (Reflect.field(boneMap, "scaleY") != null) ? Reflect.field(boneMap, "scaleY") : 1;
                 boneData.shearX = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "shearX") != null ? Reflect.field(boneMap, "shearX") : 0);
                 boneData.shearY = spine.compat.Compat.parseFloat(Reflect.field(boneMap, "shearY") != null ? Reflect.field(boneMap, "shearY") : 0);
                 boneData.inheritRotation = Reflect.field(boneMap, "inheritRotation") != null ? Reflect.field(boneMap, "inheritRotation") : true;
