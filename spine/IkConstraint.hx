@@ -261,7 +261,7 @@ class IkConstraint implements Updatable
                         y = Math.sqrt(dd - r * r) * bendDir;
                         a1 = ta - Math.atan2(y, r);
                         a2 = Math.atan2(y / psy, (r - l1) / psx);
-                        continue;
+                        break;
                     }
                 }
                 var minAngle : Float = 0;
