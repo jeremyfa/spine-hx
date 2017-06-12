@@ -43,8 +43,19 @@ class Compat {
     }
 
     public static inline function setArrayLength<T>(a:Array<Null<T>>, length:Int) {
-        if (a.length > length) a.splice(length, a.length - length);
-        else a[length - 1] = null;
+        var len = a.length;
+        if (len > length) a.splice(length, a.length - length);
+        else if (len < length) a[length - 1] = null;
+    }
+
+    public static inline function setArrayLengthNumber<T>(a:Array<Null<T>>, length:Int) {
+        var len = a.length;
+        if (len > length) a.splice(length, a.length - length);
+        else if (len < length) {
+            for (i in len...length) {
+                a[i] = untyped 0;
+            }
+        }
     }
 
 #end

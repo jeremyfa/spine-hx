@@ -46,13 +46,13 @@ class Slot
     private var _data : SlotData;
     @:allow(spine)
     private var _bone : Bone;
-    public var r : Float;
-    public var g : Float;
-    public var b : Float;
-    public var a : Float;
+    public var r : Float = 0;
+    public var g : Float = 0;
+    public var b : Float = 0;
+    public var a : Float = 0;
     @:allow(spine)
     private var _attachment : Attachment;
-    private var _attachmentTime : Float;
+    private var _attachmentTime : Float = 0;
     public var attachmentVertices : Array<Float> = new Array<Float>();
     
     public function new(data : SlotData, bone : Bone)

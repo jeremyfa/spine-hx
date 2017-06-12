@@ -43,16 +43,16 @@ class TransformConstraintData
     @:allow(spine)
     private var _bones : Array<BoneData> = new Array<BoneData>();
     public var target : BoneData;
-    public var rotateMix : Float;
-    public var translateMix : Float;
-    public var scaleMix : Float;
-    public var shearMix : Float;
-    public var offsetRotation : Float;
-    public var offsetX : Float;
-    public var offsetY : Float;
-    public var offsetScaleX : Float;
-    public var offsetScaleY : Float;
-    public var offsetShearY : Float;
+    public var rotateMix : Float = 0;
+    public var translateMix : Float = 0;
+    public var scaleMix : Float = 0;
+    public var shearMix : Float = 0;
+    public var offsetRotation : Float = 0;
+    public var offsetX : Float = 0;
+    public var offsetY : Float = 0;
+    public var offsetScaleX : Float = 0;
+    public var offsetScaleY : Float = 0;
+    public var offsetShearY : Float = 0;
     
     public function new(name : String)
     {

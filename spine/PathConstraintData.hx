@@ -46,8 +46,11 @@ class PathConstraintData
     public var positionMode : PositionMode;
     public var spacingMode : SpacingMode;
     public var rotateMode : RotateMode;
-    public var offsetRotation : Float;
-    public var position : Float;public var spacing : Float;public var rotateMix : Float;public var translateMix : Float;
+    public var offsetRotation : Float = 0;
+    public var position : Float = 0;
+    public var spacing : Float = 0;
+    public var rotateMix : Float = 0;
+    public var translateMix : Float = 0;
     
     public function new(name : String)
     {

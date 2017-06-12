@@ -43,10 +43,10 @@ class TransformConstraint implements Updatable
     @:allow(spine)
     private var _bones : Array<Bone>;
     public var target : Bone;
-    public var rotateMix : Float;
-    public var translateMix : Float;
-    public var scaleMix : Float;
-    public var shearMix : Float;
+    public var rotateMix : Float = 0;
+    public var translateMix : Float = 0;
+    public var scaleMix : Float = 0;
+    public var shearMix : Float = 0;
     @:allow(spine)
     private var _temp : Array<Float> = new Array<Float>();
 

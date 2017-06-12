@@ -35,7 +35,8 @@ package spine.attachments;
 class PathAttachment extends VertexAttachment
 {
     public var lengths : Array<Float>;
-    public var closed : Bool;public var constantSpeed : Bool;
+    public var closed : Bool = false;
+    public var constantSpeed : Bool = false;
     
     public function new(name : String)
     {

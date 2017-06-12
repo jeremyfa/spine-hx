@@ -40,8 +40,8 @@ class Event
     @:allow(spine)
     private var _data : EventData;
     public var time : Float;
-    public var intValue : Int;
-    public var floatValue : Float;
+    public var intValue : Int = 0;
+    public var floatValue : Float = 0;
     public var stringValue : String;
     
     public function new(time : Float, data : EventData)

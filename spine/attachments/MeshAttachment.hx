@@ -50,22 +50,22 @@ class MeshAttachment extends VertexAttachment
     
     public var path : String;
     public var rendererObject : Dynamic;
-    public var regionU : Float;
-    public var regionV : Float;
-    public var regionU2 : Float;
-    public var regionV2 : Float;
-    public var regionRotate : Bool;
-    public var regionOffsetX : Float;  // Pixels stripped from the bottom left, unrotated.  
-    public var regionOffsetY : Float;
-    public var regionWidth : Float;  // Unrotated, stripped size.  
-    public var regionHeight : Float;
-    public var regionOriginalWidth : Float;  // Unrotated, unstripped size.  
-    public var regionOriginalHeight : Float;
+    public var regionU : Float = 0;
+    public var regionV : Float = 0;
+    public var regionU2 : Float = 0;
+    public var regionV2 : Float = 0;
+    public var regionRotate : Bool = false;
+    public var regionOffsetX : Float = 0;  // Pixels stripped from the bottom left, unrotated.  
+    public var regionOffsetY : Float = 0;
+    public var regionWidth : Float = 0;  // Unrotated, stripped size.  
+    public var regionHeight : Float = 0;
+    public var regionOriginalWidth : Float = 0;  // Unrotated, unstripped size.  
+    public var regionOriginalHeight : Float = 0;
     
     // Nonessential.
     public var edges : Array<Int>;
-    public var width : Float;
-    public var height : Float;
+    public var width : Float = 0;
+    public var height : Float = 0;
     
     public function new(name : String)
     {

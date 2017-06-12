@@ -52,7 +52,7 @@ class Bone implements Updatable
     public var worldScaleX(get, never) : Float;
     public var worldScaleY(get, never) : Float;
 
-    public static var yDown : Bool;
+    public static var yDown : Bool = false;
 
     @:allow(spine)
     private var _data : BoneData;
@@ -62,34 +62,34 @@ class Bone implements Updatable
     private var _parent : Bone;
     @:allow(spine)
     private var _children : Array<Bone> = new Array<Bone>();
-    public var x : Float;
-    public var y : Float;
-    public var rotation : Float;
-    public var scaleX : Float;
-    public var scaleY : Float;
-    public var shearX : Float;
-    public var shearY : Float;
-    public var appliedRotation : Float;
+    public var x : Float = 0;
+    public var y : Float = 0;
+    public var rotation : Float = 0;
+    public var scaleX : Float = 0;
+    public var scaleY : Float = 0;
+    public var shearX : Float = 0;
+    public var shearY : Float = 0;
+    public var appliedRotation : Float = 0;
 
     @:allow(spine)
-    private var _a : Float;
+    private var _a : Float = 0;
     @:allow(spine)
-    private var _b : Float;
+    private var _b : Float = 0;
     @:allow(spine)
-    private var _c : Float;
+    private var _c : Float = 0;
     @:allow(spine)
-    private var _d : Float;
+    private var _d : Float = 0;
     @:allow(spine)
-    private var _worldX : Float;
+    private var _worldX : Float = 0;
     @:allow(spine)
-    private var _worldY : Float;
+    private var _worldY : Float = 0;
     @:allow(spine)
-    private var _worldSignX : Float;
+    private var _worldSignX : Float = 0;
     @:allow(spine)
-    private var _worldSignY : Float;
+    private var _worldSignY : Float = 0;
 
     @:allow(spine)
-    private var _sorted : Bool;
+    private var _sorted : Bool = false;
 
     /** @param parent May be null. */
     public function new(data : BoneData, skeleton : Skeleton, parent : Bone)

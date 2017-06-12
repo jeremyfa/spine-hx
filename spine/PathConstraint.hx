@@ -39,14 +39,19 @@ class PathConstraint implements Updatable
     public var bones(get, never) : Array<Bone>;
     public var data(get, never) : PathConstraintData;
 
-    private static var NONE : Int = -1;private static var BEFORE : Int = -2;private static var AFTER : Int = -3;
+    private static var NONE : Int = -1;
+    private static var BEFORE : Int = -2;
+    private static var AFTER : Int = -3;
 
     @:allow(spine)
     private var _data : PathConstraintData;
     @:allow(spine)
     private var _bones : Array<Bone>;
     public var target : Slot;
-    public var position : Float;public var spacing : Float;public var rotateMix : Float;public var translateMix : Float;
+    public var position : Float = 0;
+    public var spacing : Float = 0;
+    public var rotateMix : Float = 0;
+    public var translateMix : Float = 0;
 
     @:allow(spine)
     private var _spaces : Array<Float> = new Array<Float>();
@@ -115,7 +120,7 @@ class PathConstraint implements Updatable
         var boneCount : Int = this._bones.length;
         var spacesCount : Int = (tangents) ? boneCount : boneCount + 1;
         var bones : Array<Bone> = this._bones;
-        spine.compat.Compat.setArrayLength(this._spaces, spacesCount);
+        spine.compat.Compat.setArrayLengthNumber(this._spaces, spacesCount);
         var spaces : Array<Float> = this._spaces;
         var lengths : Array<Float> = null;
         var spacing : Float = this.spacing;
@@ -123,7 +128,7 @@ class PathConstraint implements Updatable
         {
             if (scale)
             {
-                spine.compat.Compat.setArrayLength(this._lengths, boneCount);
+                spine.compat.Compat.setArrayLengthNumber(this._lengths, boneCount);
                 lengths = this._lengths;
             }
             var i : Int = 0;
@@ -247,7 +252,7 @@ class PathConstraint implements Updatable
         var target : Slot = this.target;
         var position : Float = this.position;
         var spaces : Array<Float> = this._spaces;
-        spine.compat.Compat.setArrayLength(this._positions, spacesCount * 3 + 2);
+        spine.compat.Compat.setArrayLengthNumber(this._positions, spacesCount * 3 + 2);
         var out : Array<Float> = this._positions;
         var world : Array<Float>;
         var closed : Bool = path.closed;
@@ -405,7 +410,7 @@ class PathConstraint implements Updatable
         var ddfy : Float;
         var dfx : Float;
         var dfy : Float;
-        var w : Int;
+        var w : Int = 0;
         var i = 0;
         w = 2;
         while (i < curveCount)

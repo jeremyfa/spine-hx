@@ -42,7 +42,10 @@ class SkeletonBounds
     
     public var boundingBoxes : Array<BoundingBoxAttachment> = new Array<BoundingBoxAttachment>();
     public var polygons : Array<Polygon> = new Array<Polygon>();
-    public var minX : Float;public var minY : Float;public var maxX : Float;public var maxY : Float;
+    public var minX : Float = 0;
+    public var minY : Float = 0;
+    public var maxX : Float = 0;
+    public var maxY : Float = 0;
     
     public function new()
     {

@@ -53,7 +53,10 @@ class Skeleton
     public var pathConstraints : Array<PathConstraint>;
     private var _updateCache : Array<Updatable> = new Array<Updatable>();
     private var _skin : Skin;
-    public var r : Float = 1;public var g : Float = 1;public var b : Float = 1;public var a : Float = 1;
+    public var r : Float = 1;
+    public var g : Float = 1;
+    public var b : Float = 1;
+    public var a : Float = 1;
     public var time : Float = 0;
     public var flipX : Bool;public var flipY : Bool;
     public var x(default, set) : Float = 0;

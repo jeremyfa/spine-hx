@@ -47,8 +47,10 @@ class SkeletonData
     public var ikConstraints : Array<IkConstraintData> = new Array<IkConstraintData>();
     public var transformConstraints : Array<TransformConstraintData> = new Array<TransformConstraintData>();
     public var pathConstraints : Array<PathConstraintData> = new Array<PathConstraintData>();
-    public var width : Float;public var height : Float;
-    public var version : String;public var hash : String;
+    public var width : Float = 0;
+    public var height : Float = 0;
+    public var version : String;
+    public var hash : String;
 
     public function new()
     {

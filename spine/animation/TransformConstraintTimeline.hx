@@ -39,15 +39,22 @@ class TransformConstraintTimeline extends CurveTimeline
 {
     public static inline var ENTRIES : Int = 5;
     @:allow(spine.animation)
-    private static var PREV_TIME : Int = -5;@:allow(spine.animation)
-    private static var PREV_ROTATE : Int = -4;@:allow(spine.animation)
-    private static var PREV_TRANSLATE : Int = -3;@:allow(spine.animation)
-    private static var PREV_SCALE : Int = -2;@:allow(spine.animation)
+    private static var PREV_TIME : Int = -5;
+    @:allow(spine.animation)
+    private static var PREV_ROTATE : Int = -4;
+    @:allow(spine.animation)
+    private static var PREV_TRANSLATE : Int = -3;
+    @:allow(spine.animation)
+    private static var PREV_SCALE : Int = -2;
+    @:allow(spine.animation)
     private static var PREV_SHEAR : Int = -1;
     @:allow(spine.animation)
-    private static inline var ROTATE : Int = 1;@:allow(spine.animation)
-    private static inline var TRANSLATE : Int = 2;@:allow(spine.animation)
-    private static inline var SCALE : Int = 3;@:allow(spine.animation)
+    private static inline var ROTATE : Int = 1;
+    @:allow(spine.animation)
+    private static inline var TRANSLATE : Int = 2;
+    @:allow(spine.animation)
+    private static inline var SCALE : Int = 3;
+    @:allow(spine.animation)
     private static inline var SHEAR : Int = 4;
 
     public var transformConstraintIndex : Int;

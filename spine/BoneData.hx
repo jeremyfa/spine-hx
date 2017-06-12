@@ -45,14 +45,14 @@ class BoneData
     private var _name : String;
     @:allow(spine)
     private var _parent : BoneData;
-    public var length : Float;
-    public var x : Float;
-    public var y : Float;
-    public var rotation : Float;
+    public var length : Float = 0;
+    public var x : Float = 0;
+    public var y : Float = 0;
+    public var rotation : Float = 0;
     public var scaleX : Float = 1;
     public var scaleY : Float = 1;
-    public var shearX : Float;
-    public var shearY : Float;
+    public var shearX : Float = 0;
+    public var shearY : Float = 0;
     public var inheritRotation : Bool = true;
     public var inheritScale : Bool = true;
     

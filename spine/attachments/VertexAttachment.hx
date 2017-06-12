@@ -39,7 +39,7 @@ class VertexAttachment extends Attachment
 {
     public var bones : Array<Int>;
     public var vertices : Array<Float>;
-    public var worldVerticesLength : Int;
+    public var worldVerticesLength : Int = 0;
 
     public function new(name : String)
     {
@@ -97,7 +97,7 @@ class VertexAttachment extends Attachment
             w = offset;
             while (w < count)
             {
-                vx = vertices[v];vy = vertices[v + 1];
+                vx = vertices[v]; vy = vertices[v + 1];
                 worldVertices[w] = vx * a + vy * bb + x;
                 worldVertices[w + 1] = vx * c + vy * d + y;
                 v += 2;

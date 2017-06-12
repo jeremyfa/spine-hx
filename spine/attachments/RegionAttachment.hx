@@ -44,13 +44,13 @@ class RegionAttachment extends Attachment
     public var X4 : Int = 6;
     public var Y4 : Int = 7;
 
-    public var x : Float;
-    public var y : Float;
+    public var x : Float = 0;
+    public var y : Float = 0;
     public var scaleX : Float = 1;
     public var scaleY : Float = 1;
-    public var rotation : Float;
-    public var width : Float;
-    public var height : Float;
+    public var rotation : Float = 0;
+    public var width : Float = 0;
+    public var height : Float = 0;
     public var r : Float = 1;
     public var g : Float = 1;
     public var b : Float = 1;
@@ -58,12 +58,12 @@ class RegionAttachment extends Attachment
 
     public var path : String;
     public var rendererObject : Dynamic;
-    public var regionOffsetX : Float;  // Pixels stripped from the bottom left, unrotated.
-    public var regionOffsetY : Float;
-    public var regionWidth : Float;  // Unrotated, stripped size.
-    public var regionHeight : Float;
-    public var regionOriginalWidth : Float;  // Unrotated, unstripped size.
-    public var regionOriginalHeight : Float;
+    public var regionOffsetX : Float = 0;  // Pixels stripped from the bottom left, unrotated.
+    public var regionOffsetY : Float = 0;
+    public var regionWidth : Float = 0;  // Unrotated, stripped size.
+    public var regionHeight : Float = 0;
+    public var regionOriginalWidth : Float = 0;  // Unrotated, unstripped size.
+    public var regionOriginalHeight : Float = 0;
 
     public var offset : Array<Float> = new Array<Float>();
     public var uvs : Array<Float> = new Array<Float>();

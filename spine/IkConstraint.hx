@@ -41,8 +41,8 @@ class IkConstraint implements Updatable
     private var _data : IkConstraintData;
     public var bones : Array<Bone>;
     public var target : Bone;
-    public var mix : Float;
-    public var bendDirection : Int;
+    public var mix : Float = 0;
+    public var bendDirection : Int = 0;
 
     public var level : Int;
 
