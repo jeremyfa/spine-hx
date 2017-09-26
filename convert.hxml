@@ -1,0 +1,5 @@
+-main Convert
+-debug
+-lib hxnodejs
+-js convert.js
+-cmd node convert.js

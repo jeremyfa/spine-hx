@@ -1,1 +1,4 @@
 .DS_Store
+/spine-runtimes
+/convert.js
+node_modules
