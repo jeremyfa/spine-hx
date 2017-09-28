@@ -128,6 +128,20 @@ class Convert {
         separators.set('%', true);
         separators.set('&', true);
         separators.set('|', true);
+
+        var controls = new Map<String,Bool>();
+        controls.set('if', true);
+        controls.set('else', true);
+        controls.set('while', true);
+        controls.set('do', true);
+        controls.set('for', true);
+        controls.set('switch', true);
+        controls.set('case', true);
+        controls.set('throw', true);
+        controls.set('return', true);
+        controls.set('try', true);
+        controls.set('catch', true);
+        controls.set('new', true);
         
         // Stub
         var consumeExpression = function(until:String, ?options:{
@@ -138,8 +152,15 @@ class Convert {
         var inSingleLineComment = false;
         var inMultiLineComment = false;
         var inClass = false;
+        var inSubClass = false;
         var inMethod = false;
+        var inEnum = false;
+        var inInterface = false;
+        var subDeclSplits:Array<Int> = [];
         var beforeClassBraces = 0;
+        var beforeSubClassBraces = 0;
+        var beforeInterfaceBraces = 0;
+        var beforeEnumBraces = 0;
         var beforeMethodBraces = 0;
         var inFor1 = false;
         var inFor2 = false;
@@ -155,6 +176,7 @@ class Convert {
         var beforeFor3Parens = 0;
         var openBraces = 0;
         var openParens = 0;
+        var openBrackets = 0;
         var lastSeparator = '';
         var i = 0;
         var pc = ''; // 1 prev character
@@ -169,10 +191,12 @@ class Convert {
         var RE_WORD = ~/^[a-zA-Z0-9_]+/;
         var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
         var RE_IMPORT = ~/^import\s+(static\s+)?([^;\s]+)\s*;/;
-        var RE_PROPERTY = ~/^((?:public|private|protected|static|final|dynamic)\s+)*([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
-        var RE_CONSTRUCTOR = ~/^((?:public|private|protected|final)\s+)*([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
-        var RE_METHOD = ~/^((?:public|private|protected|static|final)\s+)*([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
+        var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
+        var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
+        var RE_METHOD = ~/^((?:(?:public|private|protected|static|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
         var RE_VAR = ~/^(?:([a-zA-Z0-9,<>\[\]_]+)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
+        var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
+        var RE_NEW_FLOAT = ~/^new\s+float\s*\[/;
 
         inline function computeCleanedHaxe() {
 
@@ -379,6 +403,46 @@ class Convert {
 
         } //convertArgs
 
+        function convertDeclExtras(inExtras:String):{interfaces:Array<String>, classes:Array<String>} {
+
+            var extras = {
+                interfaces: [],
+                classes: []
+            };
+
+            if (inExtras != null) {
+
+                var inImplements = false;
+                var inExtends = false;
+
+                inExtras = inExtras.trim();
+                for (item in inExtras.replace("\t", ' ').replace(",", ' ').split(' ')) {
+                    item = item.trim();
+                    if (item != '') {
+                        if (item == 'implements') {
+                            inImplements = true;
+                            inExtends = false;
+                        }
+                        else if (item == 'extends') {
+                            inImplements = false;
+                            inExtends = true;
+                        }
+                        else {
+                            if (inImplements) {
+                                extras.interfaces.push(item);
+                            }
+                            else if (inExtends) {
+                                extras.classes.push(item);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return extras;
+
+        } //convertDeclExtras
+
         function consumeCommentOrString():Bool {
 
             if (inSingleLineComment) {
@@ -434,6 +498,15 @@ class Convert {
                 openBraces--;
                 haxe += c;
                 i++;
+                if (inSubClass && openBraces == beforeSubClassBraces) {
+                    inSubClass = false;
+                }
+                if (inInterface && openBraces == beforeInterfaceBraces) {
+                    inInterface = false;
+                }
+                if (inEnum && openBraces == beforeEnumBraces) {
+                    inEnum = false;
+                }
                 if (inClass && openBraces == beforeClassBraces) {
                     inClass = false;
                 }
@@ -487,7 +560,8 @@ class Convert {
 
                     // Rewind and write while loop
                     haxe = haxe.substring(0, forSplits[1]);
-                    haxe += ' while (' + forCondition.substring(0, forCondition.length - 1) + ') {';
+                    cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
+                    haxe += ' while (' + forCondition.substring(0, forCondition.length - 1) + ')';
                     
                     // Detect if the loop body is inline or not
                     consumeCommentOrString();
@@ -500,14 +574,17 @@ class Convert {
                     }
 
                     if (c != '{') {
+                        haxe += ' { ';
                         consumeExpression(';');
-                        haxe += ' ' + forIncrement + ' }';
+                        haxe += ' ' + forIncrement + '; }';
                     }
                     else {
+                        i++;
                         openBraces++;
                         consumeExpression('}');
                         haxe = haxe.substring(0, haxe.length - 1);
-                        haxe += forIncrement + ' }';
+                        cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
+                        haxe += forIncrement + '; }';
                     }
                 }
             }
@@ -519,6 +596,26 @@ class Convert {
 
         } //consumeParen
 
+        function consumeBracket():Bool {
+
+            if (c == '[') {
+                openBrackets++;
+                haxe += c;
+                i++;
+            }
+            else if (c == ']') {
+                openBrackets--;
+                haxe += c;
+                i++;
+            }
+            else {
+                return false;
+            }
+
+            return true;
+
+        } //consumeBracket
+
         consumeExpression = function(until:String, ?options:{
             ?varType:String,
             ?isValue:Bool
@@ -526,6 +623,7 @@ class Convert {
 
             var openBracesStart = openBraces;
             var openParensStart = openParens;
+            var openBracketsStart = openBrackets;
             var stopChar = '';
             var varType = options != null ? options.varType : null;
             var isValue:Bool = options != null ? options.isValue : false;
@@ -538,6 +636,7 @@ class Convert {
                     // Nothing to do
                 }
                 else if (consumeBrace()) {
+                    isValue = false;
                     if (openBraces < openBracesStart && until.indexOf('}') != -1) {
                         stopChar = '}';
                         break;
@@ -546,6 +645,12 @@ class Convert {
                 else if (consumeParen()) {
                     if (openParens < openParensStart && until.indexOf(')') != -1) {
                         stopChar = ')';
+                        break;
+                    }
+                }
+                else if (consumeBracket()) {
+                    if (openBrackets < openBracketsStart && until.indexOf(']') != -1) {
+                        stopChar = ']';
                         break;
                     }
                 }
@@ -566,35 +671,70 @@ class Convert {
 
                     break;
                 }
-                else if (isValue) {
-                    if (c == ',' || c == ';') {
-                        isValue = false;
-                        haxe += ';';
-                        
-                        if (c == ';') {
-                            if (inFor3) {
-                                inFor3Splits.push(haxe.length);
-                            }
-                            else if (inFor2) {
-                                inFor2Splits.push(haxe.length);
-                            }
-                            else if (inFor1) {
-                                inFor1Splits.push(haxe.length);
-                            }
+                else if (isValue && c == ',' || c == ';') {
+                    isValue = false;
+                    haxe += ';';
+                    
+                    if (c == ';') {
+                        if (inFor3) {
+                            inFor3Splits.push(haxe.length);
                         }
+                        else if (inFor2) {
+                            inFor2Splits.push(haxe.length);
+                        }
+                        else if (inFor1) {
+                            inFor1Splits.push(haxe.length);
+                        }
+                    }
 
-                        i++;
-                    }
-                    else {
-                        haxe += c;
-                        i++;
-                    }
+                    i++;
                 }
                 else if (word != '') {
-                    if (word == 'return' || word == 'throw') {
-                        isValue = true;
-                        haxe += word;
-                        i += word.length;
+                    if (word == 'new') {
+                        if (RE_NEW_FLOAT.match(after)) {
+
+                            openBrackets++;
+                            i += RE_NEW_FLOAT.matched(0).length;
+                            println('MATCH FLOAT: ' + RE_NEW_FLOAT.matched(0));
+                            
+                            var index = haxe.length;
+                            var part1:String = '';
+                            var part2:String = null;
+                            consumeExpression(']');
+                            part1 = haxe.substring(index, haxe.length - 1);
+                            println('PART1: ' + part1);
+                            haxe = haxe.substring(0, index);
+                            cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
+                            c = java.charAt(i);
+                            while (c.trim() == '') {
+                                haxe += c;
+                                i++;
+                                c = java.charAt(i);
+                            }
+
+                            if (c == '[') {
+                                i++;
+                                openBrackets++;
+                                index = haxe.length;
+                                consumeExpression(']');
+                                part2 = haxe.substring(index, haxe.length - 1);
+                                haxe = haxe.substring(0, index);
+                                cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
+                            }
+
+                            if (part1 == '') part1 = '0';
+                            if (part2 != null) {
+                                if (part2 == '') part2 = '0';
+                                haxe += 'FloatArray2D.create(' + part1 + ', ' + part2 + ')';
+                            }
+                            else {
+                                haxe += 'FloatArray.create(' + part1 + ')';
+                            }
+                        }
+                        else {
+                            i += word.length;
+                            haxe += word;
+                        }
                     }
                     else if (word == 'for' && after.substr(word.length).ltrim().startsWith('(')) {
                         i += word.length;
@@ -620,6 +760,11 @@ class Convert {
                             beforeFor3Parens = openParens;
                         }
                         openParens++;
+                    }
+                    else if (controls.exists(word)) {
+                        isValue = true;
+                        haxe += word;
+                        i += word.length;
                     }
                     else if ((lastSeparator == '' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || ((inFor1 || inFor2 || inFor3) && lastSeparator == '(')) && RE_VAR.match(after)) {
                         var type = varType;
@@ -704,15 +849,74 @@ class Convert {
             else if (consumeParen()) {
                 // Nothing to do
             }
+            else if (consumeBracket()) {
+                // Nothing to do
+            }
             // Method body
             else if (inMethod) {
                 consumeExpression('}');
             }
+            // Enum content
+            else if (inEnum) {
+                if (word != '') {
+                    haxe += word.charAt(0).toUpperCase() + word.substring(1);
+                    i += word.length;
+                }
+                else if (c == ',') {
+                    haxe += ';';
+                    i++;
+                }
+                else {
+                    haxe += c;
+                    i++;
+                }
+            }
             // Class specifics
-            else if (inClass) {
+            else if (inClass || inInterface) {
                 // Method or property?
                 if (word != '') {
-                    if (RE_PROPERTY.match(after)) {
+                    if (inClass && RE_DECL.match(after)) {
+
+                        var modifiers = convertModifiers(RE_DECL.matched(1));
+
+                        if (modifiers.exists('private')) {
+                            haxe += 'private ';
+                        }
+
+                        var keyword = RE_DECL.matched(2);
+                        if (keyword == 'class') {
+                            inClass = true;
+                            beforeClassBraces = openBraces;
+                        }
+                        else if (keyword == 'interface') {
+                            inInterface = true;
+                            beforeInterfaceBraces = openBraces;
+                        }
+                        else if (keyword == 'enum') {
+                            inEnum = true;
+                            beforeEnumBraces = openBraces;
+                        }
+                        haxe += keyword + ' ';
+
+                        println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
+
+                        var name = RE_DECL.matched(3);
+                        haxe += name + ' ';
+
+                        var extras = convertDeclExtras(RE_DECL.matched(4));
+                        for (item in extras.classes) {
+                            haxe += 'extends ' + item + ' ';
+                        }
+                        for (item in extras.interfaces) {
+                            haxe += 'implements ' + item + ' ';
+                        }
+
+                        haxe += '{';
+
+                        openBraces++;
+                        i += RE_DECL.matched(0).length;
+                    }
+                    else if (RE_PROPERTY.match(after)) {
 
                         println('PROPERTY: ' + RE_PROPERTY.matched(0));
 
@@ -788,13 +992,13 @@ class Convert {
 
                         var modifiers = convertModifiers(RE_METHOD.matched(1));
                         
-                        if (modifiers.exists('public')) {
+                        if (!inInterface && modifiers.exists('public')) {
                             haxe += 'public ';
                         }
-                        if (modifiers.exists('protected')) {
+                        if (!inInterface && modifiers.exists('protected')) {
                             haxe += 'public ';
                         }
-                        if (modifiers.exists('private')) {
+                        if (!inInterface && modifiers.exists('private')) {
                             haxe += 'private ';
                         }
                         if (modifiers.exists('static')) {
@@ -810,12 +1014,15 @@ class Convert {
                         for (arg in args) {
                             parts.push(arg.name + ':' + arg.type);
                         }
-                        haxe += parts.join(', ') + '):' + type + ' {';
+                        haxe += parts.join(', ') + '):' + type + (RE_METHOD.matched(5) == ';' ? ';' : ' {');
 
                         i += RE_METHOD.matched(0).length;
-                        inMethod = true;
-                        beforeMethodBraces = openBraces;
-                        openBraces++;
+
+                        if (RE_METHOD.matched(5) == '{') {
+                            inMethod = true;
+                            beforeMethodBraces = openBraces;
+                            openBraces++;
+                        }
 
                     }
                     else {
@@ -862,22 +1069,48 @@ class Convert {
                 i += RE_IMPORT.matched(0).length;
             }
             // Class modifiers we don't want to keep
-            else if (word == 'public' || word == 'static' || word == 'abstract') {
-                // Remove it as it's invalid in haxe
-                i += word.length;
-                c = java.charAt(i);
-                while (c == ' ') {
-                    i++;
-                    c = java.charAt(i);
+            else if (word != '' && RE_DECL.match(after)) {
+
+                var modifiers = convertModifiers(RE_DECL.matched(1));
+
+                if (modifiers.exists('private')) {
+                    haxe += 'private ';
                 }
+
+                var keyword = RE_DECL.matched(2);
+                if (keyword == 'class') {
+                    inClass = true;
+                    beforeClassBraces = openBraces;
+                }
+                else if (keyword == 'interface') {
+                    inInterface = true;
+                    beforeInterfaceBraces = openBraces;
+                }
+                else if (keyword == 'enum') {
+                    inEnum = true;
+                    beforeEnumBraces = openBraces;
+                }
+                haxe += keyword + ' ';
+
+                println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
+
+                var name = RE_DECL.matched(3);
+                haxe += name + ' ';
+
+                var extras = convertDeclExtras(RE_DECL.matched(4));
+                for (item in extras.classes) {
+                    haxe += 'extends ' + item + ' ';
+                }
+                for (item in extras.interfaces) {
+                    haxe += 'implements ' + item + ' ';
+                }
+
+                haxe += '{';
+
+                openBraces++;
+                i += RE_DECL.matched(0).length;
+
             }
-            // Class public modifier
-            else if (word == 'class') {
-                inClass = true;
-                haxe += word;
-                i += word.length;
-            }
-            // Just add code as is
             else {
                 haxe += c;
                 i++;
