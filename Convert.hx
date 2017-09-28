@@ -146,7 +146,7 @@ class Convert {
         // Stub
         var consumeExpression = function(until:String, ?options:{
             ?varType:String,
-            ?isValue:Bool
+            ?isVarValue:Bool
         }):String { return null; }
 
         var inSingleLineComment = false;
@@ -194,7 +194,7 @@ class Convert {
         var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
         var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
         var RE_METHOD = ~/^((?:(?:public|private|protected|static|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
-        var RE_VAR = ~/^(?:([a-zA-Z0-9,<>\[\]_]+)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
+        var RE_VAR = ~/^(?:([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
         var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
         var RE_NEW_FLOAT = ~/^new\s+float\s*\[/;
 
@@ -618,7 +618,7 @@ class Convert {
 
         consumeExpression = function(until:String, ?options:{
             ?varType:String,
-            ?isValue:Bool
+            ?isVarValue:Bool
         }):String {
 
             var openBracesStart = openBraces;
@@ -626,7 +626,7 @@ class Convert {
             var openBracketsStart = openBrackets;
             var stopChar = '';
             var varType = options != null ? options.varType : null;
-            var isValue:Bool = options != null ? options.isValue : false;
+            var isVarValue:Bool = options != null ? options.isVarValue : false;
 
             while (i < len) {
 
@@ -636,14 +636,16 @@ class Convert {
                     // Nothing to do
                 }
                 else if (consumeBrace()) {
-                    isValue = false;
                     if (openBraces < openBracesStart && until.indexOf('}') != -1) {
                         stopChar = '}';
                         break;
                     }
                 }
                 else if (consumeParen()) {
-                    if (openParens < openParensStart && until.indexOf(')') != -1) {
+                    if (isVarValue && openParens > openParensStart) {
+                        consumeExpression(')');
+                    }
+                    else if (openParens < openParensStart && until.indexOf(')') != -1) {
                         stopChar = ')';
                         break;
                     }
@@ -671,8 +673,8 @@ class Convert {
 
                     break;
                 }
-                else if (isValue && c == ',' || c == ';') {
-                    isValue = false;
+                else if (isVarValue && c == ',' || c == ';') {
+                    isVarValue = false;
                     haxe += ';';
                     
                     if (c == ';') {
@@ -695,14 +697,12 @@ class Convert {
 
                             openBrackets++;
                             i += RE_NEW_FLOAT.matched(0).length;
-                            println('MATCH FLOAT: ' + RE_NEW_FLOAT.matched(0));
                             
                             var index = haxe.length;
                             var part1:String = '';
                             var part2:String = null;
                             consumeExpression(']');
                             part1 = haxe.substring(index, haxe.length - 1);
-                            println('PART1: ' + part1);
                             haxe = haxe.substring(0, index);
                             cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
                             c = java.charAt(i);
@@ -762,7 +762,6 @@ class Convert {
                         openParens++;
                     }
                     else if (controls.exists(word)) {
-                        isValue = true;
                         haxe += word;
                         i += word.length;
                     }
@@ -784,10 +783,11 @@ class Convert {
                         }
                         else if (end == '=') {
                             haxe += ' =';
-                            isValue = true;
+                            varType = type;
+                            isVarValue = true;
                         }
                         else if (end == ',') {
-                            haxe += ', ';
+                            haxe += ';';
                             varType = type;
                         }
 
@@ -947,10 +947,10 @@ class Convert {
                         }
                         else if (end == '=') {
                             haxe += ' =';
-                            consumeExpression(',;', {varType: type, isValue: true});
+                            consumeExpression(',;', {varType: type, isVarValue: true});
                         }
                         else if (end == ',') {
-                            haxe += ',';
+                            haxe += ';';
                             consumeExpression(',;', {varType: type});
                         }
 
