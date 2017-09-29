@@ -20,17 +20,17 @@ class Convert {
         if (FileSystem.exists('./spine-runtimes/.git')) {
             println('Update official spine-runtimes repository\u2026');
             setCwd('spine-runtimes');
-            //command('git', ['pull', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['pull', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
             setCwd('..');
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            //command('git', ['clone', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['clone', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
         println('Delete previously converted files\u2026');
-        //deleteRecursive('spine');
+        deleteRecursive('spine');
 
         // Convert
         var ctx = {
@@ -89,8 +89,6 @@ class Convert {
                     FileSystem.createDirectory(Path.directory(haxePath));
                 }
                 File.saveContent(haxePath, haxe);
-                
-                js.Node.process.exit(0);
 
                 // Add file in list
                 ctx.files.set(javaPath, haxePath);
@@ -103,10 +101,14 @@ class Convert {
     static function javaToHaxe(java:String):String {
 
         var haxe = '';
+        var cleanedJava = cleanedCode(java);
 
         var cleanedHaxe = '';
         var cleanedHaxeInMultiLineComment = false;
         var cleanedHaxeInSingleLineComment = false;
+
+        var wordReplaces = new Map<String,String>();
+        wordReplaces.set('in', 'In');
 
         var separators = new Map<String,Bool>();
         separators.set('{', true);
@@ -142,6 +144,9 @@ class Convert {
         controls.set('try', true);
         controls.set('catch', true);
         controls.set('new', true);
+        controls.set('continue', true);
+        controls.set('true', true);
+        controls.set('false', true);
         
         // Stub
         var consumeExpression = function(?options:{
@@ -158,24 +163,13 @@ class Convert {
         var inMethod = false;
         var inEnum = false;
         var inInterface = false;
+        var inFor = false;
         var subDeclSplits:Array<Int> = [];
         var beforeClassBraces = 0;
         var beforeSubClassBraces = 0;
         var beforeInterfaceBraces = 0;
         var beforeEnumBraces = 0;
         var beforeMethodBraces = 0;
-        var inFor1 = false;
-        var inFor2 = false;
-        var inFor3 = false;
-        var inFor1Body = false;
-        var inFor2Body = false;
-        var inFor3Body = false;
-        var inFor1Splits:Array<Int> = [];
-        var inFor2Splits:Array<Int> = [];
-        var inFor3Splits:Array<Int> = [];
-        var beforeFor1Parens = 0;
-        var beforeFor2Parens = 0;
-        var beforeFor3Parens = 0;
         var openBraces = 0;
         var openParens = 0;
         var openBrackets = 0;
@@ -186,22 +180,9 @@ class Convert {
         var cc = ''; // 2 next characters
         var word = ''; // Next word
         var after = '';
+        var cleanedAfter = '';
         var len = java.length;
         var usedTypes = new Map<String,Bool>();
-
-        var RE_WORD_SEP = ~/[^a-zA-Z0-9_]/;
-        var RE_WORD = ~/^[a-zA-Z0-9_]+/;
-        var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
-        var RE_IMPORT = ~/^import\s+(static\s+)?([^;\s]+)\s*;/;
-        var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
-        var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
-        var RE_METHOD = ~/^((?:(?:public|private|protected|static|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
-        var RE_VAR = ~/^(?:([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
-        var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
-        var RE_NEW_FLOAT = ~/^new\s+float\s*\[/;
-        var RE_SWITCH = ~/^switch\s*\(/;
-        var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
-        var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9,<>\[\]_]+)/;
 
         inline function computeCleanedHaxe() {
 
@@ -218,27 +199,27 @@ class Convert {
                     if (c == "\n") {
                         cleanedHaxeInSingleLineComment = false;
                     }
-                    cleanedHaxe += c;
+                    cleanedHaxe += ' ';
                     i++;
                 }
                 else if (cleanedHaxeInMultiLineComment) {
                     if (cc == '*/') {
                         cleanedHaxeInMultiLineComment = false;
-                        cleanedHaxe += cc;
+                        cleanedHaxe += '  ';
                         i += 2;
                     } else {
-                        cleanedHaxe += c;
+                        cleanedHaxe += ' ';
                         i++;
                     }
                 }
                 else if (cc == '//') {
                     cleanedHaxeInSingleLineComment = true;
-                    cleanedHaxe += cc;
+                    cleanedHaxe += '  ';
                     i += 2;
                 }
                 else if (cc == '/*') {
                     cleanedHaxeInMultiLineComment = true;
-                    cleanedHaxe += cc;
+                    cleanedHaxe += '  ';
                     i += 2;
                 }
                 else if (c == '"' || c == '\'') {
@@ -286,6 +267,7 @@ class Convert {
             computeLastSeparator();
 
             after = java.substr(i);
+            cleanedAfter = cleanedJava.substr(i);
 
             c = after.charAt(0);
             cc = c + (i < len ? after.charAt(1) : '');
@@ -332,8 +314,10 @@ class Convert {
                 case 'float': 'Float';
                 case 'float[]': 'FloatArray';
                 case 'float[][]': 'FloatArray2D';
-                case 'void': 'Void';
                 case 'int': 'Int';
+                case 'int[]': 'IntArray';
+                case 'int[][]': 'IntArray2D';
+                case 'void': 'Void';
                 case 'boolean': 'Bool';
                 default: null;
             }
@@ -543,61 +527,8 @@ class Convert {
             }
             else if (c == ')') {
                 openParens--;
+                haxe += c;
                 i++;
-                var forSplits = null;
-                if (inFor3 && openParens == beforeFor3Parens) {
-                    inFor3 = false;
-                    inFor3Body = true;
-                    forSplits = inFor3Splits;
-                }
-                else if (inFor2 && openParens == beforeFor2Parens) {
-                    inFor2 = false;
-                    inFor2Body = true;
-                    forSplits = inFor2Splits;
-                }
-                else if (inFor1 && openParens == beforeFor1Parens) {
-                    inFor1 = false;
-                    inFor1Body = true;
-                    forSplits = inFor1Splits;
-                }
-                else {
-                    haxe += c;
-                }
-
-                if (forSplits != null) {
-                    // Extract for parts
-                    var forCondition = haxe.substring(forSplits[1], forSplits[2]).trim();
-                    var forIncrement = haxe.substring(forSplits[2]).trim();
-
-                    // Rewind and write while loop
-                    haxe = haxe.substring(0, forSplits[1]);
-                    cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
-                    haxe += ' while (' + forCondition.substring(0, forCondition.length - 1) + ')';
-                    
-                    // Detect if the loop body is inline or not
-                    consumeCommentOrString(true);
-
-                    c = java.charAt(i);
-                    while (i < len && c.trim() == '') {
-                        i++;
-                        haxe += c;
-                        c = java.charAt(i);
-                    }
-
-                    if (c != '{') {
-                        haxe += ' { ';
-                        consumeExpression({ until: ';' });
-                        haxe += ' ' + forIncrement + '; }';
-                    }
-                    else {
-                        i++;
-                        openBraces++;
-                        consumeExpression({ until: '}' });
-                        haxe = haxe.substring(0, haxe.length - 1);
-                        cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
-                        haxe += forIncrement + '; }';
-                    }
-                }
             }
             else {
                 return false;
@@ -659,19 +590,20 @@ class Convert {
                 else if (c == '(' && RE_CAST.match(after)) {
                     haxe += 'cast(' + RE_CAST.matched(2).ltrim();
                     i += RE_CAST.matched(0).length;
+                    var castType = RE_CAST.matched(1);
 
                     var index = haxe.length;
                     consumeExpression({ until: ');,' });
                     var castPart = haxe.substring(index);
                     haxe = haxe.substring(0, index);
                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                    haxe += castPart.substring(0, castPart.length - 1) + ', ' + convertType(RE_CAST.matched(1)) + ')' + castPart.substring(castPart.length - 1);
+                    haxe += castPart.substring(0, castPart.length - 1) + ', ' + convertType(castType) + ')' + castPart.substring(castPart.length - 1);
                 }
                 else if (consumeParen()) {
                     if (isVarValue && openParens > openParensStart) {
                         consumeExpression({ until: ')' });
                     }
-                    else if (openParens < openParensStart && until.indexOf(')') != -1) {
+                    else if (openParens < openParensStart && openBraces == openBracesStart && until.indexOf(')') != -1) {
                         stopToken = ')';
                         break;
                     }
@@ -686,34 +618,11 @@ class Convert {
                     haxe += c;
                     i++;
                     stopToken = c;
-                        
-                    if (inFor3) {
-                        inFor3Splits.push(haxe.length);
-                    }
-                    else if (inFor2) {
-                        inFor2Splits.push(haxe.length);
-                    }
-                    else if (inFor1) {
-                        inFor1Splits.push(haxe.length);
-                    }
-
                     break;
                 }
-                else if (isVarValue && c == ',' || c == ';') {
+                else if (isVarValue && (c == ',' || c == ';') && openParens == openParensStart) {
                     isVarValue = false;
                     haxe += ';';
-                    
-                    if (c == ';') {
-                        if (inFor3) {
-                            inFor3Splits.push(haxe.length);
-                        }
-                        else if (inFor2) {
-                            inFor2Splits.push(haxe.length);
-                        }
-                        else if (inFor1) {
-                            inFor1Splits.push(haxe.length);
-                        }
-                    }
 
                     i++;
 
@@ -723,7 +632,11 @@ class Convert {
                     }
                 }
                 else if (word != '') {
-                    if (untilWords != null && untilWords.indexOf(word) != -1) {
+                    if (wordReplaces.exists(word)) {
+                        i += word.length;
+                        haxe += wordReplaces.get(word);
+                    }
+                    else if (untilWords != null && untilWords.indexOf(word) != -1) {
                         stopToken = word;
                         break;
                     }
@@ -752,111 +665,35 @@ class Convert {
                         haxe += '{';
                         openBraces++;
 
+                        var startIndex = haxe.length;
+                        consumeExpression({ until: '}' });
+                        var switchContent = haxe.substring(startIndex, haxe.length - 1);
+                        haxe = haxe.substring(0, startIndex);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+
+                        var parts = splitCode(' ' + switchContent, ['case', 'default']);
+
+                        haxe += parts[0].substring(1);
+                        parts.shift();
+
                         var cases:Array<{
-                            startIndex:Int,
                             fallThrough:Bool,
                             body:String
                         }> = [];
 
-                        // For each `case`
-                        while (i < len) {
-
-                            consumeCommentOrString(true);
-
-                            c = java.charAt(i);
-                            while (i < len && c.trim() == '') {
-                                haxe += c;
-                                i++;
-                                c = java.charAt(i);
-                            }
-                            
-                            nextIteration();
-                            consumeCommentOrString(true);
-
-                            if (word == 'case') {
-
-                                cases.push({
-                                    startIndex: haxe.length,
-                                    fallThrough: true,
-                                    body: ''
-                                });
-
-                                haxe += word;
-                                i += word.length;
-
-                                while (i < len) {
-
-                                    consumeCommentOrString(true);
-
-                                    c = java.charAt(i);
-                                    while (i < len && c.trim() == '') {
-                                        haxe += c;
-                                        i++;
-                                        c = java.charAt(i);
-                                    }
-                                    after = java.substring(i);
-
-                                    nextIteration();
-
-                                    if (word == 'return' || word == 'break') {
-                                        i += word.length;
-                                        if (word == 'return') {
-                                            haxe += word;
-                                            c = java.charAt(i);
-                                            while (i < len && c != ';') {
-                                                i++;
-                                                haxe += c;
-                                                c = java.charAt(i);
-                                            }
-                                            i++;
-                                            haxe += c;
-                                        } else {
-                                            c = java.charAt(i);
-                                            while (i < len && c != ';') {
-                                                i++;
-                                                c = java.charAt(i);
-                                            }
-                                            i++;
-                                            haxe = haxe.rtrim();
-                                            cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                                        }
-                                        cases[cases.length-1].fallThrough = false;
-                                    }
-                                    else if (word == 'case') {
-                                        cases[cases.length-1].body = haxe.substring(cases[cases.length-1].startIndex);
-                                        break;
-                                    }
-                                    else if (c == '}') {
-                                        cases[cases.length-1].body = haxe.substring(cases[cases.length-1].startIndex);
-                                        break;
-                                    }
-                                    else {
-                                        consumeExpression({ until: ';', untilWords: ['case'] });
-                                    }
-                                }
-
-                                if (c == '}') {
-                                    break;
-                                }
-
-                            }
-                            else if (c == '}') {
-                                i++;
-                                openBraces--;
-                                haxe += c;
-                                break;
-                            }
-                            else if (c == ';') {
-                                i++;
-                                haxe += c;
-                            }
-                            else {
-                                throw 'Failed to parse case at line ' + java.substr(0,i).split("\n").length;
-                            }
+                        for (part in parts) {
+                            cases.push({
+                                body: part,
+                                fallThrough: true
+                            });
                         }
 
-                        haxe = haxe.substring(0, cases[0].startIndex);
-                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        for (aCase in cases) {
+                            var cleaned = cleanedCode(aCase.body, { cleanSpaces: true }).trim();
+                            if (cleaned.endsWith(';break;') || cleaned.endsWith('}break;') || cleaned.endsWith('}return;') || cleaned.endsWith('}return;')) {
+                                aCase.fallThrough = false;
+                            }
+                        }
 
                         var n = 0;
                         for (aCase in cases) {
@@ -875,13 +712,16 @@ class Convert {
                             n++;
                         }
 
+                        haxe += '}';
+
                     }
                     else if (word == 'new') {
-                        if (RE_NEW_FLOAT.match(after)) {
+                        if (RE_NEW_ARRAY.match(after)) {
 
                             openBrackets++;
-                            i += RE_NEW_FLOAT.matched(0).length;
+                            i += RE_NEW_ARRAY.matched(0).length;
                             
+                            var arrayType = RE_NEW_ARRAY.matched(1).charAt(0).toUpperCase() + RE_NEW_ARRAY.matched(1).substring(1);
                             var index = haxe.length;
                             var part1:String = '';
                             var part2:String = null;
@@ -909,10 +749,10 @@ class Convert {
                             if (part1 == '') part1 = '0';
                             if (part2 != null) {
                                 if (part2 == '') part2 = '0';
-                                haxe += 'FloatArray2D.create(' + part1 + ', ' + part2 + ')';
+                                haxe += arrayType + 'Array2D.create(' + part1 + ', ' + part2 + ')';
                             }
                             else {
-                                haxe += 'FloatArray.create(' + part1 + ')';
+                                haxe += arrayType + 'Array.create(' + part1 + ')';
                             }
                         }
                         else {
@@ -928,22 +768,67 @@ class Convert {
                             c = java.charAt(i);
                         }
                         i++;
-                        if (!inFor1 && !inFor1Body) {
-                            inFor1 = true;
-                            inFor1Splits = [haxe.length];
-                            beforeFor1Parens = openParens;
-                        }
-                        else if (!inFor2 && !inFor2Body) {
-                            inFor2 = true;
-                            inFor2Splits = [haxe.length];
-                            beforeFor2Parens = openParens;
-                        }
-                        else if (!inFor3 && !inFor3Body) {
-                            inFor3 = true;
-                            inFor3Splits = [haxe.length];
-                            beforeFor3Parens = openParens;
-                        }
                         openParens++;
+
+                        // For init
+                        var startIndex = haxe.length;
+                        inFor = true;
+                        consumeExpression({ until: ';' });
+                        inFor = false;
+                        var forInit = haxe.substring(startIndex, haxe.length - 1).trim();
+                        haxe = haxe.substring(0, startIndex);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+
+                        // For condition
+                        startIndex = haxe.length;
+                        inFor = true;
+                        consumeExpression({ until: ';' });
+                        inFor = false;
+                        var forCondition = haxe.substring(startIndex, haxe.length - 1).trim();
+                        haxe = haxe.substring(0, startIndex);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+
+                        // For increment
+                        startIndex = haxe.length;
+                        inFor = true;
+                        consumeExpression({ until: ')' });
+                        inFor = false;
+                        var forIncrement = haxe.substring(startIndex, haxe.length - 1).trim();
+                        haxe = haxe.substring(0, startIndex);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        openParens--;
+
+                        var isInline = false;
+                        var n = i;
+                        var nc = cleanedJava.charAt(n);
+                        while (n < len && nc != ';' && nc != '{') {
+                            n++;
+                            nc = cleanedJava.charAt(n);
+                        }
+                        if (nc == ';') isInline = true;
+
+                        haxe += forInit + ';';
+                        haxe += ' while (' + forCondition + ')';
+                        if (isInline) {
+                            haxe += ' {';
+                            consumeExpression({ until: ';' });
+                            haxe += ' ' + forIncrement + '; }';
+                        }
+                        else {
+                            i = n + 1;
+                            openBraces++;
+                            haxe += ' {';
+                            consumeExpression({ until: '}' });
+                            haxe = haxe.substring(0, haxe.length - 1);
+                            cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                            haxe += forIncrement + '; }';
+                        }
+
+                        println('init: ' + forInit);
+                        println('condition: ' + forCondition);
+                        println('increment: ' + forIncrement);
+                        println('inline? ' + isInline);
+
                     }
                     else if (controls.exists(word)) {
                         haxe += word;
@@ -953,47 +838,50 @@ class Convert {
                         haxe += 'Std.is(' + RE_INSTANCEOF.matched(1) + ', ' + convertType(RE_INSTANCEOF.matched(2)) + ')';
                         i += RE_INSTANCEOF.matched(0).length;
                     }
-                    else if ((lastSeparator == '' || lastSeparator == ':' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || ((inFor1 || inFor2 || inFor3) && lastSeparator == '(')) && RE_VAR.match(after)) {
-                        var type = varType;
+                    else if (!controls.exists(word) && (lastSeparator == '' || lastSeparator == ':' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || lastSeparator == ')' || inFor) && RE_VAR.match(after)) {
+                        var type = null;
                         if (RE_VAR.matched(1) != null) {
                             type = convertType(RE_VAR.matched(1));
                         }
-                        var name = RE_VAR.matched(2);
+                        var skip = false;
+                        if (type == null) {
+                            if ((lastSeparator == ',' || lastSeparator == ';') && varType != null) {
+                                type = varType;
+                            }
+                            else {
+                                haxe += word;
+                                i += word.length;
+                                skip = true;
+                            }
+                        }
+                        if (!skip) {
+                            var name = RE_VAR.matched(2);
 
-                        haxe += 'var ' + name;
-                        if (type != null) {
-                            haxe += ':' + type;
-                        }
+                            haxe += 'var ' + name;
+                            if (type != null) {
+                                haxe += ':' + type;
+                            }
 
-                        var end = RE_VAR.matched(3);
-                        if (end == ';') {
-                            haxe += ';';
-                        }
-                        else if (end == '=') {
-                            haxe += ' =';
-                            varType = type;
-                            isVarValue = true;
-                        }
-                        else if (end == ',') {
-                            haxe += ';';
-                            varType = type;
-                        }
+                            var end = RE_VAR.matched(3);
+                            if (end == ';') {
+                                haxe += ';';
+                            }
+                            else if (end == '=') {
+                                haxe += ' =';
+                                varType = type;
+                                isVarValue = true;
+                            }
+                            else if (end == ',') {
+                                haxe += ';';
+                                varType = type;
+                            }
 
-                        i += RE_VAR.matched(0).length;
+                            i += RE_VAR.matched(0).length;
 
-                        if (inFor3 && end == ';') {
-                            inFor3Splits.push(haxe.length);
-                        }
-                        else if (inFor2 && end == ';') {
-                            inFor2Splits.push(haxe.length);
-                        }
-                        else if (inFor1 && end == ';') {
-                            inFor1Splits.push(haxe.length);
-                        }
-
-                        if (end == ';' && until.indexOf(';') != -1) {
-                            stopToken = ';';
-                            break;
+                            if (end == ';' && until.indexOf(';') != -1 && openBraces == openBracesStart && openParens == openParensStart) {
+                                stopToken = ';';
+                                break;
+                            }
                         }
                     }
                     else {
@@ -1004,15 +892,6 @@ class Convert {
                 else if (c == ';') {
                     haxe += c;
                     i++;
-                    if (inFor3) {
-                        inFor3Splits.push(haxe.length);
-                    }
-                    else if (inFor2) {
-                        inFor2Splits.push(haxe.length);
-                    }
-                    else if (inFor1) {
-                        inFor1Splits.push(haxe.length);
-                    }
                 }
                 else {
                     haxe += c;
@@ -1106,7 +985,7 @@ class Convert {
                     }
                     else if (RE_PROPERTY.match(after)) {
 
-                        println('PROPERTY: ' + RE_PROPERTY.matched(0));
+                        //println('PROPERTY: ' + RE_PROPERTY.matched(0));
 
                         var modifiers = convertModifiers(RE_PROPERTY.matched(1));
                         
@@ -1145,7 +1024,7 @@ class Convert {
                     }
                     else if (RE_CONSTRUCTOR.match(after)) {
 
-                        println('CONSTRUCTOR: ' + RE_CONSTRUCTOR.matched(0));
+                        //println('CONSTRUCTOR: ' + RE_CONSTRUCTOR.matched(0));
 
                         var modifiers = convertModifiers(RE_CONSTRUCTOR.matched(1));
                         
@@ -1176,7 +1055,7 @@ class Convert {
                     }
                     else if (RE_METHOD.match(after)) {
 
-                        println('METHOD: ' + RE_METHOD.matched(0));
+                        //println('METHOD: ' + RE_METHOD.matched(0));
 
                         var modifiers = convertModifiers(RE_METHOD.matched(1));
                         
@@ -1338,5 +1217,184 @@ class Convert {
         }
 
     } //deleteRecursive
+
+    static function cleanedCode(code:String, ?options: { cleanSpaces:Bool }) {
+
+        var i = 0;
+        var c = '';
+        var cc = '';
+        var after = '';
+        var len = code.length;
+        var inSingleLineComment = false;
+        var inMultiLineComment = false;
+        var result = '';
+        var cleanSpaces = options != null && options.cleanSpaces ? true : false;
+
+        while (i < len) {
+
+            after = code.substr(i);
+
+            c = after.charAt(0);
+            cc = c + (i < len ? after.charAt(1) : '');
+
+            if (inSingleLineComment) {
+                if (c == "\n") {
+                    inSingleLineComment = false;
+                }
+                result += cleanSpaces ? '' : ' ';
+                i++;
+            }
+            else if (inMultiLineComment) {
+                if (cc == '*/') {
+                    inMultiLineComment = false;
+                    result += cleanSpaces ? '' : '  ';
+                    i += 2;
+                } else {
+                    result += cleanSpaces ? '' : ' ';
+                    i++;
+                }
+            }
+            else if (cc == '//') {
+                inSingleLineComment = true;
+                result += cleanSpaces ? '' : '  ';
+                i += 2;
+            }
+            else if (cc == '/*') {
+                inMultiLineComment = true;
+                result += cleanSpaces ? '' : '  ';
+                i += 2;
+            }
+            else if (c == '"' || c == '\'') {
+                if (!RE_STRING.match(after)) {
+                    throw 'Failed to parse string at line ' + code.substr(0,i).split("\n").length;
+                }
+                var n = 2;
+                var strLen = RE_STRING.matched(0).length;
+                result += c;
+                while (n++ < strLen) result += cleanSpaces ? '' : ' ';
+                result += c;
+                i += strLen;
+            }
+            else if (cleanSpaces && c.trim() == '' && (result.length == 0 || RE_WORD_SEP.match(result.charAt(result.length-1)) || after.trim() == '' || RE_WORD_SEP.match(after.ltrim().charAt(0)))) {
+                i++;
+            }
+            else {
+                result += c;
+                i++;
+            }
+        }
+
+        return result;
+
+    } //cleanedCode
+
+    static function splitCode(code:String, splitTokens:Array<String>) {
+
+        var cleaned = cleanedCode(code);
+        var result = '';
+        var i = 0;
+        var c = '';
+        var cc = '';
+        var pc = '';
+        var after = '';
+        var word = '';
+        var len = cleaned.length;
+        var tokensMap:Map<String,Bool> = new Map();
+        var parts:Array<String> = [''];
+        var partIndex = 0;
+        var openBraces = 0;
+        var openParens = 0;
+        var openBrackets = 0;
+
+        for (token in splitTokens) {
+            tokensMap.set(token, true);
+        }
+
+        while (i < len) {
+
+            after = cleaned.substr(i);
+
+            c = after.charAt(0);
+            cc = c + (i < len ? after.charAt(1) : '');
+            
+            if (i > 0) {
+                pc = cleaned.charAt(i - 1);
+            }
+            else {
+                pc = '';
+            }
+            if (pc != '' &&
+                RE_WORD_SEP.match(pc) &&
+                RE_WORD.match(after)) {
+                word = RE_WORD.matched(0);
+            }
+            else {
+                word = '';
+            }
+
+            if (c == '{') {
+                openBraces++;
+                parts[partIndex] += code.charAt(i);
+                i++;
+            }
+            else if (c == '}') {
+                openBraces--;
+                parts[partIndex] += code.charAt(i);
+                i++;
+            }
+            if (c == '(') {
+                openParens++;
+                parts[partIndex] += code.charAt(i);
+                i++;
+            }
+            else if (c == ')') {
+                openParens--;
+                parts[partIndex] += code.charAt(i);
+                i++;
+            }
+            if (c == '[') {
+                openBrackets++;
+                parts[partIndex] += code.charAt(i);
+                i++;
+            }
+            else if (c == ']') {
+                openBrackets--;
+                parts[partIndex] += code.charAt(i);
+                i++;
+            }
+            else if (openBraces == 0 && word != '') {
+                if (tokensMap.exists(word)) {
+                    parts.push('');
+                    partIndex++;
+                }
+                parts[partIndex] += code.substr(i, word.length);
+                i += word.length;
+            }
+            else {
+                parts[partIndex] += code.charAt(i);
+                i++;
+            }
+
+        }
+
+        return parts;
+
+    } //splitCode
+
+/// Regular expressions
+
+    static var RE_WORD_SEP = ~/^[^a-zA-Z0-9_]/;
+    static var RE_WORD = ~/^[a-zA-Z0-9_]+/;
+    static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
+    static var RE_IMPORT = ~/^import\s+(static\s+)?([^;\s]+)\s*;/;
+    static var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
+    static var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
+    static var RE_METHOD = ~/^((?:(?:public|private|protected|static|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
+    static var RE_VAR = ~/^(?:([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
+    static var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
+    static var RE_NEW_ARRAY = ~/^new\s+([a-zA-Z0-9_]+)\s*\[/;
+    static var RE_SWITCH = ~/^switch\s*\(/;
+    static var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
+    static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9,<>\[\]_]+)/;
 
 } //Convert
