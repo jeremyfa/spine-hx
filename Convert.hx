@@ -144,9 +144,11 @@ class Convert {
         controls.set('new', true);
         
         // Stub
-        var consumeExpression = function(until:String, ?options:{
+        var consumeExpression = function(?options:{
             ?varType:String,
-            ?isVarValue:Bool
+            ?isVarValue:Bool,
+            ?until:String,
+            ?untilWords:Array<String>
         }):String { return null; }
 
         var inSingleLineComment = false;
@@ -197,6 +199,9 @@ class Convert {
         var RE_VAR = ~/^(?:([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
         var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
         var RE_NEW_FLOAT = ~/^new\s+float\s*\[/;
+        var RE_SWITCH = ~/^switch\s*\(/;
+        var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
+        var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9,<>\[\]_]+)/;
 
         inline function computeCleanedHaxe() {
 
@@ -443,7 +448,14 @@ class Convert {
 
         } //convertDeclExtras
 
-        function consumeCommentOrString():Bool {
+        function consumeCommentOrString(loop:Bool = false):Bool {
+
+            if (loop) {
+                do {
+                    consumeCommentOrString();
+                } while (i < len && (inSingleLineComment || inMultiLineComment));
+                return false;
+            }
 
             if (inSingleLineComment) {
                 if (c == "\n") {
@@ -554,7 +566,6 @@ class Convert {
 
                 if (forSplits != null) {
                     // Extract for parts
-                    var forInit = haxe.substring(forSplits[0], forSplits[1]).trim();
                     var forCondition = haxe.substring(forSplits[1], forSplits[2]).trim();
                     var forIncrement = haxe.substring(forSplits[2]).trim();
 
@@ -564,7 +575,7 @@ class Convert {
                     haxe += ' while (' + forCondition.substring(0, forCondition.length - 1) + ')';
                     
                     // Detect if the loop body is inline or not
-                    consumeCommentOrString();
+                    consumeCommentOrString(true);
 
                     c = java.charAt(i);
                     while (i < len && c.trim() == '') {
@@ -575,13 +586,13 @@ class Convert {
 
                     if (c != '{') {
                         haxe += ' { ';
-                        consumeExpression(';');
+                        consumeExpression({ until: ';' });
                         haxe += ' ' + forIncrement + '; }';
                     }
                     else {
                         i++;
                         openBraces++;
-                        consumeExpression('}');
+                        consumeExpression({ until: '}' });
                         haxe = haxe.substring(0, haxe.length - 1);
                         cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
                         haxe += forIncrement + '; }';
@@ -616,17 +627,21 @@ class Convert {
 
         } //consumeBracket
 
-        consumeExpression = function(until:String, ?options:{
+        consumeExpression = function(?options:{
             ?varType:String,
-            ?isVarValue:Bool
+            ?isVarValue:Bool,
+            ?until:String,
+            ?untilWords:Array<String>
         }):String {
 
             var openBracesStart = openBraces;
             var openParensStart = openParens;
             var openBracketsStart = openBrackets;
-            var stopChar = '';
+            var stopToken = '';
             var varType = options != null ? options.varType : null;
             var isVarValue:Bool = options != null ? options.isVarValue : false;
+            var until:String = options != null ? options.until : '';
+            var untilWords:Array<String> = options != null ? options.untilWords : null;
 
             while (i < len) {
 
@@ -637,29 +652,40 @@ class Convert {
                 }
                 else if (consumeBrace()) {
                     if (openBraces < openBracesStart && until.indexOf('}') != -1) {
-                        stopChar = '}';
+                        stopToken = '}';
                         break;
                     }
                 }
+                else if (c == '(' && RE_CAST.match(after)) {
+                    haxe += 'cast(' + RE_CAST.matched(2).ltrim();
+                    i += RE_CAST.matched(0).length;
+
+                    var index = haxe.length;
+                    consumeExpression({ until: ');,' });
+                    var castPart = haxe.substring(index);
+                    haxe = haxe.substring(0, index);
+                    cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                    haxe += castPart.substring(0, castPart.length - 1) + ', ' + convertType(RE_CAST.matched(1)) + ')' + castPart.substring(castPart.length - 1);
+                }
                 else if (consumeParen()) {
                     if (isVarValue && openParens > openParensStart) {
-                        consumeExpression(')');
+                        consumeExpression({ until: ')' });
                     }
                     else if (openParens < openParensStart && until.indexOf(')') != -1) {
-                        stopChar = ')';
+                        stopToken = ')';
                         break;
                     }
                 }
                 else if (consumeBracket()) {
                     if (openBrackets < openBracketsStart && until.indexOf(']') != -1) {
-                        stopChar = ']';
+                        stopToken = ']';
                         break;
                     }
                 }
                 else if (c == ';' && until.indexOf(';') != -1 && openBraces == openBracesStart && openParens == openParensStart) {
                     haxe += c;
                     i++;
-                    stopChar = c;
+                    stopToken = c;
                         
                     if (inFor3) {
                         inFor3Splits.push(haxe.length);
@@ -690,9 +716,167 @@ class Convert {
                     }
 
                     i++;
+
+                    if (until.indexOf(c) != -1) {
+                        stopToken = c;
+                        break;
+                    }
                 }
                 else if (word != '') {
-                    if (word == 'new') {
+                    if (untilWords != null && untilWords.indexOf(word) != -1) {
+                        stopToken = word;
+                        break;
+                    }
+                    else if (word == 'switch' && RE_SWITCH.match(after)) {
+
+                        openParens++;
+                        i += RE_SWITCH.matched(0).length;
+                        haxe += RE_SWITCH.matched(0);
+
+                        consumeExpression({ until: ')' });
+
+                        // Until `{`
+                        consumeCommentOrString(true);
+                        c = java.charAt(i);
+                        while (i < len && c.trim() == '') {
+                            haxe += c;
+                            i++;
+                            c = java.charAt(i);
+                        }
+
+                        if (c != '{') {
+                            throw 'Failed to parse switch at line ' + java.substr(0,i).split("\n").length;
+                        }
+
+                        i++;
+                        haxe += '{';
+                        openBraces++;
+
+                        var cases:Array<{
+                            startIndex:Int,
+                            fallThrough:Bool,
+                            body:String
+                        }> = [];
+
+                        // For each `case`
+                        while (i < len) {
+
+                            consumeCommentOrString(true);
+
+                            c = java.charAt(i);
+                            while (i < len && c.trim() == '') {
+                                haxe += c;
+                                i++;
+                                c = java.charAt(i);
+                            }
+                            
+                            nextIteration();
+                            consumeCommentOrString(true);
+
+                            if (word == 'case') {
+
+                                cases.push({
+                                    startIndex: haxe.length,
+                                    fallThrough: true,
+                                    body: ''
+                                });
+
+                                haxe += word;
+                                i += word.length;
+
+                                while (i < len) {
+
+                                    consumeCommentOrString(true);
+
+                                    c = java.charAt(i);
+                                    while (i < len && c.trim() == '') {
+                                        haxe += c;
+                                        i++;
+                                        c = java.charAt(i);
+                                    }
+                                    after = java.substring(i);
+
+                                    nextIteration();
+
+                                    if (word == 'return' || word == 'break') {
+                                        i += word.length;
+                                        if (word == 'return') {
+                                            haxe += word;
+                                            c = java.charAt(i);
+                                            while (i < len && c != ';') {
+                                                i++;
+                                                haxe += c;
+                                                c = java.charAt(i);
+                                            }
+                                            i++;
+                                            haxe += c;
+                                        } else {
+                                            c = java.charAt(i);
+                                            while (i < len && c != ';') {
+                                                i++;
+                                                c = java.charAt(i);
+                                            }
+                                            i++;
+                                            haxe = haxe.rtrim();
+                                            cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                        }
+                                        cases[cases.length-1].fallThrough = false;
+                                    }
+                                    else if (word == 'case') {
+                                        cases[cases.length-1].body = haxe.substring(cases[cases.length-1].startIndex);
+                                        break;
+                                    }
+                                    else if (c == '}') {
+                                        cases[cases.length-1].body = haxe.substring(cases[cases.length-1].startIndex);
+                                        break;
+                                    }
+                                    else {
+                                        consumeExpression({ until: ';', untilWords: ['case'] });
+                                    }
+                                }
+
+                                if (c == '}') {
+                                    break;
+                                }
+
+                            }
+                            else if (c == '}') {
+                                i++;
+                                openBraces--;
+                                haxe += c;
+                                break;
+                            }
+                            else if (c == ';') {
+                                i++;
+                                haxe += c;
+                            }
+                            else {
+                                throw 'Failed to parse case at line ' + java.substr(0,i).split("\n").length;
+                            }
+                        }
+
+                        haxe = haxe.substring(0, cases[0].startIndex);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+
+                        var n = 0;
+                        for (aCase in cases) {
+                            haxe += aCase.body;
+                            if (aCase.fallThrough) {
+                                var m = 1;
+                                while (n + m < cases.length) {
+                                    var nextCase = cases[n + m];
+                                    var toAdd = nextCase.body;
+                                    toAdd = toAdd.substring(toAdd.indexOf("\n") + 1);
+                                    haxe = haxe.rtrim() + "\n" + toAdd;
+                                    if (!nextCase.fallThrough) break;
+                                    m++;
+                                }
+                            }
+                            n++;
+                        }
+
+                    }
+                    else if (word == 'new') {
                         if (RE_NEW_FLOAT.match(after)) {
 
                             openBrackets++;
@@ -701,7 +885,7 @@ class Convert {
                             var index = haxe.length;
                             var part1:String = '';
                             var part2:String = null;
-                            consumeExpression(']');
+                            consumeExpression({ until: ']' });
                             part1 = haxe.substring(index, haxe.length - 1);
                             haxe = haxe.substring(0, index);
                             cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
@@ -716,7 +900,7 @@ class Convert {
                                 i++;
                                 openBrackets++;
                                 index = haxe.length;
-                                consumeExpression(']');
+                                consumeExpression({ until: ']' });
                                 part2 = haxe.substring(index, haxe.length - 1);
                                 haxe = haxe.substring(0, index);
                                 cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
@@ -765,7 +949,11 @@ class Convert {
                         haxe += word;
                         i += word.length;
                     }
-                    else if ((lastSeparator == '' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || ((inFor1 || inFor2 || inFor3) && lastSeparator == '(')) && RE_VAR.match(after)) {
+                    else if (RE_INSTANCEOF.match(after)) {
+                        haxe += 'Std.is(' + RE_INSTANCEOF.matched(1) + ', ' + convertType(RE_INSTANCEOF.matched(2)) + ')';
+                        i += RE_INSTANCEOF.matched(0).length;
+                    }
+                    else if ((lastSeparator == '' || lastSeparator == ':' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || ((inFor1 || inFor2 || inFor3) && lastSeparator == '(')) && RE_VAR.match(after)) {
                         var type = varType;
                         if (RE_VAR.matched(1) != null) {
                             type = convertType(RE_VAR.matched(1));
@@ -804,7 +992,7 @@ class Convert {
                         }
 
                         if (end == ';' && until.indexOf(';') != -1) {
-                            stopChar = ';';
+                            stopToken = ';';
                             break;
                         }
                     }
@@ -832,7 +1020,7 @@ class Convert {
                 }
             }
 
-            return stopChar;
+            return stopToken;
 
         } //consumeExpression
 
@@ -854,7 +1042,7 @@ class Convert {
             }
             // Method body
             else if (inMethod) {
-                consumeExpression('}');
+                consumeExpression({ until: '}' });
             }
             // Enum content
             else if (inEnum) {
@@ -947,11 +1135,11 @@ class Convert {
                         }
                         else if (end == '=') {
                             haxe += ' =';
-                            consumeExpression(',;', {varType: type, isVarValue: true});
+                            consumeExpression({ until: ',;', varType: type, isVarValue: true});
                         }
                         else if (end == ',') {
                             haxe += ';';
-                            consumeExpression(',;', {varType: type});
+                            consumeExpression({ until: ',;', varType: type});
                         }
 
                     }
