@@ -852,8 +852,8 @@ class Convert {
                             haxe += newCode;
                         }
 
-                        if (forInit.trim() != '') haxe += forInit + ';';
-                        haxe += ' while (' + forCondition + ')';
+                        if (forInit.trim() != '') haxe += forInit + '; ';
+                        haxe += 'while (' + forCondition + ')';
                         if (isInline) {
                             haxe += ' {';
                             startIndex = haxe.length;
@@ -1069,11 +1069,11 @@ class Convert {
                         }
                         else if (end == '=') {
                             haxe += ' =';
-                            consumeExpression({ until: ',;', varType: type, isVarValue: true});
+                            consumeExpression({ until: ';', varType: type, isVarValue: true});
                         }
                         else if (end == ',') {
                             haxe += ';';
-                            consumeExpression({ until: ',;', varType: type});
+                            consumeExpression({ until: ';', varType: type});
                         }
 
                     }
