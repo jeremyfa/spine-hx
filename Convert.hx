@@ -90,7 +90,7 @@ class Convert {
                 }
                 File.saveContent(haxePath, haxe);
 
-                exit(0);
+                //exit(0);
 
                 // Add file in list
                 ctx.files.set(javaPath, haxePath);
@@ -166,6 +166,7 @@ class Convert {
         var inEnum = false;
         var inInterface = false;
         var inFor = false;
+        var inCall = false;
         var subDeclSplits:Array<Int> = [];
         var beforeClassBraces = 0;
         var beforeSubClassBraces = 0;
@@ -196,8 +197,10 @@ class Convert {
             var len = haxe.length;
             var c = '';
             var cc = '';
+            var after = '';
 
             while (i < len) {
+                after = haxe.substring(i);
                 c = haxe.charAt(i);
                 cc = c + (i < len ? after.charAt(1) : '');
                 
@@ -597,13 +600,24 @@ class Convert {
                     haxe += 'cast(' + RE_CAST.matched(2).ltrim();
                     i += RE_CAST.matched(0).length;
                     var castType = RE_CAST.matched(1);
+                    openParens++;
 
                     var index = haxe.length;
-                    consumeExpression({ until: ');,' });
+                    var aStop = consumeExpression({ until: ');,' });
                     var castPart = haxe.substring(index);
                     haxe = haxe.substring(0, index);
                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                     haxe += castPart.substring(0, castPart.length - 1) + ', ' + convertType(castType) + ')' + castPart.substring(castPart.length - 1);
+
+                    if (aStop == ';') {
+                        varType = null;
+                        isVarValue = false;
+                    }
+
+                    if (aStop == ';' && until.indexOf(';') != -1 && openBraces == openBracesStart && openParens == openParensStart) {
+                        stopToken = ';';
+                        break;
+                    }
                 }
                 else if (consumeParen()) {
                     if (isVarValue && openParens > openParensStart) {
@@ -641,6 +655,14 @@ class Convert {
                     if (wordReplaces.exists(word)) {
                         i += word.length;
                         haxe += wordReplaces.get(word);
+                    }
+                    else if (RE_CALL.match(after) && !controls.exists(RE_CALL.matched(1))) {
+                        i += RE_CALL.matched(0).length;
+                        haxe += RE_CALL.matched(0);
+                        openParens++;
+                        inCall = true;
+                        consumeExpression({ until: ')' });
+                        inCall = false;
                     }
                     else if (untilWords != null && untilWords.indexOf(word) != -1) {
                         stopToken = word;
@@ -878,12 +900,6 @@ class Convert {
                             }
                         }
 
-                        println('init: ' + forInit);
-                        println('condition: ' + forCondition);
-                        println('increment: ' + forIncrement);
-                        println('inline? ' + isInline);
-                        //exit(0);
-
                     }
                     else if (controls.exists(word)) {
                         haxe += word;
@@ -893,7 +909,7 @@ class Convert {
                         haxe += 'Std.is(' + RE_INSTANCEOF.matched(1) + ', ' + convertType(RE_INSTANCEOF.matched(2)) + ')';
                         i += RE_INSTANCEOF.matched(0).length;
                     }
-                    else if (!controls.exists(word) && (lastSeparator == '' || lastSeparator == ':' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || lastSeparator == ')' || inFor) && RE_VAR.match(after)) {
+                    else if (!controls.exists(word) && !inCall && (lastSeparator == '' || lastSeparator == ':' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || lastSeparator == ')' || inFor) && RE_VAR.match(after)) {
                         var type = null;
                         if (RE_VAR.matched(1) != null) {
                             type = convertType(RE_VAR.matched(1));
@@ -920,6 +936,7 @@ class Convert {
                             var end = RE_VAR.matched(3);
                             if (end == ';') {
                                 haxe += ';';
+                                varType = null;
                             }
                             else if (end == '=') {
                                 haxe += ' =';
@@ -1020,7 +1037,7 @@ class Convert {
                         }
                         haxe += keyword + ' ';
 
-                        println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
+                        //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
 
                         var name = RE_DECL.matched(3);
                         haxe += name + ' ';
@@ -1214,7 +1231,7 @@ class Convert {
                 }
                 haxe += keyword + ' ';
 
-                println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
+                //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
 
                 var name = RE_DECL.matched(3);
                 haxe += name + ' ';
@@ -1451,5 +1468,6 @@ class Convert {
     static var RE_SWITCH = ~/^switch\s*\(/;
     static var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
     static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9,<>\[\]_]+)/;
+    static var RE_CALL = ~/^([a-zA-Z0-9,<>\[\]_\.]+)\s*\(/;
 
 } //Convert
