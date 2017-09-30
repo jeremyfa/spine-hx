@@ -20,17 +20,17 @@ class Convert {
         if (FileSystem.exists('./spine-runtimes/.git')) {
             println('Update official spine-runtimes repository\u2026');
             setCwd('spine-runtimes');
-            command('git', ['pull', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            //command('git', ['pull', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
             setCwd('..');
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            command('git', ['clone', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            //command('git', ['clone', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
         println('Delete previously converted files\u2026');
-        deleteRecursive('spine');
+        //deleteRecursive('spine');
 
         // Convert
         var ctx = {
@@ -82,13 +82,15 @@ class Convert {
                 var java = File.getContent(javaPath);
 
                 // Convert java to haxe
-                var haxe = javaToHaxe(java);
+                var haxe = javaToHaxe(java, javaPath.substr(ctx.javaDir.length + 1));
 
                 // Save file
                 if (!FileSystem.exists(Path.directory(haxePath))) {
                     FileSystem.createDirectory(Path.directory(haxePath));
                 }
                 File.saveContent(haxePath, haxe);
+
+                exit(0);
 
                 // Add file in list
                 ctx.files.set(javaPath, haxePath);
@@ -98,7 +100,7 @@ class Convert {
 
     } //convert
 
-    static function javaToHaxe(java:String):String {
+    static function javaToHaxe(java:String, filePath:String):String {
 
         var haxe = '';
         var cleanedJava = cleanedCode(java);
@@ -184,7 +186,11 @@ class Convert {
         var len = java.length;
         var usedTypes = new Map<String,Bool>();
 
-        inline function computeCleanedHaxe() {
+        function fail(message:String) {
+            throw message + ' at ' + filePath + ':' + java.substr(0,i).split("\n").length;
+        }
+
+        function computeCleanedHaxe() {
 
             var i = cleanedHaxe.length;
             var len = haxe.length;
@@ -224,7 +230,7 @@ class Convert {
                 }
                 else if (c == '"' || c == '\'') {
                     if (!RE_STRING.match(after)) {
-                        throw 'Failed to parse string at line ' + java.substr(0,i).split("\n").length;
+                        fail('Failed to parse string');
                     }
                     var n = 2;
                     var strLen = RE_STRING.matched(0).length;
@@ -241,7 +247,7 @@ class Convert {
 
         } //computeCleanedHaxe
 
-        inline function computeLastSeparator() {
+        function computeLastSeparator() {
 
             if (cleanedHaxeInSingleLineComment || cleanedHaxeInMultiLineComment) return;
 
@@ -470,7 +476,7 @@ class Convert {
             }
             else if (c == '"' || c == '\'') {
                 if (!RE_STRING.match(after)) {
-                    throw 'Failed to parse string at line ' + java.substr(0,i).split("\n").length;
+                    fail('Failed to parse string');
                 }
                 haxe += RE_STRING.matched(0);
                 i += RE_STRING.matched(0).length;
@@ -658,7 +664,7 @@ class Convert {
                         }
 
                         if (c != '{') {
-                            throw 'Failed to parse switch at line ' + java.substr(0,i).split("\n").length;
+                            fail('Failed to parse switch');
                         }
 
                         i++;
@@ -760,7 +766,21 @@ class Convert {
                             haxe += word;
                         }
                     }
-                    else if (word == 'for' && after.substr(word.length).ltrim().startsWith('(')) {
+                    else if (word == 'if' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
+                        i += word.length;
+                        haxe += word;
+                        c = java.charAt(i);
+                        while (c != '(') {
+                            i++;
+                            haxe += c;
+                            c = java.charAt(i);
+                        }
+                        haxe += '(';
+                        i++;
+                        openParens++;
+                        consumeExpression({ until: ')' });
+                    }
+                    else if (word == 'for' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
                         i += word.length;
                         c = java.charAt(i);
                         while (c != '(') {
@@ -787,6 +807,7 @@ class Convert {
                         var forCondition = haxe.substring(startIndex, haxe.length - 1).trim();
                         haxe = haxe.substring(0, startIndex);
                         cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        if (forCondition.trim() == '') forCondition = 'true';
 
                         // For increment
                         startIndex = haxe.length;
@@ -807,27 +828,61 @@ class Convert {
                         }
                         if (nc == ';') isInline = true;
 
-                        haxe += forInit + ';';
+                        function convertContinues() {
+                            var code = haxe.substring(startIndex, haxe.length);
+                            var parts = splitCode(code, ['continue']);
+                            var n = 0;
+                            var newCode = parts[n++];
+                            while (n < parts.length) {
+                                var part = parts[n];
+                                var m = 0;
+                                newCode += '{ ' + forIncrement + '; ';
+                                var c = part.charAt(m);
+                                while (m < part.length && c != ';') {
+                                    newCode += c;
+                                    m++;
+                                    c = part.charAt(m);
+                                }
+                                m++;
+                                newCode += '; }' + part.substring(m);
+                                n++;
+                            }
+                            haxe = haxe.substring(0, startIndex);
+                            cleanedHaxe = haxe.substring(0, haxe.length);
+                            haxe += newCode;
+                        }
+
+                        if (forInit.trim() != '') haxe += forInit + ';';
                         haxe += ' while (' + forCondition + ')';
                         if (isInline) {
                             haxe += ' {';
+                            startIndex = haxe.length;
                             consumeExpression({ until: ';' });
+                            if (forIncrement.trim() != '') convertContinues();
                             haxe += ' ' + forIncrement + '; }';
                         }
                         else {
                             i = n + 1;
                             openBraces++;
                             haxe += ' {';
+                            startIndex = haxe.length;
                             consumeExpression({ until: '}' });
+                            if (forIncrement.trim() != '') convertContinues();
                             haxe = haxe.substring(0, haxe.length - 1);
                             cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                            haxe += forIncrement + '; }';
+                            if (forIncrement.trim() != '') {
+                                haxe += forIncrement + '; }';
+                            }
+                            else {
+                                haxe += '}';
+                            }
                         }
 
                         println('init: ' + forInit);
                         println('condition: ' + forCondition);
                         println('increment: ' + forIncrement);
                         println('inline? ' + isInline);
+                        //exit(0);
 
                     }
                     else if (controls.exists(word)) {
@@ -1123,7 +1178,7 @@ class Convert {
             // Import
             else if (word == 'import') {
                 if (!RE_IMPORT.match(after)) {
-                    throw 'Failed to parse import at line ' + java.substr(0,i).split("\n").length;
+                    fail('Failed to parse import');
                 }
                 
                 // Import replaces
@@ -1266,7 +1321,7 @@ class Convert {
             }
             else if (c == '"' || c == '\'') {
                 if (!RE_STRING.match(after)) {
-                    throw 'Failed to parse string at line ' + code.substr(0,i).split("\n").length;
+                    throw 'Failed to parse string when cleaning code';
                 }
                 var n = 2;
                 var strLen = RE_STRING.matched(0).length;
