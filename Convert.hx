@@ -587,6 +587,10 @@ class Convert {
 
                 nextIteration();
 
+                if (c == ';') {
+                    varType = null;
+                }
+
                 if (consumeCommentOrString()) {
                     // Nothing to do
                 }
@@ -635,6 +639,7 @@ class Convert {
                     }
                 }
                 else if (c == ';' && until.indexOf(';') != -1 && openBraces == openBracesStart && openParens == openParensStart) {
+                    varType = null;
                     haxe += c;
                     i++;
                     stopToken = c;
@@ -645,6 +650,9 @@ class Convert {
                     haxe += ';';
 
                     i++;
+                    if (c == ';') {
+                        varType = null;
+                    }
 
                     if (until.indexOf(c) != -1) {
                         stopToken = c;
@@ -655,6 +663,10 @@ class Convert {
                     if (wordReplaces.exists(word)) {
                         i += word.length;
                         haxe += wordReplaces.get(word);
+                    }
+                    else if (RE_NUMBER.match(after)) {
+                        i += RE_NUMBER.matched(0).length;
+                        haxe += RE_NUMBER.matched(1);
                     }
                     else if (RE_CALL.match(after) && !controls.exists(RE_CALL.matched(1))) {
                         i += RE_CALL.matched(0).length;
@@ -718,7 +730,7 @@ class Convert {
 
                         for (aCase in cases) {
                             var cleaned = cleanedCode(aCase.body, { cleanSpaces: true }).trim();
-                            if (cleaned.endsWith(';break;') || cleaned.endsWith('}break;') || cleaned.endsWith('}return;') || cleaned.endsWith('}return;')) {
+                            if (cleaned.endsWith(';break;') || cleaned.endsWith('}break;') || cleaned.endsWith('}return;') || cleaned.endsWith('}return;') || cleaned.endsWith(';return;}') || cleaned.endsWith('}return;}') || cleaned.endsWith(';break;}') || cleaned.endsWith('}break;}')) {
                                 aCase.fallThrough = false;
                             }
                         }
@@ -937,6 +949,7 @@ class Convert {
                             if (end == ';') {
                                 haxe += ';';
                                 varType = null;
+                                isVarValue = false;
                             }
                             else if (end == '=') {
                                 haxe += ' =';
@@ -946,6 +959,7 @@ class Convert {
                             else if (end == ',') {
                                 haxe += ';';
                                 varType = type;
+                                isVarValue = false;
                             }
 
                             i += RE_VAR.matched(0).length;
@@ -1469,5 +1483,6 @@ class Convert {
     static var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
     static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9,<>\[\]_]+)/;
     static var RE_CALL = ~/^([a-zA-Z0-9,<>\[\]_\.]+)\s*\(/;
+    static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
 
 } //Convert
