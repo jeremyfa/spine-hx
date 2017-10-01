@@ -167,12 +167,14 @@ class Convert {
         var inInterface = false;
         var inFor = false;
         var inCall = false;
+        var continueToLabels:Array<String> = [];
         var subDeclSplits:Array<Int> = [];
         var beforeClassBraces = 0;
         var beforeSubClassBraces = 0;
         var beforeInterfaceBraces = 0;
         var beforeEnumBraces = 0;
         var beforeMethodBraces = 0;
+        var nextSwitchIndex = 0;
         var openBraces = 0;
         var openParens = 0;
         var openBrackets = 0;
@@ -604,7 +606,6 @@ class Convert {
                     haxe += 'cast(' + RE_CAST.matched(2).ltrim();
                     i += RE_CAST.matched(0).length;
                     var castType = RE_CAST.matched(1);
-                    openParens++;
 
                     var index = haxe.length;
                     var aStop = consumeExpression({ until: ');,' });
@@ -684,9 +685,11 @@ class Convert {
 
                         openParens++;
                         i += RE_SWITCH.matched(0).length;
-                        haxe += RE_SWITCH.matched(0);
+                        var switchCondName = '_switchCond' + (nextSwitchIndex++);
+                        haxe += 'while(true) { var ' + switchCondName + ' = (';
 
                         consumeExpression({ until: ')' });
+                        haxe += ';';
 
                         // Until `{`
                         consumeCommentOrString(true);
@@ -717,16 +720,26 @@ class Convert {
                         parts.shift();
 
                         var cases:Array<{
+                            caseVal:String,
                             fallThrough:Bool,
                             body:String
                         }> = [];
 
                         for (part in parts) {
+                            if (!RE_CASE.match(part)) {
+                                fail('Failed to parse switch case');
+                            }
+                            var caseVal = RE_CASE.matched(2);
+                            if (caseVal == null || caseVal == '') caseVal = 'default';
+                            //caseVal = caseVal.substring(5, caseVal.length - 1);
                             cases.push({
-                                body: part,
+                                caseVal: caseVal,
+                                body: part.substring(RE_CASE.matched(0).length),
                                 fallThrough: true
                             });
                         }
+
+                        println('CASES: ' + cases);
 
                         for (aCase in cases) {
                             var cleaned = cleanedCode(aCase.body, { cleanSpaces: true }).trim();
@@ -737,22 +750,29 @@ class Convert {
 
                         var n = 0;
                         for (aCase in cases) {
+                            if (aCase.caseVal != 'default') {
+                                if (n > 0) haxe += 'else ';
+                                haxe += 'if (' + switchCondName + ' == ' + aCase.caseVal + ') ';
+                            } else {
+                                haxe += 'else ';
+                            }
+                            var hasBrace = aCase.body.ltrim().startsWith('{');
+                            if (!hasBrace) haxe += '{';
                             haxe += aCase.body;
                             if (aCase.fallThrough) {
                                 var m = 1;
                                 while (n + m < cases.length) {
                                     var nextCase = cases[n + m];
-                                    var toAdd = nextCase.body;
-                                    toAdd = toAdd.substring(toAdd.indexOf("\n") + 1);
-                                    haxe = haxe.rtrim() + "\n" + toAdd;
+                                    haxe += nextCase.body;
                                     if (!nextCase.fallThrough) break;
                                     m++;
                                 }
                             }
+                            if (!hasBrace) haxe += '} ';
                             n++;
                         }
 
-                        haxe += '}';
+                        haxe += 'break; }';
 
                     }
                     else if (word == 'new') {
@@ -803,114 +823,160 @@ class Convert {
                     else if (word == 'if' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
                         i += word.length;
                         haxe += word;
-                        c = java.charAt(i);
+                        c = cleanedJava.charAt(i);
                         while (c != '(') {
                             i++;
                             haxe += c;
-                            c = java.charAt(i);
+                            c = cleanedJava.charAt(i);
                         }
                         haxe += '(';
                         i++;
                         openParens++;
-                        consumeExpression({ until: ')' });
+                        //consumeExpression({ until: ')' });
                     }
                     else if (word == 'for' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
-                        i += word.length;
-                        c = java.charAt(i);
-                        while (c != '(') {
-                            i++;
-                            c = java.charAt(i);
-                        }
-                        i++;
-                        openParens++;
 
-                        // For init
-                        var startIndex = haxe.length;
-                        inFor = true;
-                        consumeExpression({ until: ';' });
-                        inFor = false;
-                        var forInit = haxe.substring(startIndex, haxe.length - 1).trim();
-                        haxe = haxe.substring(0, startIndex);
-                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        if (RE_FOREACH.match(cleanedAfter)) {
+                            // For each (for (A a : B) ...)
+                            i += RE_FOREACH.matched(0).length;
+                            haxe += 'for (' + convertType(RE_FOREACH.matched(1)) + ' ' + RE_FOREACH.matched(2) + ' :';
+                            openParens++;
+                            consumeExpression({ until: ')' });
 
-                        // For condition
-                        startIndex = haxe.length;
-                        inFor = true;
-                        consumeExpression({ until: ';' });
-                        inFor = false;
-                        var forCondition = haxe.substring(startIndex, haxe.length - 1).trim();
-                        haxe = haxe.substring(0, startIndex);
-                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                        if (forCondition.trim() == '') forCondition = 'true';
+                            if (continueToLabels.length > 0) {
 
-                        // For increment
-                        startIndex = haxe.length;
-                        inFor = true;
-                        consumeExpression({ until: ')' });
-                        inFor = false;
-                        var forIncrement = haxe.substring(startIndex, haxe.length - 1).trim();
-                        haxe = haxe.substring(0, startIndex);
-                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                        openParens--;
-
-                        var isInline = false;
-                        var n = i;
-                        var nc = cleanedJava.charAt(n);
-                        while (n < len && nc != ';' && nc != '{') {
-                            n++;
-                            nc = cleanedJava.charAt(n);
-                        }
-                        if (nc == ';') isInline = true;
-
-                        function convertContinues() {
-                            var code = haxe.substring(startIndex, haxe.length);
-                            var parts = splitCode(code, ['continue']);
-                            var n = 0;
-                            var newCode = parts[n++];
-                            while (n < parts.length) {
-                                var part = parts[n];
-                                var m = 0;
-                                newCode += '{ ' + forIncrement + '; ';
-                                var c = part.charAt(m);
-                                while (m < part.length && c != ';') {
-                                    newCode += c;
-                                    m++;
-                                    c = part.charAt(m);
+                                // Is the rest inline?
+                                var isInline = false;
+                                var n = i;
+                                var nc = cleanedJava.charAt(n);
+                                while (n < len && nc != ';' && nc != '{') {
+                                    n++;
+                                    nc = cleanedJava.charAt(n);
                                 }
-                                m++;
-                                newCode += '; }' + part.substring(m);
-                                n++;
-                            }
-                            haxe = haxe.substring(0, startIndex);
-                            cleanedHaxe = haxe.substring(0, haxe.length);
-                            haxe += newCode;
-                        }
+                                if (nc == ';') isInline = true;
 
-                        if (forInit.trim() != '') haxe += forInit + '; ';
-                        haxe += 'while (' + forCondition + ')';
-                        if (isInline) {
-                            haxe += ' {';
-                            startIndex = haxe.length;
-                            consumeExpression({ until: ';' });
-                            if (forIncrement.trim() != '') convertContinues();
-                            haxe += ' ' + forIncrement + '; }';
+                                if (isInline) {
+                                    haxe += ' {';
+                                    consumeExpression({ until: ';' });
+                                    haxe += ' ' + continueToLabels.join('; ') + '; }';
+                                }
+                                else {
+                                    i = n + 1;
+                                    openBraces++;
+                                    haxe += ' {';
+                                    consumeExpression({ until: '}' });
+                                    haxe = haxe.substring(0, haxe.length - 1);
+                                    cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                    haxe += continueToLabels.join('; ') + '; }';
+                                }
+
+                            }
+                            
                         }
                         else {
-                            i = n + 1;
-                            openBraces++;
-                            haxe += ' {';
-                            startIndex = haxe.length;
-                            consumeExpression({ until: '}' });
-                            if (forIncrement.trim() != '') convertContinues();
-                            haxe = haxe.substring(0, haxe.length - 1);
+                            i += word.length;
+                            c = java.charAt(i);
+                            while (c != '(') {
+                                i++;
+                                c = java.charAt(i);
+                            }
+                            i++;
+                            openParens++;
+
+                            // For init
+                            var startIndex = haxe.length;
+                            inFor = true;
+                            consumeExpression({ until: ';' });
+                            inFor = false;
+                            var forInit = haxe.substring(startIndex, haxe.length - 1).trim();
+                            haxe = haxe.substring(0, startIndex);
                             cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                            if (forIncrement.trim() != '') {
-                                haxe += forIncrement + '; }';
+
+                            // For condition
+                            startIndex = haxe.length;
+                            inFor = true;
+                            consumeExpression({ until: ';' });
+                            inFor = false;
+                            var forCondition = haxe.substring(startIndex, haxe.length - 1).trim();
+                            haxe = haxe.substring(0, startIndex);
+                            cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                            if (forCondition.trim() == '') forCondition = 'true';
+
+                            // For increment
+                            startIndex = haxe.length;
+                            inFor = true;
+                            consumeExpression({ until: ')' });
+                            inFor = false;
+                            var forIncrement = haxe.substring(startIndex, haxe.length - 1).trim();
+                            haxe = haxe.substring(0, startIndex);
+                            cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+
+                            var isInline = false;
+                            var n = i;
+                            var nc = cleanedJava.charAt(n);
+                            while (n < len && nc != ';' && nc != '{') {
+                                n++;
+                                nc = cleanedJava.charAt(n);
+                            }
+                            if (nc == ';') isInline = true;
+
+                            function convertContinues() {
+                                // TODO handle continue to label
+                                var code = haxe.substring(startIndex, haxe.length);
+                                var parts = splitCode(code, ['continue']);
+                                var n = 0;
+                                var newCode = parts[n++];
+                                while (n < parts.length) {
+                                    var part = parts[n];
+                                    var m = 0;
+                                    newCode += '{ ' + forIncrement + '; ';
+                                    var c = part.charAt(m);
+                                    while (m < part.length && c != ';') {
+                                        newCode += c;
+                                        m++;
+                                        c = part.charAt(m);
+                                    }
+                                    m++;
+                                    newCode += '; }' + part.substring(m);
+                                    n++;
+                                }
+                                haxe = haxe.substring(0, startIndex);
+                                cleanedHaxe = haxe.substring(0, haxe.length);
+                                haxe += newCode;
+                            }
+
+                            if (forInit.trim() != '') haxe += forInit + '; ';
+                            haxe += 'while (' + forCondition + ')';
+                            if (isInline) {
+                                haxe += ' {';
+                                startIndex = haxe.length;
+                                consumeExpression({ until: ';' });
+                                if (forIncrement.trim() != '') convertContinues();
+                                haxe += ' ' + forIncrement + '; }';
                             }
                             else {
-                                haxe += '}';
+                                i = n + 1;
+                                openBraces++;
+                                haxe += ' {';
+                                startIndex = haxe.length;
+                                consumeExpression({ until: '}' });
+                                if (forIncrement.trim() != '') convertContinues();
+                                haxe = haxe.substring(0, haxe.length - 1);
+                                cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                if (forIncrement.trim() != '') {
+                                    haxe += forIncrement + '; }';
+                                }
+                                else {
+                                    haxe += '}';
+                                }
                             }
                         }
+
+                        /*println('inline: ' + isInline);
+                        println('init: ' + forInit);
+                        println('cond: ' + forCondition);
+                        println('incr: ' + forIncrement);*/
+                        //exit(0);
 
                     }
                     else if (controls.exists(word)) {
@@ -1011,8 +1077,9 @@ class Convert {
             }
             // Enum content
             else if (inEnum) {
-                if (word != '') {
-                    haxe += word.charAt(0).toUpperCase() + word.substring(1);
+
+                if (word != '' && wordReplaces.exists(word)) {
+                    haxe += wordReplaces.get(word);
                     i += word.length;
                 }
                 else if (c == ',') {
@@ -1480,9 +1547,11 @@ class Convert {
     static var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
     static var RE_NEW_ARRAY = ~/^new\s+([a-zA-Z0-9_]+)\s*\[/;
     static var RE_SWITCH = ~/^switch\s*\(/;
+    static var RE_CASE = ~/^(case|default)\s*(?:([^:]+)\s*)?:\s*/;
     static var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
     static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9,<>\[\]_]+)/;
     static var RE_CALL = ~/^([a-zA-Z0-9,<>\[\]_\.]+)\s*\(/;
     static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
+    static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
 
 } //Convert
