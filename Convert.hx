@@ -1006,26 +1006,29 @@ class Convert {
                                 item.depth++;
                             }
 
-                            function convertContinues() {
-                                // TODO handle continue to label
+                            function convertContinuesAndBreaks() {
                                 var code = haxe.substring(startIndex, haxe.length);
-                                var parts = splitCode(code, ['continue']);
+                                var parts = splitCode(code, ['continue', 'break']);
                                 var n = 0;
                                 var newCode = parts[n++];
                                 while (n < parts.length) {
                                     var part = parts[n];
-                                    newCode += '{ ' + forIncrement + '; ';
-                                    if (RE_CONTINUE.match(part)) {
+                                    if (forIncrement == null || part.startsWith('break')) {
+                                        newCode += '{ ';
+                                    } else {
+                                        newCode += '{ ' + forIncrement + '; ';
+                                    }
+                                    if (RE_CONTINUE_OR_BREAK.match(part)) {
 
-                                        var label = RE_CONTINUE.matched(1);
+                                        var label = RE_CONTINUE_OR_BREAK.matched(2);
                                         if (label != null && label.trim() != '') {
-                                            newCode += '_goToLabel_' + RE_CONTINUE.matched(1) + ' = true; break;';
+                                            newCode += '_goToLabel_' + RE_CONTINUE_OR_BREAK.matched(2) + ' = true; break;';
                                         }
                                         else {
-                                            newCode += RE_CONTINUE.matched(0);
+                                            newCode += RE_CONTINUE_OR_BREAK.matched(0);
                                         }
 
-                                        newCode += ' }' + part.substring(RE_CONTINUE.matched(0).length);
+                                        newCode += ' }' + part.substring(RE_CONTINUE_OR_BREAK.matched(0).length);
                                     }
                                     else {
                                         fail('Failed to parse continue');
@@ -1043,8 +1046,9 @@ class Convert {
                                 haxe += ' {';
                                 startIndex = haxe.length;
                                 consumeExpression({ until: ';' });
-                                if (forIncrement.trim() != '') convertContinues();
-                                haxe += ' ' + forIncrement + '; }';
+                                convertContinuesAndBreaks();
+                                if (forIncrement.trim() != '') haxe += ' ' + forIncrement + '; }';
+                                else haxe += ' }';
                             }
                             else {
                                 i = n + 1;
@@ -1052,7 +1056,7 @@ class Convert {
                                 haxe += ' {';
                                 startIndex = haxe.length;
                                 consumeExpression({ until: '}' });
-                                if (forIncrement.trim() != '') convertContinues();
+                                convertContinuesAndBreaks();
                                 haxe = haxe.substring(0, haxe.length - 1);
                                 cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                                 if (forIncrement.trim() != '') {
@@ -1669,6 +1673,6 @@ class Convert {
     static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
     static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
     static var RE_LABEL = ~/^(outer)\s*:/;
-    static var RE_CONTINUE = ~/^continue(?:\s+(outer)\s*)?;/;
+    static var RE_CONTINUE_OR_BREAK = ~/^(continue|break)(?:\s+(outer)\s*)?;/;
 
 } //Convert
