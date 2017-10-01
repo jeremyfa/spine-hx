@@ -25,7 +25,7 @@ class Convert {
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            //command('git', ['clone', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['clone', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
@@ -167,7 +167,11 @@ class Convert {
         var inInterface = false;
         var inFor = false;
         var inCall = false;
-        var continueToLabels:Array<String> = [];
+        var continueToLabels:Array<{
+            breakCode:String,
+            continueCode:String,
+            depth:Int
+        }> = [];
         var subDeclSplits:Array<Int> = [];
         var beforeClassBraces = 0;
         var beforeSubClassBraces = 0;
@@ -584,6 +588,7 @@ class Convert {
             var isVarValue:Bool = options != null ? options.isVarValue : false;
             var until:String = options != null ? options.until : '';
             var untilWords:Array<String> = options != null ? options.untilWords : null;
+            var endOfExpression:Array<String> = [];
 
             while (i < len) {
 
@@ -669,6 +674,17 @@ class Convert {
                         i += RE_NUMBER.matched(0).length;
                         haxe += RE_NUMBER.matched(1);
                     }
+                    else if (RE_LABEL.match(after) && haxe.indexOf('case ', cast Math.max(0, haxe.lastIndexOf("\n"))) == -1) {
+                        i += RE_LABEL.matched(0).length;
+                        var flagName = '_gotoLabel_' + RE_LABEL.matched(1);
+                        haxe += 'var ' + flagName + ':Bool; while (true) { ' + flagName + ' = false; ';
+                        endOfExpression.unshift('if (!' + flagName + ') break; }');
+                        continueToLabels.unshift({
+                            breakCode: 'if (' + flagName + ') break',
+                            continueCode: 'if (' + flagName + ') continue',
+                            depth: 0
+                        });
+                    }
                     else if (RE_CALL.match(after) && !controls.exists(RE_CALL.matched(1))) {
                         i += RE_CALL.matched(0).length;
                         haxe += RE_CALL.matched(0);
@@ -738,8 +754,6 @@ class Convert {
                                 fallThrough: true
                             });
                         }
-
-                        println('CASES: ' + cases);
 
                         for (aCase in cases) {
                             var cleaned = cleanedCode(aCase.body, { cleanSpaces: true }).trim();
@@ -834,6 +848,60 @@ class Convert {
                         openParens++;
                         //consumeExpression({ until: ')' });
                     }
+                    else if (word == 'while' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
+
+                        i += word.length;
+                        c = cleanedJava.charAt(i);
+                        while (c != '(') {
+                            i++;
+                            c = cleanedJava.charAt(i);
+                        }
+                        i++;
+                        openParens++;
+
+                        consumeExpression({ until: ')' });
+
+                        if (continueToLabels.length > 0) {
+
+                            // Is the rest inline?
+                            var isInline = false;
+                            var n = i;
+                            var nc = cleanedJava.charAt(n);
+                            while (n < len && nc != ';' && nc != '{') {
+                                n++;
+                                nc = cleanedJava.charAt(n);
+                            }
+                            if (nc == ';') isInline = true;
+
+                            for (item in continueToLabels) {
+                                item.depth++;
+                            }
+
+                            if (isInline) {
+                                haxe += ' {';
+                                consumeExpression({ until: ';' });
+                                haxe += ' }';
+                            }
+                            else {
+                                i = n + 1;
+                                openBraces++;
+                                haxe += ' {';
+                                consumeExpression({ until: '}' });
+                            }
+
+                            for (item in continueToLabels) {
+                                if (item.depth > 1) {
+                                    haxe += ' ' + item.breakCode + ';';
+                                }
+                                else {
+                                    haxe += ' ' + item.continueCode + ';';
+                                }
+                                item.depth--;
+                            }
+
+                        }
+
+                    }
                     else if (word == 'for' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
 
                         if (RE_FOREACH.match(cleanedAfter)) {
@@ -855,10 +923,14 @@ class Convert {
                                 }
                                 if (nc == ';') isInline = true;
 
+                                for (item in continueToLabels) {
+                                    item.depth++;
+                                }
+
                                 if (isInline) {
                                     haxe += ' {';
                                     consumeExpression({ until: ';' });
-                                    haxe += ' ' + continueToLabels.join('; ') + '; }';
+                                    haxe += ' }';
                                 }
                                 else {
                                     i = n + 1;
@@ -867,7 +939,17 @@ class Convert {
                                     consumeExpression({ until: '}' });
                                     haxe = haxe.substring(0, haxe.length - 1);
                                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                                    haxe += continueToLabels.join('; ') + '; }';
+                                    haxe += '}';
+                                }
+
+                                for (item in continueToLabels) {
+                                    if (item.depth > 1) {
+                                        haxe += ' ' + item.breakCode + ';';
+                                    }
+                                    else {
+                                        haxe += ' ' + item.continueCode + ';';
+                                    }
+                                    item.depth--;
                                 }
 
                             }
@@ -875,10 +957,10 @@ class Convert {
                         }
                         else {
                             i += word.length;
-                            c = java.charAt(i);
+                            c = cleanedJava.charAt(i);
                             while (c != '(') {
                                 i++;
-                                c = java.charAt(i);
+                                c = cleanedJava.charAt(i);
                             }
                             i++;
                             openParens++;
@@ -920,6 +1002,10 @@ class Convert {
                             }
                             if (nc == ';') isInline = true;
 
+                            for (item in continueToLabels) {
+                                item.depth++;
+                            }
+
                             function convertContinues() {
                                 // TODO handle continue to label
                                 var code = haxe.substring(startIndex, haxe.length);
@@ -928,16 +1014,22 @@ class Convert {
                                 var newCode = parts[n++];
                                 while (n < parts.length) {
                                     var part = parts[n];
-                                    var m = 0;
                                     newCode += '{ ' + forIncrement + '; ';
-                                    var c = part.charAt(m);
-                                    while (m < part.length && c != ';') {
-                                        newCode += c;
-                                        m++;
-                                        c = part.charAt(m);
+                                    if (RE_CONTINUE.match(part)) {
+
+                                        var label = RE_CONTINUE.matched(1);
+                                        if (label != null && label.trim() != '') {
+                                            newCode += '_goToLabel_' + RE_CONTINUE.matched(1) + ' = true; break;';
+                                        }
+                                        else {
+                                            newCode += RE_CONTINUE.matched(0);
+                                        }
+
+                                        newCode += ' }' + part.substring(RE_CONTINUE.matched(0).length);
                                     }
-                                    m++;
-                                    newCode += '; }' + part.substring(m);
+                                    else {
+                                        fail('Failed to parse continue');
+                                    }
                                     n++;
                                 }
                                 haxe = haxe.substring(0, startIndex);
@@ -969,6 +1061,16 @@ class Convert {
                                 else {
                                     haxe += '}';
                                 }
+                            }
+
+                            for (item in continueToLabels) {
+                                if (item.depth > 1) {
+                                    haxe += ' ' + item.breakCode + ';';
+                                }
+                                else {
+                                    haxe += ' ' + item.continueCode + ';';
+                                }
+                                item.depth--;
                             }
                         }
 
@@ -1048,6 +1150,19 @@ class Convert {
                 else {
                     haxe += c;
                     i++;
+                }
+            }
+
+            if (endOfExpression.length > 0) {
+                for (k in 0...endOfExpression.length) {
+                    continueToLabels.shift();
+                }
+                if (stopToken == '}') {
+                    haxe = haxe.substring(0, haxe.length - 1);
+                    haxe += endOfExpression.join(' ') + ' }';
+                }
+                else {
+                    haxe += ' ' + endOfExpression.join(' ');
                 }
             }
 
@@ -1553,5 +1668,7 @@ class Convert {
     static var RE_CALL = ~/^([a-zA-Z0-9,<>\[\]_\.]+)\s*\(/;
     static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
     static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
+    static var RE_LABEL = ~/^(outer)\s*:/;
+    static var RE_CONTINUE = ~/^continue(?:\s+(outer)\s*)?;/;
 
 } //Convert
