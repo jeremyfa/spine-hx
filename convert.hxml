@@ -3,3 +3,4 @@
 -lib hxnodejs
 -js convert.js
 -cmd node convert.js
+-cmd haxe build.hxml

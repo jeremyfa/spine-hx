@@ -30,7 +30,7 @@ class Convert {
 
         // Delete previously converted files
         println('Delete previously converted files\u2026');
-        //deleteRecursive('spine');
+        //deleteRecursive('spine', 'support');
 
         // Convert
         var ctx = {
@@ -172,7 +172,6 @@ class Convert {
             continueCode:String,
             depth:Int
         }> = [];
-        var subDeclSplits:Array<Int> = [];
         var beforeClassBraces = 0;
         var beforeSubClassBraces = 0;
         var beforeInterfaceBraces = 0;
@@ -329,6 +328,10 @@ class Convert {
                 case 'float': 'Float';
                 case 'float[]': 'FloatArray';
                 case 'float[][]': 'FloatArray2D';
+                case 'String[]': 'StringArray';
+                case 'short[]': 'ShortArray';
+                case 'Event[]': 'Array<Event>';
+                case 'Object[]': 'Array<Dynamic>';
                 case 'int': 'Int';
                 case 'int[]': 'IntArray';
                 case 'int[][]': 'IntArray2D';
@@ -516,6 +519,7 @@ class Convert {
                     inInterface = false;
                 }
                 if (inEnum && openBraces == beforeEnumBraces) {
+                    haxe = haxe.substring(0, haxe.length-1) + ';}';
                     inEnum = false;
                 }
                 if (inClass && openBraces == beforeClassBraces) {
@@ -777,7 +781,7 @@ class Convert {
                                 var m = 1;
                                 while (n + m < cases.length) {
                                     var nextCase = cases[n + m];
-                                    haxe += nextCase.body;
+                                    haxe += '    ' + nextCase.body;
                                     if (!nextCase.fallThrough) break;
                                     m++;
                                 }
@@ -786,7 +790,7 @@ class Convert {
                             n++;
                         }
 
-                        haxe += 'break; }';
+                        haxe += '} break; }';
 
                     }
                     else if (word == 'new') {
@@ -858,6 +862,8 @@ class Convert {
                         }
                         i++;
                         openParens++;
+
+                        haxe += 'while (';
 
                         consumeExpression({ until: ')' });
 
@@ -970,7 +976,7 @@ class Convert {
                             inFor = true;
                             consumeExpression({ until: ';' });
                             inFor = false;
-                            var forInit = haxe.substring(startIndex, haxe.length - 1).trim();
+                            var forInit = haxe.substring(startIndex, haxe.length - 1).trim().replace(',',';');
                             haxe = haxe.substring(0, startIndex);
                             cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
 
@@ -979,7 +985,7 @@ class Convert {
                             inFor = true;
                             consumeExpression({ until: ';' });
                             inFor = false;
-                            var forCondition = haxe.substring(startIndex, haxe.length - 1).trim();
+                            var forCondition = haxe.substring(startIndex, haxe.length - 1).trim().replace(',',';');
                             haxe = haxe.substring(0, startIndex);
                             cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                             if (forCondition.trim() == '') forCondition = 'true';
@@ -989,7 +995,7 @@ class Convert {
                             inFor = true;
                             consumeExpression({ until: ')' });
                             inFor = false;
-                            var forIncrement = haxe.substring(startIndex, haxe.length - 1).trim();
+                            var forIncrement = haxe.substring(startIndex, haxe.length - 1).trim().replace(',',';');
                             haxe = haxe.substring(0, startIndex);
                             cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
 
@@ -1225,7 +1231,8 @@ class Convert {
                         var keyword = RE_DECL.matched(2);
                         if (keyword == 'class') {
                             inClass = true;
-                            beforeClassBraces = openBraces;
+                            inSubClass = true;
+                            beforeSubClassBraces = openBraces;
                         }
                         else if (keyword == 'interface') {
                             inInterface = true;
@@ -1402,6 +1409,7 @@ class Convert {
                 var pack = RE_IMPORT.matched(2);
                 pack = replaceStart(pack, 'com.esotericsoftware.spine.', 'spine.');
                 pack = replaceStart(pack, 'com.badlogic.gdx.', 'spine.support.');
+                pack = replaceStart(pack, 'java.util.', 'spine.support.');
 
                 // Add import
                 haxe += 'import ' + pack + ';';
@@ -1457,9 +1465,52 @@ class Convert {
         
         }
 
+        // Convert tabs to spaces
+        haxe = haxe.replace("\t", '    ');
+
+        // Move inner declarations to top level
+        haxe = moveTopLevelDecls(haxe);
+
         return haxe;
 
     } //javaToHaxe
+
+    static function moveTopLevelDecls(haxe:String):String {
+
+        var lines = haxe.split("\n");
+        var mainLines = [];
+        var subLines = [];
+        var inSub = false;
+        var lastWasInSub = false;
+
+        for (line in lines) {
+            if (lastWasInSub && line.trim() == '') {
+                subLines.push('');
+            }
+            else {
+                lastWasInSub = false;
+                if (!inSub) {
+                    if (line.startsWith('    ') && RE_DECL.match(line.substring(4))) {
+                        inSub = true;
+                        subLines.push(line.substring(4));
+                    }
+                    else {
+                        mainLines.push(line);
+                    }
+                }
+                else {
+                    subLines.push(line.substring(4));
+                    if (line.startsWith('    }')) {
+                        inSub = false;
+                        lastWasInSub = true;
+                    }
+                }
+            }
+        }
+
+        return mainLines.join("\n") + subLines.join("\n");
+
+    } //moveTopLevelDecls
 
 /// Utils
 
@@ -1473,16 +1524,22 @@ class Convert {
 
     } //replaceStart
 
-    static function deleteRecursive(path:String) {
+    static function deleteRecursive(path:String, ?except:String) {
 
         if (!FileSystem.exists(path)) {
             return;
         }
         else if (FileSystem.isDirectory(path)) {
+            var hasException = false;
             for (name in FileSystem.readDirectory(path)) {
-                deleteRecursive(Path.join([path, name]));
+                if (except == null || name != except) {
+                    deleteRecursive(Path.join([path, name]));
+                }
+                else if (except != null) {
+                    hasException = true;
+                }
             }
-            FileSystem.deleteDirectory(path);
+            if (!hasException) FileSystem.deleteDirectory(path);
         }
         else {
             FileSystem.deleteFile(path);
