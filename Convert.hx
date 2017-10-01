@@ -1124,6 +1124,14 @@ class Convert {
                             }
 
                             var end = RE_VAR.matched(3);
+                            if (end == ',' || end == ';') {
+                                if (type == 'Float' || type == 'Int') {
+                                    haxe += ' = 0';
+                                }
+                                else if (type == 'Bool') {
+                                    haxe += ' = false';
+                                }
+                            }
                             if (end == ';') {
                                 haxe += ';';
                                 varType = null;
@@ -1288,6 +1296,14 @@ class Convert {
                         i += RE_PROPERTY.matched(0).length;
 
                         var end = RE_PROPERTY.matched(4);
+                        if (end == ',' || end == ';') {
+                            if (type == 'Float' || type == 'Int') {
+                                haxe += ' = 0';
+                            }
+                            else if (type == 'Bool') {
+                                haxe += ' = false';
+                            }
+                        }
                         if (end == ';') {
                             haxe += ';';
                         }
