@@ -41,6 +41,20 @@ class Convert {
         };
         convert(ctx);
 
+        // Add import.hx
+        File.saveContent('spine/import.hx', "
+import spine.support.error.*;
+import spine.support.utils.ShortArray;
+import spine.support.utils.IntArray;
+import spine.support.utils.IntArray2D;
+import spine.support.utils.FloatArray;
+import spine.support.utils.FloatArray2D;
+import spine.support.utils.StringArray;
+
+using spine.support.extensions.StringExtensions;
+using StringTools;
+");
+
     } //main
 
     static function convert(ctx:{
@@ -74,33 +88,47 @@ class Convert {
                 //
                 var javaPath = path;
                 var haxePath = ctx.haxeDir + javaPath.substr(0, path.length - 5).substr(ctx.javaDir.length) + '.hx';
+                var relJavaPath = javaPath.substr(ctx.javaDir.length + 1);
 
-                // Log
-                println(javaPath.substr(ctx.javaDir.length + 1) + ' -> ' + haxePath.substr(ctx.haxeDir.length + 1));
+                if (!skippedFiles.exists(relJavaPath)) {
 
-                // Get contents
-                var java = File.getContent(javaPath);
+                    // Log
+                    println(relJavaPath + ' -> ' + haxePath.substr(ctx.haxeDir.length + 1));
 
-                // Convert java to haxe
-                var haxe = javaToHaxe(java, javaPath.substr(ctx.javaDir.length + 1));
+                    // Get contents
+                    var java = File.getContent(javaPath);
+                    var type = 'spine.' + javaPath.substring(ctx.javaDir.length + 1, javaPath.length - 5).replace('/', '.');
 
-                // Save file
-                if (!FileSystem.exists(Path.directory(haxePath))) {
-                    FileSystem.createDirectory(Path.directory(haxePath));
+                    // Convert java to haxe
+                    var haxe = javaToHaxe(java, javaPath.substr(ctx.javaDir.length + 1), type, ctx.haxeDir);
+
+                    // Save file
+                    if (!FileSystem.exists(Path.directory(haxePath))) {
+                        FileSystem.createDirectory(Path.directory(haxePath));
+                    }
+                    File.saveContent(haxePath, haxe);
+
+                    // Add file in list
+                    ctx.files.set(javaPath, haxePath);
                 }
-                File.saveContent(haxePath, haxe);
-
-                //exit(0);
-
-                // Add file in list
-                ctx.files.set(javaPath, haxePath);
             }
 
         }
 
     } //convert
 
-    static function javaToHaxe(java:String, filePath:String):String {
+    static function javaToHaxe(java:String, filePath:String, rootType:String, haxeDir:String):String {
+
+        if (FileSystem.exists(Path.join([haxeDir, 'support/overrides', replaceStart(rootType, 'spine.', '').replace('.','/') + '.hx']))) {
+            var haxe = 'package ' + rootType.substring(0, rootType.lastIndexOf('.')) + ';' + "\n";
+            haxe += "\n";
+            haxe += 'typedef ' + rootType.substring(rootType.lastIndexOf('.') + 1) + ' = spine.support.overrides.' + replaceStart(rootType, 'spine.', '') + ';' + "\n";
+            haxe += "\n";
+            return haxe;
+        }
+
+        // Perform some replaces to facilitate parsing
+        java = java.replace('ObjectMap<Key, ', 'ObjectMap<Key,');
 
         var haxe = '';
         var cleanedJava = cleanedCode(java);
@@ -149,6 +177,7 @@ class Convert {
         controls.set('continue', true);
         controls.set('true', true);
         controls.set('false', true);
+        controls.set('break', true);
         
         // Stub
         var consumeExpression = function(?options:{
@@ -162,8 +191,15 @@ class Convert {
         var inMultiLineComment = false;
         var inClass = false;
         var inSubClass = false;
+        var classHasConstructor = false;
+        var subClassHasConstructor = false;
         var inMethod = false;
+        var inSkippedMethod = false;
+        var inMethodName = '';
         var inEnum = false;
+        var inEnumName = '';
+        var inEnumValues:Array<String> = [];
+        var extraHaxe = '';
         var inInterface = false;
         var inFor = false;
         var inCall = false;
@@ -337,6 +373,8 @@ class Convert {
                 case 'int[][]': 'IntArray2D';
                 case 'void': 'Void';
                 case 'boolean': 'Bool';
+                case 'Object': 'Dynamic';
+                case 'Array': 'Array<Dynamic>';
                 default: null;
             }
             if (type == null) {
@@ -514,19 +552,32 @@ class Convert {
                 i++;
                 if (inSubClass && openBraces == beforeSubClassBraces) {
                     inSubClass = false;
+                    /*if (!subClassHasConstructor) {
+                        haxe = haxe.substring(0, haxe.length - 1);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        haxe += "\n\t" + 'public function new() {}\n}';
+                    }*/
                 }
                 if (inInterface && openBraces == beforeInterfaceBraces) {
                     inInterface = false;
                 }
                 if (inEnum && openBraces == beforeEnumBraces) {
-                    haxe = haxe.substring(0, haxe.length-1) + ';}';
                     inEnum = false;
                 }
                 if (inClass && openBraces == beforeClassBraces) {
                     inClass = false;
+                    /*if (!classHasConstructor) {
+                        haxe = haxe.substring(0, haxe.length - 1);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        haxe += "\n\t\t" + 'public function new() {}\n\t}';
+                    }*/
                 }
                 if (inMethod && openBraces == beforeMethodBraces) {
+                    if (skippedNames.exists(inMethodName) || inSkippedMethod) {
+                        haxe += '*/';
+                    }
                     inMethod = false;
+                    inSkippedMethod = false;
                 }
             }
             else {
@@ -619,6 +670,7 @@ class Convert {
                     var index = haxe.length;
                     var aStop = consumeExpression({ until: ');,' });
                     var castPart = haxe.substring(index);
+
                     haxe = haxe.substring(0, index);
                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                     haxe += castPart.substring(0, castPart.length - 1) + ', ' + convertType(castType) + ')' + castPart.substring(castPart.length - 1);
@@ -669,6 +721,14 @@ class Convert {
                         break;
                     }
                 }
+                else if ((c == ',' || c == ';') && openParens == openParensStart) {
+                    haxe += c;
+                    i++;
+                    if (until.indexOf(c) != -1) {
+                        stopToken = c;
+                        break;
+                    }
+                }
                 else if (word != '') {
                     if (wordReplaces.exists(word)) {
                         i += word.length;
@@ -688,6 +748,10 @@ class Convert {
                             continueCode: 'if (' + flagName + ') continue',
                             depth: 0
                         });
+                    }
+                    else if (RE_PARENT_CLASS_THIS.match(after)) {
+                        i += RE_PARENT_CLASS_THIS.matched(0).length;
+                        haxe += RE_PARENT_CLASS_THIS.matched(1) + '_this.';
                     }
                     else if (RE_CALL.match(after) && !controls.exists(RE_CALL.matched(1))) {
                         i += RE_CALL.matched(0).length;
@@ -794,7 +858,53 @@ class Convert {
 
                     }
                     else if (word == 'new') {
-                        if (RE_NEW_ARRAY.match(after)) {
+                        if (RE_NEW_INSTANCE.match(after)) {
+                            
+                            openParens++;
+                            i += RE_NEW_INSTANCE.matched(0).length;
+
+                            var typeName = RE_NEW_INSTANCE.matched(1);
+                            var trailingParen = RE_NEW_INSTANCE.matched(2);
+                            if (trailingParen != null && trailingParen.trim() != '') {
+                                openParens--;
+                            }
+                            if (contextualClasses.exists(rootType + '.' + typeName) && trailingParen != null && trailingParen.trim() != '') {
+                                haxe += 'null';
+                            }
+                            else if (inlineClassDefs.exists(rootType + '.' + typeName)) {
+                                var replaces = inlineClassDefs.get(rootType + '.' + typeName);
+                                haxe += 'new ' + replaces.replaceWithClass + '(';
+                                if (trailingParen != null) {
+                                    haxe += trailingParen;
+                                }
+                                else {
+                                    consumeExpression({ until: ')' });
+                                }
+                                var startIndex = haxe.length;
+                                c = cleanedJava.charAt(i);
+                                while (i < len && c != '{') {
+                                    i++;
+                                    c = cleanedJava.charAt(i);
+                                }
+                                i++;
+                                openBraces++;
+                                consumeExpression({ until: '}' });
+                                i++;
+                                haxe = haxe.substring(0, startIndex);
+                                cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                haxe += ';';
+
+                                if (until.indexOf(';') != -1) {
+                                    stopToken = ';';
+                                    break;
+                                }
+                            }
+                            else {
+                                haxe += RE_NEW_INSTANCE.matched(0);
+                            }
+
+                        }
+                        else if (RE_NEW_ARRAY.match(after)) {
 
                             openBrackets++;
                             i += RE_NEW_ARRAY.matched(0).length;
@@ -913,7 +1023,7 @@ class Convert {
                         if (RE_FOREACH.match(cleanedAfter)) {
                             // For each (for (A a : B) ...)
                             i += RE_FOREACH.matched(0).length;
-                            haxe += 'for (' + convertType(RE_FOREACH.matched(1)) + ' ' + RE_FOREACH.matched(2) + ' :';
+                            haxe += 'for (' + RE_FOREACH.matched(2) + ' in';
                             openParens++;
                             consumeExpression({ until: ')' });
 
@@ -1014,27 +1124,31 @@ class Convert {
 
                             function convertContinuesAndBreaks() {
                                 var code = haxe.substring(startIndex, haxe.length);
-                                var parts = splitCode(code, ['continue', 'break']);
+                                var parts = splitCode(code, ['continue', 'break'], true);
                                 var n = 0;
                                 var newCode = parts[n++];
                                 while (n < parts.length) {
                                     var part = parts[n];
-                                    if (forIncrement == null || part.startsWith('break')) {
-                                        newCode += '{ ';
-                                    } else {
-                                        newCode += '{ ' + forIncrement + '; ';
+                                    var breakCode = '';
+                                    if (forIncrement != null && part.startsWith('continue')) {
+                                        breakCode += forIncrement + '; ';
                                     }
                                     if (RE_CONTINUE_OR_BREAK.match(part)) {
 
                                         var label = RE_CONTINUE_OR_BREAK.matched(2);
                                         if (label != null && label.trim() != '') {
-                                            newCode += '_goToLabel_' + RE_CONTINUE_OR_BREAK.matched(2) + ' = true; break;';
+                                            breakCode += '_goToLabel_' + RE_CONTINUE_OR_BREAK.matched(2) + ' = true; break;';
                                         }
                                         else {
-                                            newCode += RE_CONTINUE_OR_BREAK.matched(0);
+                                            breakCode += RE_CONTINUE_OR_BREAK.matched(0).replace('continue', '__CONTINUE__');
                                         }
 
-                                        newCode += ' }' + part.substring(RE_CONTINUE_OR_BREAK.matched(0).length);
+                                        if (breakCode.split(';').length > 2) {
+                                            breakCode = '{ ' + breakCode + ' }';
+                                        }
+
+                                        breakCode += part.substring(RE_CONTINUE_OR_BREAK.matched(0).length);
+                                        newCode += breakCode;
                                     }
                                     else {
                                         fail('Failed to parse continue');
@@ -1208,54 +1322,64 @@ class Convert {
             else if (inMethod) {
                 consumeExpression({ until: '}' });
             }
-            // Enum content
-            else if (inEnum) {
-
-                if (word != '' && wordReplaces.exists(word)) {
-                    haxe += wordReplaces.get(word);
-                    i += word.length;
-                }
-                else if (c == ',') {
-                    haxe += ';';
-                    i++;
-                }
-                else {
-                    haxe += c;
-                    i++;
-                }
-            }
             // Class specifics
-            else if (inClass || inInterface) {
+            else if (inClass || inInterface || inEnum) {
                 // Method or property?
                 if (word != '') {
-                    if (inClass && RE_DECL.match(after)) {
+                    if (inEnum && RE_ENUM_VALUE.match(after)) {
+                        i += RE_ENUM_VALUE.matched(0).length;
+                        var name = RE_ENUM_VALUE.matched(1);
+                        name = name.charAt(0).toUpperCase() + name.substring(1);
+                        haxe += 'var ' + name + ' = ' + inEnumValues.length;
+                        var end = RE_ENUM_VALUE.matched(3);
+                        if (end == '}') {
+                            haxe += ';' + RE_ENUM_VALUE.matched(2);
+                            i--;
+                        }
+                        else {
+                            haxe += RE_ENUM_VALUE.matched(2) + ';';
+                        }
+
+                        inEnumValues.push(name);
+                    }
+                    else if (inClass && RE_DECL.match(after)) {
 
                         var modifiers = convertModifiers(RE_DECL.matched(1));
 
-                        if (modifiers.exists('private')) {
+                        var keyword = RE_DECL.matched(2);
+
+                        if (modifiers.exists('private') && keyword == 'class') {
                             haxe += 'private ';
                         }
 
-                        var keyword = RE_DECL.matched(2);
                         if (keyword == 'class') {
                             inClass = true;
                             inSubClass = true;
+                            subClassHasConstructor = false;
                             beforeSubClassBraces = openBraces;
+                            haxe += keyword + ' ';
                         }
                         else if (keyword == 'interface') {
                             inInterface = true;
                             beforeInterfaceBraces = openBraces;
+                            haxe += keyword + ' ';
                         }
                         else if (keyword == 'enum') {
                             inEnum = true;
+                            inEnumValues = [];
                             beforeEnumBraces = openBraces;
+                            haxe += '@:enum abstract ';
                         }
-                        haxe += keyword + ' ';
 
                         //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
 
                         var name = RE_DECL.matched(3);
-                        haxe += name + ' ';
+                        if (keyword == 'enum') {
+                            inEnumName = name;
+                            haxe += name + '(Int) from Int to Int ';
+                        } else {
+                            haxe += name + ' ';
+                        }
 
                         var extras = convertDeclExtras(RE_DECL.matched(4));
                         for (item in extras.classes) {
@@ -1267,12 +1391,27 @@ class Convert {
 
                         haxe += '{';
 
+                        for (key in contextualClasses.keys()) {
+                            if (key.startsWith(rootType + '.')) {
+                                var subType = key.substring(rootType.length + 1);
+                                if (subType == name) {
+                                    haxe += "\n\t\t";
+                                    haxe += 'private var ' + rootType.substring(rootType.lastIndexOf('.') + 1) + '_this:' + rootType.substring(rootType.lastIndexOf('.') + 1) + ';';
+                                }
+                            }
+                        }
+
                         openBraces++;
                         i += RE_DECL.matched(0).length;
                     }
                     else if (RE_PROPERTY.match(after)) {
 
                         //println('PROPERTY: ' + RE_PROPERTY.matched(0));
+                        var name = RE_PROPERTY.matched(3);
+
+                        if (inEnum || skippedNames.exists(name)) {
+                            haxe += '//';
+                        }
 
                         var modifiers = convertModifiers(RE_PROPERTY.matched(1));
                         
@@ -1290,7 +1429,6 @@ class Convert {
                         }
 
                         var type = convertType(RE_PROPERTY.matched(2));
-                        var name = RE_PROPERTY.matched(3);
 
                         haxe += 'var ' + name + ':' + type;
                         i += RE_PROPERTY.matched(0).length;
@@ -1321,6 +1459,26 @@ class Convert {
 
                         //println('CONSTRUCTOR: ' + RE_CONSTRUCTOR.matched(0));
 
+                        var skip = false;
+                        for (key in skippedConstructors.keys()) {
+                            if (key == rootType && cleanedCode(RE_CONSTRUCTOR.matched(3), { cleanSpaces: true }) == skippedConstructors.get(key)) {
+                                haxe += '/*';
+                                skip = true;
+                                break;
+                            }
+                        }
+
+                        inSkippedMethod = skip;
+
+                        if (!skip) {
+                            if (inSubClass) {
+                                subClassHasConstructor = true;
+                            }
+                            else if (inClass) {
+                                classHasConstructor = true;
+                            }
+                        }
+
                         var modifiers = convertModifiers(RE_CONSTRUCTOR.matched(1));
                         
                         if (modifiers.exists('public')) {
@@ -1344,8 +1502,21 @@ class Convert {
 
                         i += RE_CONSTRUCTOR.matched(0).length;
                         inMethod = true;
+                        inMethodName = 'new';
                         beforeMethodBraces = openBraces;
                         openBraces++;
+
+                        if (inClass && !inSubClass) {
+                            for (key in contextualClasses.keys()) {
+                                if (key.startsWith(rootType + '.')) {
+                                    var subType = key.substring(rootType.length + 1);
+                                    haxe += "\n\t\t";
+                                    haxe += 'this.' + contextualClasses.get(key) + ' = new ' + subType + '();';
+                                    haxe += "\n\t\t";
+                                    haxe += '@:privateAccess this.' + contextualClasses.get(key) + '.' + rootType.substring(rootType.lastIndexOf('.') + 1) + '_this = this;';
+                                }
+                            }
+                        }
 
                     }
                     else if (RE_METHOD.match(after)) {
@@ -1353,6 +1524,11 @@ class Convert {
                         //println('METHOD: ' + RE_METHOD.matched(0));
 
                         var modifiers = convertModifiers(RE_METHOD.matched(1));
+                        var name = RE_METHOD.matched(3);
+
+                        if (skippedNames.exists(name)) {
+                            haxe += '/*';
+                        }
                         
                         if (!inInterface && modifiers.exists('public')) {
                             haxe += 'public ';
@@ -1368,7 +1544,6 @@ class Convert {
                         }
 
                         var type = convertType(RE_METHOD.matched(2));
-                        var name = RE_METHOD.matched(3);
                         var args = convertArgs(RE_METHOD.matched(4));
 
                         haxe += 'function ' + name + '(';
@@ -1382,6 +1557,7 @@ class Convert {
 
                         if (RE_METHOD.matched(5) == '{') {
                             inMethod = true;
+                            inMethodName = name;
                             beforeMethodBraces = openBraces;
                             openBraces++;
                         }
@@ -1424,6 +1600,7 @@ class Convert {
                 // Import replaces
                 var pack = RE_IMPORT.matched(2);
                 pack = replaceStart(pack, 'com.esotericsoftware.spine.', 'spine.');
+                pack = replaceStart(pack, 'com.badlogic.gdx.graphics.g2d', 'spine.support.graphics');
                 pack = replaceStart(pack, 'com.badlogic.gdx.', 'spine.support.');
                 pack = replaceStart(pack, 'java.util.', 'spine.support.');
 
@@ -1436,29 +1613,39 @@ class Convert {
 
                 var modifiers = convertModifiers(RE_DECL.matched(1));
 
-                if (modifiers.exists('private')) {
+                var keyword = RE_DECL.matched(2);
+
+                if (modifiers.exists('private') && keyword == 'class') {
                     haxe += 'private ';
                 }
 
-                var keyword = RE_DECL.matched(2);
                 if (keyword == 'class') {
                     inClass = true;
+                    classHasConstructor = false;
                     beforeClassBraces = openBraces;
+                    haxe += keyword + ' ';
                 }
                 else if (keyword == 'interface') {
                     inInterface = true;
                     beforeInterfaceBraces = openBraces;
+                    haxe += keyword + ' ';
                 }
                 else if (keyword == 'enum') {
                     inEnum = true;
+                    inEnumValues = [];
                     beforeEnumBraces = openBraces;
+                    haxe += '@:enum abstract ';
                 }
-                haxe += keyword + ' ';
 
                 //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
 
                 var name = RE_DECL.matched(3);
-                haxe += name + ' ';
+                if (keyword == 'enum') {
+                    inEnumName = name;
+                    haxe += name + '(Int) from Int to Int ';
+                } else {
+                    haxe += name + ' ';
+                }
 
                 var extras = convertDeclExtras(RE_DECL.matched(4));
                 for (item in extras.classes) {
@@ -1484,8 +1671,81 @@ class Convert {
         // Convert tabs to spaces
         haxe = haxe.replace("\t", '    ');
 
+        // Convert __CONTINUE__ to continue
+        haxe = haxe.replace('__CONTINUE__', 'continue');
+
+        // Convert catches
+        haxe = haxe.replace('catch (Exception ex)', 'catch (ex:Dynamic)');
+
+        // Per-file patches
+        if (rootType == 'spine.AnimationStateData') {
+            haxe = haxe.replace('class Key {', 'private class Key {');
+            haxe = haxe.replace('setMix(fromName:String, toName:String, duration:Float)', 'setMixByName(fromName:String, toName:String, duration:Float)');
+        }
+        else if (rootType == 'spine.AnimationState') {
+            haxe = haxe.replace('setAnimation(trackIndex:Int, animationName:String, loop:Bool)', 'setAnimationByName(trackIndex:Int, animationName:String, loop:Bool)');
+            haxe = haxe.replace('addAnimation(trackIndex:Int, animationName:String, loop:Bool, delay:Float)', 'addAnimationByName(trackIndex:Int, animationName:String, loop:Bool, delay:Float)');
+            haxe = haxe.replace('animationsChanged()', 'handleAnimationsChanged()');
+        }
+        else if (rootType == 'spine.Animation') {
+            haxe = haxe.replace('binarySearch(values:FloatArray, target:Float, step:Int)', 'binarySearchWithStep(values:FloatArray, target:Float, step:Int)');
+        }
+        else if (rootType == 'spine.Skeleton') {
+            haxe = haxe.replace('updateCache', 'cache');
+            haxe = haxe.replace('cache()', 'updateCache()');
+            haxe = haxe.replace('sortPathConstraintAttachment(skin:Skin, slotIndex:Int, slotBone:Bone)', 'sortPathConstraintAttachmentWithSkin(skin:Skin, slotIndex:Int, slotBone:Bone)');
+            haxe = haxe.replace('updateWorldTransform(parent:Bone)', 'updateWorldTransformWithParent(parent:Bone)');
+            haxe = haxe.replace('setSkin(skinName:String)', 'setSkinByName(skinName:String)');
+            haxe = haxe.replace('getAttachment(slotName:String, attachmentName:String)', 'getAttachmentWithSlotName(slotName:String, attachmentName:String)');
+        }
+        else if (rootType == 'spine.IkConstraint') {
+            haxe = haxe.replace('apply(bone:Bone, targetX:Float, targetY:Float, alpha:Float)', 'applyOne(bone:Bone, targetX:Float, targetY:Float, alpha:Float)');
+            haxe = haxe.replace('apply(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, alpha:Float)', 'applyTwo(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, alpha:Float)');
+        }
+        else if (rootType == 'spine.Bone') {
+            haxe = haxe.replace('updateWorldTransform(', 'updateWorldTransformWithData(');
+            haxe = haxe.replace('updateWorldTransformWithData()', 'updateWorldTransform()');
+            haxe = haxe.replace('setScale(scale:Float)', 'setScale2(scale:Float)');
+        }
+        else if (rootType == 'spine.SkeletonBounds') {
+            haxe = haxe.replace('containsPoint(polygon:FloatArray, x:Float, y:Float)', 'polygonContainsPoint(polygon:FloatArray, x:Float, y:Float)');
+            haxe = haxe.replace('intersectsSegment(polygon:FloatArray, x1:Float, y1:Float, x2:Float, y2:Float)', 'polygonIntersectsSegment(polygon:FloatArray, x1:Float, y1:Float, x2:Float, y2:Float)');
+        }
+
+        // Replace outside-of-for break outer;
+        haxe = haxe.replace('break outer;', '{ _gotoLabel_outer = true; continue; }');
+
         // Move inner declarations to top level
         haxe = moveTopLevelDecls(haxe);
+
+        // Add inline class defs (which are not inline anymore)
+        for (key in inlineClassDefs.keys()) {
+            if (key.startsWith(rootType + '.')) {
+                var body = inlineClassDefs.get(key).classBody;
+                var lines = body.split("\n");
+                var indent = lines[1].length - lines[1].ltrim().length;
+                haxe += "\n";
+                for (line in lines) {
+                    haxe += line.substring(indent) + "\n";
+                }
+                haxe += "\n";
+            }
+        }
+
+        // Comment skipped names
+        var newLines = [];
+        var lines = haxe.split("\n");
+        for (line in lines) {
+            var ltrimmed = line.ltrim();
+            for (name in skippedNames.keys()) {
+                if (ltrimmed.startsWith(name + ' =')) {
+                    line = line.substring(0, line.length - ltrimmed.length) + '//' + ltrimmed;
+                    break;
+                }
+            }
+            newLines.push(line);
+        }
+        haxe = newLines.join("\n");
 
         return haxe;
 
@@ -1500,14 +1760,26 @@ class Convert {
         var lastWasInSub = false;
 
         for (line in lines) {
-            if (lastWasInSub && line.trim() == '') {
-                subLines.push('');
+            if (lastWasInSub && cleanedCode(line, { canBeInComment: true }).trim() == '') {
+                subLines.push(line);
             }
             else {
                 lastWasInSub = false;
                 if (!inSub) {
-                    if (line.startsWith('    ') && RE_DECL.match(line.substring(4))) {
+                    if (line.startsWith('    ') && RE_HAXE_DECL.match(line.substring(4))) {
                         inSub = true;
+                        
+                        // Check if previous lines should be in sub as well
+                        var prevLines = [];
+                        while (mainLines.length >= 0 && cleanedCode(mainLines[mainLines.length-1], { canBeInComment: true }).trim() == '') {
+                            var l = mainLines.pop();
+                            if (l.startsWith('    ')) l = l.substring(4);
+                            prevLines.unshift(l);
+                        }
+                        if (prevLines.length > 0) {
+                            subLines = subLines.concat(prevLines);
+                        }
+
                         subLines.push(line.substring(4));
                     }
                     else {
@@ -1516,7 +1788,7 @@ class Convert {
                 }
                 else {
                     subLines.push(line.substring(4));
-                    if (line.startsWith('    }')) {
+                    if (line.startsWith('    }') || line.startsWith('    ;}')) {
                         inSub = false;
                         lastWasInSub = true;
                     }
@@ -1563,7 +1835,7 @@ class Convert {
 
     } //deleteRecursive
 
-    static function cleanedCode(code:String, ?options: { cleanSpaces:Bool }) {
+    static function cleanedCode(code:String, ?options: { ?cleanSpaces:Bool, ?canBeInComment:Bool }) {
 
         var i = 0;
         var c = '';
@@ -1574,6 +1846,10 @@ class Convert {
         var inMultiLineComment = false;
         var result = '';
         var cleanSpaces = options != null && options.cleanSpaces ? true : false;
+        var canBeInComment = options != null && options.canBeInComment ? true : false;
+        
+        if (canBeInComment && code.ltrim().startsWith('*')) inMultiLineComment = true;
+        else if (canBeInComment && code.rtrim().endsWith('*/')) inMultiLineComment = true;
 
         while (i < len) {
 
@@ -1611,7 +1887,7 @@ class Convert {
             }
             else if (c == '"' || c == '\'') {
                 if (!RE_STRING.match(after)) {
-                    throw 'Failed to parse string when cleaning code';
+                    throw 'Failed to parse string when cleaning code: ' + code;
                 }
                 var n = 2;
                 var strLen = RE_STRING.matched(0).length;
@@ -1633,7 +1909,7 @@ class Convert {
 
     } //cleanedCode
 
-    static function splitCode(code:String, splitTokens:Array<String>) {
+    static function splitCode(code:String, splitTokens:Array<String>, deep:Bool = false) {
 
         var cleaned = cleanedCode(code);
         var result = '';
@@ -1707,7 +1983,7 @@ class Convert {
                 parts[partIndex] += code.charAt(i);
                 i++;
             }
-            else if (openBraces == 0 && word != '') {
+            else if ((openBraces == 0 || deep) && word != '') {
                 if (tokensMap.exists(word)) {
                     parts.push('');
                     partIndex++;
@@ -1726,6 +2002,67 @@ class Convert {
 
     } //splitCode
 
+/// Contextual classes info
+
+    static var contextualClasses:Map<String,String> = [
+        'spine.AnimationState.EventQueue' => 'queue'
+    ];
+
+    static var inlineClassDefs:Map<String,{replaceWithClass:String, classBody:String}> = [
+        'spine.AnimationState.Pool' => {
+            replaceWithClass: 'TrackEntryPool',
+            classBody: "
+            private class KeyPool extends Pool<TrackEntry> {
+                override function newObject() {
+                    return new TrackEntry();
+                }
+            }"
+        },
+        'spine.Skin.Pool' => {
+            replaceWithClass: 'KeyPool',
+            classBody: "
+            private class KeyPool extends Pool<Key> {
+                override public function new(initialCapacity:Int) {
+                    super(initialCapacity, 999999999);
+                }
+                override function newObject() {
+                    return new Key();
+                }
+            }"
+        },
+        'spine.SkeletonBounds.Pool' => {
+            replaceWithClass: 'PolygonPool',
+            classBody: "
+            private class PolygonPool extends Pool<FloatArray> {
+                override function newObject() {
+                    return new FloatArray();
+                }
+            }"
+        }
+    ];
+
+    static var skippedFiles:Map<String,Bool> = [
+        'SkeletonRenderer.java' => true,
+        'SkeletonBinary.java' => true,
+        'utils/SkeletonActor.java' => true,
+        'utils/SkeletonActorPool.java' => true
+    ];
+
+    static var skippedNames:Map<String,Bool> = [
+        'hashCode' => true
+    ];
+
+    static var skippedConstructors:Map<String,String> = [
+        'spine.AnimationState' => '', // Empty animation state
+        'spine.Slot' => 'Slot slot,Bone bone', // Copy constructor
+        'spine.Skeleton' => 'Skeleton skeleton', // Copy constructor
+        'spine.TransformConstraint' => 'TransformConstraint constraint,Skeleton skeleton', // Copy constructor
+        'spine.IkConstraint' => 'IkConstraint constraint,Skeleton skeleton', // Copy constructor
+        'spine.PathConstraint' => 'PathConstraint constraint,Skeleton skeleton', // Copy constructor
+        'spine.Bone' => 'Bone bone,Skeleton skeleton,Bone parent', // Copy constructor
+        'spine.BoneData' => 'BoneData bone,BoneData parent' // Copy constructor
+    ];
+
 /// Regular expressions
 
     static var RE_WORD_SEP = ~/^[^a-zA-Z0-9_]/;
@@ -1737,15 +2074,19 @@ class Convert {
     static var RE_METHOD = ~/^((?:(?:public|private|protected|static|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
     static var RE_VAR = ~/^(?:([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
     static var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
+    static var RE_HAXE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract|@:enum)\s+)+)?(enum|interface|class|abstract)\s+([a-zA-Z0-9,<>\[\]_]+)/;
     static var RE_NEW_ARRAY = ~/^new\s+([a-zA-Z0-9_]+)\s*\[/;
+    static var RE_NEW_INSTANCE = ~/^new\s+([a-zA-Z0-9_]+)\s*\((\s*\))?/;
     static var RE_SWITCH = ~/^switch\s*\(/;
     static var RE_CASE = ~/^(case|default)\s*(?:([^:]+)\s*)?:\s*/;
     static var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
-    static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9,<>\[\]_]+)/;
+    static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
     static var RE_CALL = ~/^([a-zA-Z0-9,<>\[\]_\.]+)\s*\(/;
     static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
     static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
     static var RE_LABEL = ~/^(outer)\s*:/;
     static var RE_CONTINUE_OR_BREAK = ~/^(continue|break)(?:\s+(outer)\s*)?;/;
+    static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\s*)(,|;|\})/;
+    static var RE_PARENT_CLASS_THIS = ~/^([a-zA-Z0-9_]+)(\s*)\.\s*this\s*\./;
 
 } //Convert
