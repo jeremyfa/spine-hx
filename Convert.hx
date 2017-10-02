@@ -44,14 +44,19 @@ class Convert {
         // Add import.hx
         File.saveContent('spine/import.hx', "
 import spine.support.error.*;
+import spine.support.utils.BooleanArray;
+import spine.support.utils.Short;
 import spine.support.utils.ShortArray;
+import spine.support.utils.ShortArray2D;
 import spine.support.utils.IntArray;
 import spine.support.utils.IntArray2D;
 import spine.support.utils.FloatArray;
 import spine.support.utils.FloatArray2D;
 import spine.support.utils.StringArray;
+import spine.support.utils.ObjectArray;
 
 using spine.support.extensions.StringExtensions;
+using spine.support.extensions.ArrayExtensions;
 using StringTools;
 ");
 
@@ -125,6 +130,12 @@ using StringTools;
             haxe += 'typedef ' + rootType.substring(rootType.lastIndexOf('.') + 1) + ' = spine.support.overrides.' + replaceStart(rootType, 'spine.', '') + ';' + "\n";
             haxe += "\n";
             return haxe;
+        }
+
+        // To differenciate the two pools of this class.
+        // That is rather hacky but it works.
+        if (rootType == 'spine.utils.Triangulator') {
+            java = java.replace('polygonIndicesPool = new Pool()', 'polygonIndicesPool = new Pool2()');
         }
 
         // Perform some replaces to facilitate parsing
@@ -364,16 +375,21 @@ using StringTools;
                 case 'float': 'Float';
                 case 'float[]': 'FloatArray';
                 case 'float[][]': 'FloatArray2D';
+                case 'Array<FloatArray>': 'FloatArray2D';
                 case 'String[]': 'StringArray';
                 case 'short[]': 'ShortArray';
+                case 'Array<ShortArray>': 'ShortArray2D';
+                case 'short': 'Short';
                 case 'Event[]': 'Array<Event>';
-                case 'Object[]': 'Array<Dynamic>';
+                case 'Object[]': 'ObjectArray';
                 case 'int': 'Int';
                 case 'int[]': 'IntArray';
                 case 'int[][]': 'IntArray2D';
+                case 'Array<IntArray>': 'IntArray2D';
                 case 'void': 'Void';
                 case 'boolean': 'Bool';
                 case 'Object': 'Dynamic';
+                case 'boolean[]': 'BooleanArray';
                 case 'Array': 'Array<Dynamic>';
                 default: null;
             }
@@ -762,12 +778,17 @@ using StringTools;
                         haxe += RE_CALL.matched(0);
                         openParens++;
                         inCall = true;
+                        var index = haxe.length;
                         consumeExpression({ until: ')' });
                         inCall = false;
                     }
                     else if (untilWords != null && untilWords.indexOf(word) != -1) {
                         stopToken = word;
                         break;
+                    }
+                    else if (word == 'catch' && RE_CATCH.match(after)) {
+                        i += RE_CATCH.matched(0).length;
+                        haxe += 'catch (' + RE_CATCH.matched(2) + ':Dynamic)';
                     }
                     else if (word == 'switch' && RE_SWITCH.match(after)) {
 
@@ -1691,9 +1712,6 @@ using StringTools;
         // Convert __CONTINUE__ to continue
         haxe = haxe.replace('__CONTINUE__', 'continue');
 
-        // Convert catches
-        haxe = haxe.replace('catch (Exception ex)', 'catch (ex:Dynamic)');
-
         // Per-file patches
         if (rootType == 'spine.AnimationStateData') {
             haxe = haxe.replace('class Key {', 'private class Key {');
@@ -2055,11 +2073,30 @@ using StringTools;
                     return new FloatArray();
                 }
             }"
+        },
+        'spine.utils.Triangulator.Pool' => {
+            replaceWithClass: 'PolygonPool',
+            classBody: "
+            private class PolygonPool extends Pool<FloatArray> {
+                override function newObject() {
+                    return new FloatArray(16);
+                }
+            }"
+        },
+        'spine.utils.Triangulator.Pool2' => {
+            replaceWithClass: 'IndicesPool',
+            classBody: "
+            private class IndicesPool extends Pool<ShortArray> {
+                override function newObject() {
+                    return new ShortArray(16);
+                }
+            }"
         }
     ];
 
     static var skippedFiles:Map<String,Bool> = [
         'SkeletonRenderer.java' => true,
+        'SkeletonRendererDebug.java' => true,
         'SkeletonBinary.java' => true,
         'utils/SkeletonActor.java' => true,
         'utils/SkeletonActorPool.java' => true
@@ -2077,7 +2114,8 @@ using StringTools;
         'spine.IkConstraint' => 'IkConstraint constraint,Skeleton skeleton', // Copy constructor
         'spine.PathConstraint' => 'PathConstraint constraint,Skeleton skeleton', // Copy constructor
         'spine.Bone' => 'Bone bone,Skeleton skeleton,Bone parent', // Copy constructor
-        'spine.BoneData' => 'BoneData bone,BoneData parent' // Copy constructor
+        'spine.BoneData' => 'BoneData bone,BoneData parent', // Copy constructor
+        'spine.SkeletonJson' => 'TextureAtlas atlas' // Can use new(new AtlasAttachmentLoader(atlas)) instead
     ];
 
 /// Regular expressions
@@ -2098,9 +2136,10 @@ using StringTools;
     static var RE_CASE = ~/^(case|default)\s*(?:([^:]+)\s*)?:\s*/;
     static var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
     static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
-    static var RE_CALL = ~/^([a-zA-Z0-9,<>\[\]_\.]+)\s*\(/;
+    static var RE_CALL = ~/^([a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s*\(/;
     static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
     static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
+    static var RE_CATCH = ~/^catch\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*\)/;
     static var RE_LABEL = ~/^(outer)\s*:/;
     static var RE_CONTINUE_OR_BREAK = ~/^(continue|break)(?:\s+(outer)\s*)?;/;
     static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\s*)(,|;|\})/;

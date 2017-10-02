@@ -1,13 +1,13 @@
 package spine.support.utils;
 
-abstract FloatArray2D(Array<FloatArray>) from Array<FloatArray> to Array<FloatArray> {
+abstract BooleanArray(Array<Bool>) from Array<Bool> to Array<Bool> {
 
     inline public function new(capacity:Int = 16) {
         return new Array();
     }
 
-    public var items(get,never):FloatArray2D;
-    inline function get_items():FloatArray2D {
+    public var items(get,never):BooleanArray;
+    inline function get_items():BooleanArray {
         return this;
     }
 
@@ -20,21 +20,21 @@ abstract FloatArray2D(Array<FloatArray>) from Array<FloatArray> to Array<FloatAr
         this.splice(0, this.length);
     }
 
-    inline public function setSize(size:Int):FloatArray2D {
+    inline public function setSize(size:Int):BooleanArray {
         var len = this.length;
         if (len > size) {
             this.splice(size, size - len);
         }
         else if (len < size) {
             while (len < size) {
-                this.push(0);
+                this.push(false);
                 len++;
             }
         }
         return this;
     }
 
-    inline public function add(item:FloatArray):Void {
+    inline public function add(item:Bool):Void {
         this.push(item);
     }
 
