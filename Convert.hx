@@ -1000,6 +1000,57 @@ using StringTools;
                         openParens++;
                         //consumeExpression({ until: ')' });
                     }
+                    else if (word == 'do' && cleanedAfter.substr(word.length).ltrim().startsWith('{')) {
+
+                        i += word.length;
+                        c = cleanedJava.charAt(i);
+                        while (c != '{') {
+                            i++;
+                            c = cleanedJava.charAt(i);
+                        }
+                        i++;
+                        openBraces++;
+
+                        haxe += 'do {';
+
+                        consumeExpression({ until: '}' });
+
+                        c = cleanedJava.charAt(i);
+                        while (i < len && c != '(') {
+                            haxe += c;
+                            i++;
+                            c = cleanedJava.charAt(i);
+                        }
+                        openParens++;
+                        i++;
+                        haxe += c;
+
+                        consumeExpression({ until: ')' });
+                        
+                        haxe += ';';
+                        i++;
+
+                        if (continueToLabels.length > 0) {
+
+                            for (item in continueToLabels) {
+                                item.depth++;
+                            }
+
+                            cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+
+                            for (item in continueToLabels) {
+                                if (item.depth > 1) {
+                                    haxe += ' ' + item.breakCode + ';';
+                                }
+                                else {
+                                    haxe += ' ' + item.continueCode + ';';
+                                }
+                                item.depth--;
+                            }
+
+                        }
+
+                    }
                     else if (word == 'while' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
 
                         i += word.length;
@@ -1499,7 +1550,10 @@ using StringTools;
 
                         var skip = false;
                         for (key in skippedConstructors.keys()) {
-                            if (key == rootType && cleanedCode(RE_CONSTRUCTOR.matched(3), { cleanSpaces: true }) == skippedConstructors.get(key)) {
+                            var sharpIndex = key.indexOf('#');
+                            var cleanKey = key;
+                            if (sharpIndex != -1) cleanKey = key.substring(0, sharpIndex);
+                            if (cleanKey == rootType && cleanedCode(RE_CONSTRUCTOR.matched(3), { cleanSpaces: true }) == skippedConstructors.get(key)) {
                                 haxe += '/*';
                                 skip = true;
                                 break;
@@ -1745,6 +1799,9 @@ using StringTools;
         else if (rootType == 'spine.SkeletonBounds') {
             haxe = haxe.replace('containsPoint(polygon:FloatArray, x:Float, y:Float)', 'polygonContainsPoint(polygon:FloatArray, x:Float, y:Float)');
             haxe = haxe.replace('intersectsSegment(polygon:FloatArray, x1:Float, y1:Float, x2:Float, y2:Float)', 'polygonIntersectsSegment(polygon:FloatArray, x1:Float, y1:Float, x2:Float, y2:Float)');
+        }
+        else if (rootType == 'spine.utils.SkeletonClipping') {
+            haxe = haxe.replace('clipEnd(slot:Slot)', 'clipEndWithSlot(slot:Slot)');
         }
 
         // Replace outside-of-for break outer;
@@ -2099,7 +2156,10 @@ using StringTools;
         'SkeletonRendererDebug.java' => true,
         'SkeletonBinary.java' => true,
         'utils/SkeletonActor.java' => true,
-        'utils/SkeletonActorPool.java' => true
+        'utils/SkeletonActorPool.java' => true,
+        'utils/TwoColorPolygonBatch.java' => true,
+        'vertexeffects/JitterEffect.java' => true,
+        'vertexeffects/SwirlEffect.java' => true
     ];
 
     static var skippedNames:Map<String,Bool> = [
@@ -2115,7 +2175,9 @@ using StringTools;
         'spine.PathConstraint' => 'PathConstraint constraint,Skeleton skeleton', // Copy constructor
         'spine.Bone' => 'Bone bone,Skeleton skeleton,Bone parent', // Copy constructor
         'spine.BoneData' => 'BoneData bone,BoneData parent', // Copy constructor
-        'spine.SkeletonJson' => 'TextureAtlas atlas' // Can use new(new AtlasAttachmentLoader(atlas)) instead
+        'spine.SkeletonJson' => 'TextureAtlas atlas', // Can use new(new AtlasAttachmentLoader(atlas)) instead
+        'spine.utils.SkeletonPool' => 'SkeletonData skeletonData', // Optional constructor
+        'spine.utils.SkeletonPool#2' => 'SkeletonData skeletonData,int initialCapacity' // Optional constructor
     ];
 
 /// Regular expressions
