@@ -669,13 +669,17 @@ using StringTools;
 
                     var index = haxe.length;
                     var aStop = consumeExpression({ until: ');,' });
-                    var castPart = haxe.substring(index);
+                    var castPart = haxe.substring(index, haxe.length - 1);
 
+                    if (aStop == ')') openParens++;
+                    i--;
                     haxe = haxe.substring(0, index);
                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                    haxe += castPart.substring(0, castPart.length - 1) + ', ' + convertType(castType) + ')' + castPart.substring(castPart.length - 1);
+                    haxe += castPart + ', ' + convertType(castType) + ')';
 
-                    if (aStop == ';') {
+                    //exit(0);
+
+                    /*if (aStop == ';') {
                         varType = null;
                         isVarValue = false;
                     }
@@ -683,7 +687,7 @@ using StringTools;
                     if (aStop == ';' && until.indexOf(';') != -1 && openBraces == openBracesStart && openParens == openParensStart) {
                         stopToken = ';';
                         break;
-                    }
+                    }*/
                 }
                 else if (consumeParen()) {
                     if (isVarValue && openParens > openParensStart) {
@@ -825,8 +829,14 @@ using StringTools;
 
                         for (aCase in cases) {
                             var cleaned = cleanedCode(aCase.body, { cleanSpaces: true }).trim();
-                            if (cleaned.endsWith(';break;') || cleaned.endsWith('}break;') || cleaned.endsWith('}return;') || cleaned.endsWith('}return;') || cleaned.endsWith(';return;}') || cleaned.endsWith('}return;}') || cleaned.endsWith(';break;}') || cleaned.endsWith('}break;}')) {
-                                aCase.fallThrough = false;
+                            var hasBrace = cleaned.startsWith('{');
+                            if (RE_CASE_BREAKS.match(cleaned)) {
+                                if (RE_CASE_BREAKS.matched(4) != null && RE_CASE_BREAKS.matched(4).trim() == '}') {
+                                    aCase.fallThrough = !hasBrace;
+                                }
+                                else {
+                                    aCase.fallThrough = false;
+                                }
                             }
                         }
 
@@ -845,7 +855,14 @@ using StringTools;
                                 var m = 1;
                                 while (n + m < cases.length) {
                                     var nextCase = cases[n + m];
-                                    haxe += '    ' + nextCase.body;
+                                    if (hasBrace) {
+                                        var caseEnd = haxe.substring(haxe.lastIndexOf('}'));
+                                        haxe = haxe.substring(0, haxe.lastIndexOf('}'));
+                                        haxe += nextCase.body;
+                                        haxe += caseEnd;
+                                    } else {
+                                        haxe += '    ' + nextCase.body;
+                                    }
                                     if (!nextCase.fallThrough) break;
                                     m++;
                                 }
@@ -2088,5 +2105,6 @@ using StringTools;
     static var RE_CONTINUE_OR_BREAK = ~/^(continue|break)(?:\s+(outer)\s*)?;/;
     static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\s*)(,|;|\})/;
     static var RE_PARENT_CLASS_THIS = ~/^([a-zA-Z0-9_]+)(\s*)\.\s*this\s*\./;
+    static var RE_CASE_BREAKS = ~/(;|})\s*(break|continue|return)\s*(\s[^;]+)?;\s*(\}\s*)?$/;
 
 } //Convert
