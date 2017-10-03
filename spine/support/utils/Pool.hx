@@ -10,12 +10,13 @@ class Pool<T> {
 
     /** @param max The maximum number of free objects to store in this pool. */
     public function new(initialCapacity:Int = 64, max:Int = 999999999) {
-        freeObjects = new Array(false, initialCapacity);
+        freeObjects = [];
+        freeObjects.setSize(initialCapacity);
         this.max = max;
     }
     public function free(object:T):Void {
         if (object == null) throw new IllegalArgumentException("object cannot be null.");
-        if (freeObjects.size < max) {
+        if (freeObjects.length < max) {
             freeObjects.add(object);
             peak = Math.max(peak, freeObjects.size);
         }

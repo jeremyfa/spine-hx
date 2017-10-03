@@ -1,3 +1,3 @@
 package spine.support.utils;
 
-typedef IntArray2D = Array<IntArray>;
+typedef IntArray2D = spine.support.utils.Array<IntArray>;

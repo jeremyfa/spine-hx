@@ -1,9 +1,10 @@
 package spine.support.utils;
 
-abstract FloatArray(Array<Float>) from Array<Float> to Array<Float> {
+@:forward(iterator, length)
+abstract FloatArray(std.Array<Float>) from std.Array<Float> to std.Array<Float> {
 
     inline public function new(capacity:Int = 16) {
-        return new Array();
+        this = [];
     }
 
     public var items(get,never):FloatArray;
@@ -36,6 +37,10 @@ abstract FloatArray(Array<Float>) from Array<Float> to Array<Float> {
 
     inline public function add(item:Float):Void {
         this.push(item);
+    }
+
+    inline public function get(index:Int):Float {
+        return this[index];
     }
 
     inline public function removeIndex(index:Int):Void {

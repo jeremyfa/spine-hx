@@ -1,9 +1,10 @@
 package spine.support.utils;
 
-abstract IntArray(Array<Int>) from Array<Int> to Array<Int> {
+@:forward(iterator, length)
+abstract IntArray(std.Array<Int>) from std.Array<Int> to std.Array<Int> {
 
     inline public function new(capacity:Int = 16) {
-        return new Array();
+        this = [];
     }
 
     public var items(get,never):IntArray;
@@ -36,6 +37,10 @@ abstract IntArray(Array<Int>) from Array<Int> to Array<Int> {
 
     inline public function add(item:Int):Void {
         this.push(item);
+    }
+
+    inline public function get(index:Int):Int {
+        return this[index];
     }
 
     inline public function removeIndex(index:Int):Void {

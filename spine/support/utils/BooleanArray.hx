@@ -1,9 +1,10 @@
 package spine.support.utils;
 
-abstract BooleanArray(Array<Bool>) from Array<Bool> to Array<Bool> {
+@:forward(iterator, length)
+abstract BooleanArray(std.Array<Bool>) from std.Array<Bool> to std.Array<Bool> {
 
     inline public function new(capacity:Int = 16) {
-        return new Array();
+        this = [];
     }
 
     public var items(get,never):BooleanArray;
@@ -36,6 +37,10 @@ abstract BooleanArray(Array<Bool>) from Array<Bool> to Array<Bool> {
 
     inline public function add(item:Bool):Void {
         this.push(item);
+    }
+
+    inline public function get(index:Int):Bool {
+        return this[index];
     }
 
     inline public function removeIndex(index:Int):Void {
