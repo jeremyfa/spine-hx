@@ -193,6 +193,7 @@ using StringTools;
         // Stub
         var consumeExpression = function(?options:{
             ?varType:String,
+            ?varModifiers:Array<String>,
             ?isVarValue:Bool,
             ?until:String,
             ?untilWords:Array<String>
@@ -568,11 +569,11 @@ using StringTools;
                 i++;
                 if (inSubClass && openBraces == beforeSubClassBraces) {
                     inSubClass = false;
-                    /*if (!subClassHasConstructor) {
+                    if (!subClassHasConstructor) {
                         haxe = haxe.substring(0, haxe.length - 1);
                         cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                        haxe += "\n\t" + 'public function new() {}\n}';
-                    }*/
+                        haxe += "\n\t\t" + 'public function new() {}\n\t}';
+                    }
                 }
                 if (inInterface && openBraces == beforeInterfaceBraces) {
                     inInterface = false;
@@ -582,11 +583,11 @@ using StringTools;
                 }
                 if (inClass && openBraces == beforeClassBraces) {
                     inClass = false;
-                    /*if (!classHasConstructor) {
+                    if (!classHasConstructor) {
                         haxe = haxe.substring(0, haxe.length - 1);
                         cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                        haxe += "\n\t\t" + 'public function new() {}\n\t}';
-                    }*/
+                        haxe += "\n\t" + 'public function new() {}\n}';
+                    }
                 }
                 if (inMethod && openBraces == beforeMethodBraces) {
                     if (skippedNames.exists(inMethodName) || inSkippedMethod) {
@@ -646,6 +647,7 @@ using StringTools;
 
         consumeExpression = function(?options:{
             ?varType:String,
+            ?varModifiers:Array<String>,
             ?isVarValue:Bool,
             ?until:String,
             ?untilWords:Array<String>
@@ -656,6 +658,7 @@ using StringTools;
             var openBracketsStart = openBrackets;
             var stopToken = '';
             var varType = options != null ? options.varType : null;
+            var varModifiers = options != null ? options.varModifiers : null;
             var isVarValue:Bool = options != null ? options.isVarValue : false;
             var until:String = options != null ? options.until : '';
             var untilWords:Array<String> = options != null ? options.untilWords : null;
@@ -667,6 +670,7 @@ using StringTools;
 
                 if (c == ';') {
                     varType = null;
+                    varModifiers = null;
                 }
 
                 if (consumeCommentOrString()) {
@@ -722,6 +726,7 @@ using StringTools;
                 }
                 else if (c == ';' && until.indexOf(';') != -1 && openBraces == openBracesStart && openParens == openParensStart) {
                     varType = null;
+                    varModifiers = null;
                     haxe += c;
                     i++;
                     stopToken = c;
@@ -734,6 +739,7 @@ using StringTools;
                     i++;
                     if (c == ';') {
                         varType = null;
+                        varModifiers = null;
                     }
 
                     if (until.indexOf(c) != -1) {
@@ -1226,7 +1232,7 @@ using StringTools;
 
                                         var label = RE_CONTINUE_OR_BREAK.matched(2);
                                         if (label != null && label.trim() != '') {
-                                            breakCode += '_goToLabel_' + RE_CONTINUE_OR_BREAK.matched(2) + ' = true; break;';
+                                            breakCode += '_gotoLabel_' + RE_CONTINUE_OR_BREAK.matched(2) + ' = true; break;';
                                         }
                                         else {
                                             breakCode += RE_CONTINUE_OR_BREAK.matched(0).replace('continue', '__CONTINUE__');
@@ -1321,6 +1327,10 @@ using StringTools;
                         if (!skip) {
                             var name = RE_VAR.matched(2);
 
+                            if (varType != null && varModifiers != null && varModifiers.length > 0) {
+                                haxe += varModifiers.join(' ') + ' ';
+                            }
+
                             haxe += 'var ' + name;
                             if (type != null) {
                                 haxe += ':' + type;
@@ -1338,6 +1348,7 @@ using StringTools;
                             if (end == ';') {
                                 haxe += ';';
                                 varType = null;
+                                varModifiers = null;
                                 isVarValue = false;
                             }
                             else if (end == '=') {
@@ -1418,7 +1429,8 @@ using StringTools;
                     if (inEnum && RE_ENUM_VALUE.match(after)) {
                         i += RE_ENUM_VALUE.matched(0).length;
                         var name = RE_ENUM_VALUE.matched(1);
-                        name = name.charAt(0).toUpperCase() + name.substring(1);
+                        if (name == 'in') name = 'directionIn';
+                        else if (name == 'out') name = 'directionOut';
                         haxe += 'var ' + name + ' = ' + inEnumValues.length;
                         var end = RE_ENUM_VALUE.matched(3);
                         if (end == '}') {
@@ -1504,17 +1516,30 @@ using StringTools;
 
                         var modifiers = convertModifiers(RE_PROPERTY.matched(1));
                         
+                        var hasAccessModifier = false;
+                        var varModifiers:Array<String> = [];
                         if (modifiers.exists('public')) {
                             haxe += 'public ';
+                            hasAccessModifier = true;
+                            varModifiers.push('public');
                         }
                         if (modifiers.exists('protected')) {
                             haxe += 'public ';
+                            hasAccessModifier = true;
+                            varModifiers.push('public');
                         }
                         if (modifiers.exists('private')) {
                             haxe += 'private ';
+                            hasAccessModifier = true;
+                            varModifiers.push('private');
+                        }
+                        if (!hasAccessModifier) {
+                            haxe += 'public '; // Default to public
+                            varModifiers.push('public');
                         }
                         if (modifiers.exists('static')) {
                             haxe += 'static ';
+                            varModifiers.push('static');
                         }
 
                         var type = convertType(RE_PROPERTY.matched(2));
@@ -1536,11 +1561,11 @@ using StringTools;
                         }
                         else if (end == '=') {
                             haxe += ' =';
-                            consumeExpression({ until: ';', varType: type, isVarValue: true});
+                            consumeExpression({ until: ';', varType: type, varModifiers: varModifiers, isVarValue: true});
                         }
                         else if (end == ',') {
                             haxe += ';';
-                            consumeExpression({ until: ';', varType: type});
+                            consumeExpression({ until: ';', varType: type, varModifiers: varModifiers});
                         }
 
                     }
@@ -1786,6 +1811,9 @@ using StringTools;
             haxe = haxe.replace('updateWorldTransform(parent:Bone)', 'updateWorldTransformWithParent(parent:Bone)');
             haxe = haxe.replace('setSkin(skinName:String)', 'setSkinByName(skinName:String)');
             haxe = haxe.replace('getAttachment(slotName:String, attachmentName:String)', 'getAttachmentWithSlotName(slotName:String, attachmentName:String)');
+            haxe = haxe.replace('sortPathConstraintAttachment(skin,', 'sortPathConstraintAttachmentWithSkin(skin,');
+            haxe = haxe.replace('sortPathConstraintAttachment(data.defaultSkin,', 'sortPathConstraintAttachmentWithSkin(data.defaultSkin,');
+            haxe = haxe.replace('sortPathConstraintAttachment(data.skins.', 'sortPathConstraintAttachmentWithSkin(data.skins.');
         }
         else if (rootType == 'spine.IkConstraint') {
             haxe = haxe.replace('apply(bone:Bone, targetX:Float, targetY:Float, alpha:Float)', 'applyOne(bone:Bone, targetX:Float, targetY:Float, alpha:Float)');
