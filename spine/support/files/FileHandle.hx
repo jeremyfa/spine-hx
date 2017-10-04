@@ -1,5 +1,9 @@
 package spine.support.files;
 
-abstract FileHandle(String) from String to String {
+interface FileHandle {
+
+    public var path:String;
+
+    public function getContent():String;
 
 } //FileHandle

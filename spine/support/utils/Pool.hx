@@ -18,7 +18,7 @@ class Pool<T> {
         if (object == null) throw new IllegalArgumentException("object cannot be null.");
         if (freeObjects.length < max) {
             freeObjects.add(object);
-            peak = Math.max(peak, freeObjects.size);
+            peak = MathUtils.max(peak, freeObjects.size);
         }
         reset(object);
     }
@@ -41,7 +41,7 @@ class Pool<T> {
             if (freeObjects.size < max) freeObjects.add(object);
             reset(object);
         i++; }
-        peak = Math.max(peak, freeObjects.size);
+        peak = MathUtils.max(peak, freeObjects.size);
     }
 
     /** Removes all free objects from this pool. */

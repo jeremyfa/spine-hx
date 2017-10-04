@@ -1,7 +1,16 @@
 package spine.support.utils;
 
-@:forward(iterator, length)
+@:forward(iterator, length, push, pop, shift, unshift, splice)
 abstract IntArray(std.Array<Int>) from std.Array<Int> to std.Array<Int> {
+
+    public inline static function create(length:Float = 0):IntArray {
+        var len = Std.int(length);
+        var array = new IntArray(len != 0 ? len : 16);
+        if (length != 0) {
+            array.setSize(len);
+        }
+        return array;
+    }
 
     inline public function new(capacity:Int = 16) {
         this = [];
@@ -15,6 +24,14 @@ abstract IntArray(std.Array<Int>) from std.Array<Int> to std.Array<Int> {
     public var size(get,never):Int;
     inline function get_size():Int {
         return this.length;
+    }
+
+    inline public function shrink():IntArray {
+        return this;
+    }
+
+    inline public function toArray():IntArray {
+        return this;
     }
 
     inline public function clear():Void {
@@ -39,12 +56,25 @@ abstract IntArray(std.Array<Int>) from std.Array<Int> to std.Array<Int> {
         this.push(item);
     }
 
+    inline public function addAll(items:IntArray, start:Int = 0, count:Int = -1):Void {
+        if (count == -1) count = items.length;
+        var i = this.length;
+        var len = i + items.length;
+        setSize(len);
+        for (item in items) {
+            this[i++] = item;
+            if (--count <= 0) break;
+        }
+    }
+
     inline public function get(index:Int):Int {
         return this[index];
     }
 
-    inline public function removeIndex(index:Int):Void {
+    inline public function removeIndex(index:Int):Int {
+        var item = this[index];
         this.splice(index, 1);
+        return item;
     }
 
     inline public function ensureCapacity(size:Int):IntArray {

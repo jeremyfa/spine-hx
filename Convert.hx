@@ -7,6 +7,17 @@ import haxe.io.Path;
 
 using StringTools;
 
+typedef ConvertContext = {
+    javaDir:String,
+    haxeDir:String,
+    relativePath:String,
+    files:Map<String,String>,
+    enums:Map<String,{
+        rootType: String,
+        values: Array<String>
+    }>
+};
+
 class Convert {
 
 /// Convert script
@@ -37,7 +48,8 @@ class Convert {
             javaDir: 'spine-runtimes/spine-libgdx/spine-libgdx/src/com/esotericsoftware/spine',
             haxeDir: 'spine',
             relativePath: '.',
-            files: new Map()
+            files: new Map(),
+            enums: new Map()
         };
         convert(ctx);
 
@@ -53,21 +65,18 @@ import spine.support.utils.IntArray2D;
 import spine.support.utils.FloatArray;
 import spine.support.utils.FloatArray2D;
 import spine.support.utils.StringArray;
-import spine.support.utils.ObjectArray;
+import spine.support.math.MathUtils;
+import spine.BlendMode;
 
 using spine.support.extensions.StringExtensions;
 using spine.support.extensions.ArrayExtensions;
+using spine.support.extensions.FileExtensions;
 using StringTools;
 ");
 
     } //main
 
-    static function convert(ctx:{
-        javaDir:String,
-        haxeDir:String,
-        relativePath:String,
-        files:Map<String,String>
-    }) {
+    static function convert(ctx:ConvertContext, root:Bool = true, secondPass:Bool = false) {
 
         var fullJavaDir = Path.join([ctx.javaDir, ctx.relativePath]);
         var fullHaxeDir = Path.join([ctx.haxeDir, ctx.relativePath]);
@@ -84,8 +93,9 @@ using StringTools;
                     javaDir: ctx.javaDir,
                     haxeDir: ctx.haxeDir,
                     relativePath: Path.join([ctx.relativePath, name]),
-                    files: ctx.files
-                });
+                    files: ctx.files,
+                    enums: ctx.enums
+                }, false, secondPass);
             }
             else if (path.endsWith('.java')) {
 
@@ -98,14 +108,14 @@ using StringTools;
                 if (!skippedFiles.exists(relJavaPath)) {
 
                     // Log
-                    println(relJavaPath + ' -> ' + haxePath.substr(ctx.haxeDir.length + 1));
+                    println('[pass ' + (secondPass ? 2 : 1) + '] ' + relJavaPath + ' -> ' + haxePath.substr(ctx.haxeDir.length + 1));
 
                     // Get contents
                     var java = File.getContent(javaPath);
                     var type = 'spine.' + javaPath.substring(ctx.javaDir.length + 1, javaPath.length - 5).replace('/', '.');
 
                     // Convert java to haxe
-                    var haxe = javaToHaxe(java, javaPath.substr(ctx.javaDir.length + 1), type, ctx.haxeDir);
+                    var haxe = javaToHaxe(java, javaPath.substr(ctx.javaDir.length + 1), type, ctx.haxeDir, ctx);
 
                     // Save file
                     if (!FileSystem.exists(Path.directory(haxePath))) {
@@ -120,9 +130,15 @@ using StringTools;
 
         }
 
+        // Do parsing a second time, because we gathered information
+        // on the previous pass that we can use now
+        if (!secondPass && root) {
+            convert(ctx, true, true);
+        }
+
     } //convert
 
-    static function javaToHaxe(java:String, filePath:String, rootType:String, haxeDir:String):String {
+    static function javaToHaxe(java:String, filePath:String, rootType:String, haxeDir:String, ctx:ConvertContext):String {
 
         if (FileSystem.exists(Path.join([haxeDir, 'support/overrides', replaceStart(rootType, 'spine.', '').replace('.','/') + '.hx']))) {
             var haxe = 'package ' + rootType.substring(0, rootType.lastIndexOf('.')) + ';' + "\n";
@@ -373,6 +389,10 @@ using StringTools;
         function convertType(inType:String):String {
 
             var type = switch (inType) {
+                // Java cannot infer types, that's why we see Object[] at various places in the code.
+                // But Haxe can, so let's just remove the explicit type and let the compiler find it :)
+                case 'Object[]': '';
+
                 case 'float': 'Float';
                 case 'float[]': 'FloatArray';
                 case 'float[][]': 'FloatArray2D';
@@ -382,7 +402,6 @@ using StringTools;
                 case 'Array<ShortArray>': 'ShortArray2D';
                 case 'short': 'Short';
                 case 'Event[]': 'Array<Event>';
-                case 'Object[]': 'ObjectArray';
                 case 'int': 'Int';
                 case 'int[]': 'IntArray';
                 case 'int[][]': 'IntArray2D';
@@ -579,7 +598,40 @@ using StringTools;
                     inInterface = false;
                 }
                 if (inEnum && openBraces == beforeEnumBraces) {
+
+                    ctx.enums.set(inEnumName, {
+                        rootType: rootType,
+                        values: inEnumValues
+                    });
+
                     inEnum = false;
+                    extraHaxe += "\n";
+                    extraHaxe += 'class ' + inEnumName + '_enum {\n\n';
+                    var n = 0;
+                    for (val in inEnumValues) {
+                        extraHaxe += '    public inline static var ' + val + '_value = ' + n + ';\n';
+                        n++;
+                    }
+                    extraHaxe += '\n';
+                    n = 0;
+                    for (val in inEnumValues) {
+                        extraHaxe += '    public inline static var ' + val + '_name = "' + val + '";\n';
+                        n++;
+                    }
+                    extraHaxe += '\n';
+                    extraHaxe += '    public static function valueOf(value:String):' + inEnumName + ' {\n';
+                    extraHaxe += '        return switch (value) {\n';
+                    n = 0;
+                    for (val in inEnumValues) {
+                        extraHaxe += '            case "' + val + '": ' + inEnumName + '.' + val + ';\n';
+                        n++;
+                    }
+                    extraHaxe += '            default: ' + inEnumName + '.' + inEnumValues[0] + ';\n';
+                    extraHaxe += '        };\n';
+                    extraHaxe += '    }\n';
+
+                    extraHaxe += '\n}\n';
+
                 }
                 if (inClass && openBraces == beforeClassBraces) {
                     inClass = false;
@@ -696,8 +748,6 @@ using StringTools;
                     haxe = haxe.substring(0, index);
                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                     haxe += castPart + ', ' + convertType(castType) + ')';
-
-                    //exit(0);
 
                     /*if (aStop == ';') {
                         varType = null;
@@ -1072,7 +1122,51 @@ using StringTools;
 
                         consumeExpression({ until: ')' });
 
-                        if (continueToLabels.length > 0) {
+                        // Is the rest inline?
+                        var isInline = false;
+                        var n = i;
+                        var nc = cleanedJava.charAt(n);
+                        while (n < len && nc != ';' && nc != '{') {
+                            n++;
+                            nc = cleanedJava.charAt(n);
+                        }
+                        if (nc == ';') isInline = true;
+
+                        for (item in continueToLabels) {
+                            item.depth++;
+                        }
+
+                        if (isInline) {
+                            haxe += ' {';
+                            consumeExpression({ until: ';' });
+                            haxe += ' }';
+                        }
+                        else {
+                            i = n + 1;
+                            openBraces++;
+                            haxe += ' {';
+                            consumeExpression({ until: '}' });
+                        }
+
+                        for (item in continueToLabels) {
+                            if (item.depth > 1) {
+                                haxe += ' ' + item.breakCode + ';';
+                            }
+                            else {
+                                haxe += ' ' + item.continueCode + ';';
+                            }
+                            item.depth--;
+                        }
+
+                    }
+                    else if (word == 'for' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
+
+                        if (RE_FOREACH.match(cleanedAfter)) {
+                            // For each (for (A a : B) ...)
+                            i += RE_FOREACH.matched(0).length;
+                            haxe += 'for (' + RE_FOREACH.matched(2) + ' in';
+                            openParens++;
+                            consumeExpression({ until: ')' });
 
                             // Is the rest inline?
                             var isInline = false;
@@ -1098,6 +1192,9 @@ using StringTools;
                                 openBraces++;
                                 haxe += ' {';
                                 consumeExpression({ until: '}' });
+                                haxe = haxe.substring(0, haxe.length - 1);
+                                cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                haxe += '}';
                             }
 
                             for (item in continueToLabels) {
@@ -1108,61 +1205,6 @@ using StringTools;
                                     haxe += ' ' + item.continueCode + ';';
                                 }
                                 item.depth--;
-                            }
-
-                        }
-
-                    }
-                    else if (word == 'for' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
-
-                        if (RE_FOREACH.match(cleanedAfter)) {
-                            // For each (for (A a : B) ...)
-                            i += RE_FOREACH.matched(0).length;
-                            haxe += 'for (' + RE_FOREACH.matched(2) + ' in';
-                            openParens++;
-                            consumeExpression({ until: ')' });
-
-                            if (continueToLabels.length > 0) {
-
-                                // Is the rest inline?
-                                var isInline = false;
-                                var n = i;
-                                var nc = cleanedJava.charAt(n);
-                                while (n < len && nc != ';' && nc != '{') {
-                                    n++;
-                                    nc = cleanedJava.charAt(n);
-                                }
-                                if (nc == ';') isInline = true;
-
-                                for (item in continueToLabels) {
-                                    item.depth++;
-                                }
-
-                                if (isInline) {
-                                    haxe += ' {';
-                                    consumeExpression({ until: ';' });
-                                    haxe += ' }';
-                                }
-                                else {
-                                    i = n + 1;
-                                    openBraces++;
-                                    haxe += ' {';
-                                    consumeExpression({ until: '}' });
-                                    haxe = haxe.substring(0, haxe.length - 1);
-                                    cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                                    haxe += '}';
-                                }
-
-                                for (item in continueToLabels) {
-                                    if (item.depth > 1) {
-                                        haxe += ' ' + item.breakCode + ';';
-                                    }
-                                    else {
-                                        haxe += ' ' + item.continueCode + ';';
-                                    }
-                                    item.depth--;
-                                }
-
                             }
                             
                         }
@@ -1332,7 +1374,7 @@ using StringTools;
                             }
 
                             haxe += 'var ' + name;
-                            if (type != null) {
+                            if (type != null && type != '') {
                                 haxe += ':' + type;
                             }
 
@@ -1386,6 +1428,7 @@ using StringTools;
             }
 
             if (endOfExpression.length > 0) {
+                //println(haxe);
                 for (k in 0...endOfExpression.length) {
                     continueToLabels.shift();
                 }
@@ -1426,19 +1469,19 @@ using StringTools;
             else if (inClass || inInterface || inEnum) {
                 // Method or property?
                 if (word != '') {
-                    if (inEnum && RE_ENUM_VALUE.match(after)) {
+                    if (inEnum && RE_ENUM_VALUE.match(cleanedAfter)) {
                         i += RE_ENUM_VALUE.matched(0).length;
                         var name = RE_ENUM_VALUE.matched(1);
                         if (name == 'in') name = 'directionIn';
                         else if (name == 'out') name = 'directionOut';
                         haxe += 'var ' + name + ' = ' + inEnumValues.length;
-                        var end = RE_ENUM_VALUE.matched(3);
+                        var end = RE_ENUM_VALUE.matched(4);
                         if (end == '}') {
-                            haxe += ';' + RE_ENUM_VALUE.matched(2);
+                            haxe += ';' + RE_ENUM_VALUE.matched(3);
                             i--;
                         }
                         else {
-                            haxe += RE_ENUM_VALUE.matched(2) + ';';
+                            haxe += RE_ENUM_VALUE.matched(3) + ';';
                         }
 
                         inEnumValues.push(name);
@@ -1574,14 +1617,20 @@ using StringTools;
                         //println('CONSTRUCTOR: ' + RE_CONSTRUCTOR.matched(0));
 
                         var skip = false;
-                        for (key in skippedConstructors.keys()) {
-                            var sharpIndex = key.indexOf('#');
-                            var cleanKey = key;
-                            if (sharpIndex != -1) cleanKey = key.substring(0, sharpIndex);
-                            if (cleanKey == rootType && cleanedCode(RE_CONSTRUCTOR.matched(3), { cleanSpaces: true }) == skippedConstructors.get(key)) {
-                                haxe += '/*';
-                                skip = true;
-                                break;
+                        if (inEnum) {
+                            skip = true;
+                            haxe += '/*';
+                        }
+                        if (!skip) {
+                            for (key in skippedConstructors.keys()) {
+                                var sharpIndex = key.indexOf('#');
+                                var cleanKey = key;
+                                if (sharpIndex != -1) cleanKey = key.substring(0, sharpIndex);
+                                if (cleanKey == rootType && cleanedCode(RE_CONSTRUCTOR.matched(3), { cleanSpaces: true }) == skippedConstructors.get(key)) {
+                                    haxe += '/*';
+                                    skip = true;
+                                    break;
+                                }
                             }
                         }
 
@@ -1643,7 +1692,8 @@ using StringTools;
                         var modifiers = convertModifiers(RE_METHOD.matched(1));
                         var name = RE_METHOD.matched(3);
 
-                        if (skippedNames.exists(name)) {
+                        if (skippedNames.exists(name) || inEnum) {
+                            inSkippedMethod = true;
                             haxe += '/*';
                         }
                         
@@ -1830,10 +1880,32 @@ using StringTools;
         }
         else if (rootType == 'spine.utils.SkeletonClipping') {
             haxe = haxe.replace('clipEnd(slot:Slot)', 'clipEndWithSlot(slot:Slot)');
+            haxe = haxe.replace('cast(polygons[p], FloatArray)', 'polygons[p]');
+        }
+        else if (rootType == 'spine.utils.Triangulator') {
+            haxe = haxe.replace('isConcave(', 'isGeometryConcave(');
+            haxe = haxe.replace('winding(', 'computeWinding(');
+        }
+        else if (rootType == 'spine.BlendMode') {
+            haxe = haxe.replace('import spine.support.graphics.GL20;', '');
+        }
+
+        // Convert enums valueOf() / name()
+        for (enumName in ctx.enums.keys()) {
+            var enumRootType = ctx.enums.get(enumName).rootType;
+            var enumValues = ctx.enums.get(enumName).values;
+            haxe = haxe.replace('import ' + enumRootType + '.' + enumName + ';', 'import ' + enumRootType + '.' + enumName + ';\nimport ' + enumRootType + '.' + enumName + '_enum;');
+            haxe = haxe.replace(enumName + '.valueOf(', enumName + '_enum.valueOf(');
+            for (val in enumValues) {
+                haxe = haxe.replace(enumName + '.' + val + '.name()', enumName + '_enum.' + val + '_name');
+            }
         }
 
         // Replace outside-of-for break outer;
         haxe = haxe.replace('break outer;', '{ _gotoLabel_outer = true; continue; }');
+
+        // Replace some Math library calls
+        haxe = haxe.replace('Math.max(', 'MathUtils.max(');
 
         // Move inner declarations to top level
         haxe = moveTopLevelDecls(haxe);
@@ -1866,6 +1938,12 @@ using StringTools;
             newLines.push(line);
         }
         haxe = newLines.join("\n");
+
+        // Add extra haxe
+        if (extraHaxe.trim() != '') {
+            haxe += "\n";
+            haxe += extraHaxe;
+        }
 
         return haxe;
 
@@ -2224,15 +2302,15 @@ using StringTools;
     static var RE_NEW_INSTANCE = ~/^new\s+([a-zA-Z0-9_]+)\s*\((\s*\))?/;
     static var RE_SWITCH = ~/^switch\s*\(/;
     static var RE_CASE = ~/^(case|default)\s*(?:([^:]+)\s*)?:\s*/;
-    static var RE_INSTANCEOF = ~/^([a-zA-Z0-9,<>\[\]_]+)\s+instanceof\s+([a-zA-Z0-9,<>\[\]_]+)/;
-    static var RE_CAST = ~/^\(\s*([a-zA-Z0-9,<>\[\]_]+)\s*\)\s*([a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
+    static var RE_INSTANCEOF = ~/^([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+instanceof\s+([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
+    static var RE_CAST = ~/^\(\s*([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s*\)\s*((?:[a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)|(?:\([^\(\)]+\)))/;
     static var RE_CALL = ~/^([a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s*\(/;
     static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
     static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
     static var RE_CATCH = ~/^catch\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*\)/;
     static var RE_LABEL = ~/^(outer)\s*:/;
     static var RE_CONTINUE_OR_BREAK = ~/^(continue|break)(?:\s+(outer)\s*)?;/;
-    static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\s*)(,|;|\})/;
+    static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\([^\)]+\))?(\s*)((?:,\s*;)|,|;|\})/;
     static var RE_PARENT_CLASS_THIS = ~/^([a-zA-Z0-9_]+)(\s*)\.\s*this\s*\./;
     static var RE_CASE_BREAKS = ~/(;|})\s*(break|continue|return)\s*(\s[^;]+)?;\s*(\}\s*)?$/;
 

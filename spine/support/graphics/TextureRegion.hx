@@ -34,27 +34,18 @@ import spine.support.graphics.TextureAtlas;
 
 class TextureRegion
 {
-    public var page : AtlasPage;
-    public var name : String;
-    public var x : Int;
-    public var y : Int;
-    public var width : Int;
-    public var height : Int;
-    public var u : Float;
-    public var v : Float;
-    public var u2 : Float;
-    public var v2 : Float;
-    public var offsetX : Float;
-    public var offsetY : Float;
-    public var originalWidth : Int;
-    public var originalHeight : Int;
-    public var index : Int;
-    public var rotate : Bool;
-    public var splits : Array<Int>;
-    public var pads : Array<Int>;
-    public var rendererObject : Dynamic;
+    public var rendererObject:Dynamic;
+    public var u:Float = 0;
+    public var v:Float = 0;
+    public var u2:Float = 0;
+    public var v2:Float = 0;
     
     public function new()
     {
     }
+
+    inline public function getU() { return u; }
+    inline public function getV() { return v; }
+    inline public function getU2() { return u2; }
+    inline public function getV2() { return v2; }
 }

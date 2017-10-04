@@ -30,10 +30,43 @@
  
 package spine.support.graphics;
 
+/******************************************************************************
+ * Spine Runtimes Software License
+ * Version 2.3
+ *
+ * Copyright (c) 2013-2015, Esoteric Software
+ * All rights reserved.
+ *
+ * You are granted a perpetual, non-exclusive, non-sublicensable and
+ * non-transferable license to use, install, execute and perform the Spine
+ * Runtimes Software (the "Software") and derivative works solely for personal
+ * or internal use. Without the written permission of Esoteric Software (see
+ * Section 2 of the Spine Software License Agreement), you may not (a) modify,
+ * translate, adapt or otherwise create derivative works, improvements of the
+ * Software or develop new applications using the Software or (b) remove,
+ * delete, alter or obscure any trademarks or any copyright, trademark, patent
+ * or other intellectual property or proprietary rights notices on or in the
+ * Software, including any copy thereof. Redistributions in binary or source
+ * form must include this license and terms.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL ESOTERIC SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *****************************************************************************/
+
+using StringTools;
+
 class TextureAtlas
 {
     private var pages : Array<AtlasPage> = new Array<AtlasPage>();
-    private var regions : Array<TextureRegion> = new Array<TextureRegion>();
+    private var regions : Array<AtlasRegion> = new Array<AtlasRegion>();
     private var textureLoader : TextureLoader;
 
     /** @param object A String. */
@@ -50,7 +83,7 @@ class TextureAtlas
     {
         if (textureLoader == null)
         {
-            throw new ArgumentError("textureLoader cannot be null.");
+            throw new IllegalArgumentException("textureLoader cannot be null.");
         }
         this.textureLoader = textureLoader;
 
@@ -117,7 +150,7 @@ class TextureAtlas
                 }
                 else
                 {
-                    var region : TextureRegion = new TextureRegion();
+                    var region : AtlasRegion = new AtlasRegion();
                     region.name = line;
                     region.page = page;
 
@@ -156,20 +189,20 @@ class TextureAtlas
                         if (reader.readTuple(tuple) == 4)
                         {
                             // pad is optional, but only present with splits
-                            region.pads = [spine.compat.Compat.parseInt(tuple[0]), spine.compat.Compat.parseInt(tuple[1]), spine.compat.Compat.parseInt(tuple[2]), spine.compat.Compat.parseInt(tuple[3])];
+                            region.pads = [Std.parseInt(tuple[0]), Std.parseInt(tuple[1]), Std.parseInt(tuple[2]), Std.parseInt(tuple[3])];
 
                             reader.readTuple(tuple);
                         }
                     }
 
-                    region.originalWidth = spine.compat.Compat.parseInt(tuple[0]);
-                    region.originalHeight = spine.compat.Compat.parseInt(tuple[1]);
+                    region.originalWidth = Std.parseInt(tuple[0]);
+                    region.originalHeight = Std.parseInt(tuple[1]);
 
                     reader.readTuple(tuple);
-                    region.offsetX = spine.compat.Compat.parseInt(tuple[0]);
-                    region.offsetY = spine.compat.Compat.parseInt(tuple[1]);
+                    region.offsetX = Std.parseInt(tuple[0]);
+                    region.offsetY = Std.parseInt(tuple[1]);
 
-                    region.index = spine.compat.Compat.parseInt(reader.readValue());
+                    region.index = Std.parseInt(reader.readValue());
 
                     textureLoader.loadRegion(region);
                     regions[regions.length] = region;
@@ -181,7 +214,7 @@ class TextureAtlas
     /** Returns the first region found with the specified name. This method uses string comparison to find the region, so the result
 	 * should be cached rather than calling this method multiple times.
 	 * @return The region, or null. */
-    public function findRegion(name : String) : TextureRegion
+    public function findRegion(name : String) : AtlasRegion
     {
         var i : Int = 0;
         var n : Int = regions.length;
@@ -208,14 +241,7 @@ class TextureAtlas
     }
 }
 
-interface TextureLoader
-{
-    function loadPage(page : AtlasPage, path : String) : Void;
 
-    function loadRegion(region : TextureRegion) : Void;
-
-    function unloadPage(page : AtlasPage) : Void;
-}
 
 class Reader
 {
@@ -297,42 +323,27 @@ class AtlasPage
     }
 }
 
-@:enum
-abstract Format(String) from String to String {
-	var Alpha = "alpha";
-	var Intensity = "intensity";
-	var LuminanceAlpha = "luminanceAlpha";
-	var Rgb565 = "rgb565";
-	var Rgba4444 = "rgba4444";
-	var Rgb888 = "rgb888";
-	var Rgba8888 = "rgba8888";
-}
-
-@:enum
-abstract TextureFilter(String) from String to String {
-	var Nearest = "nearest";
-	var Linear = "linear";
-	var MipMap = "mipMap";
-	var MipMapNearestNearest = "mipMapNearestNearest";
-	var MipMapLinearNearest = "mipMapLinearNearest";
-	var MipMapNearestLinear = "mipMapNearestLinear";
-	var MipMapLinearLinear = "mipMapLinearLinear";
-}
-
-class TextureWrap
+class AtlasRegion extends TextureRegion
 {
-    public static var mirroredRepeat : TextureWrap = new TextureWrap(0, "mirroredRepeat");
-    public static var clampToEdge : TextureWrap = new TextureWrap(1, "clampToEdge");
-    public static var repeat : TextureWrap = new TextureWrap(2, "repeat");
-    
-    public var ordinal : Int;
     public var name : String;
-    
-    public function new(ordinal : Int, name : String)
+    public var x : Int;
+    public var y : Int;
+    public var width : Int;
+    public var height : Int;
+    public var packedWidth : Int;
+    public var packedHeight : Int;
+    public var offsetX : Float;
+    public var offsetY : Float;
+    public var originalWidth : Int;
+    public var originalHeight : Int;
+    public var index : Int;
+    public var rotate : Bool;
+    public var splits : Array<Int>;
+    public var pads : Array<Int>;
+    public var page : AtlasPage;
+
+    public function new()
     {
-        this.ordinal = ordinal;
-        this.name = name;
+        super();
     }
 }
-
-

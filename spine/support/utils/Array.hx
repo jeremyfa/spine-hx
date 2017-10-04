@@ -1,7 +1,16 @@
 package spine.support.utils;
 
-@:forward(iterator)
+@:forward(iterator, length, push, pop, shift, unshift, splice)
 abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
+
+    public inline static function create(length:Float = 0):Dynamic {
+        var len = Std.int(length);
+        var array = new Array<Dynamic>(len != 0 ? len : 16);
+        if (length != 0) {
+            array.setSize(len);
+        }
+        return array;
+    }
 
     inline public function new(capacity:Int = 16) {
         this = [];
@@ -15,6 +24,10 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
     public var size(get,never):Int;
     inline function get_size():Int {
         return this.length;
+    }
+
+    inline public function shrink():Array<T> {
+        return this;
     }
 
     inline public function clear():Void {
@@ -48,12 +61,25 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
         this.push(item);
     }
 
+    inline public function addAll(items:Array<T>, start:Int = 0, count:Int = -1):Void {
+        if (count == -1) count = items.length;
+        var i = this.length;
+        var len = i + items.length;
+        setSize(len);
+        for (item in items) {
+            this[i++] = item;
+            if (--count <= 0) break;
+        }
+    }
+
     inline public function get(index:Int):T {
         return this[index];
     }
 
-    inline public function removeIndex(index:Int):Void {
+    inline public function removeIndex(index:Int):T {
+        var item = this[index];
         this.splice(index, 1);
+        return item;
     }
 
     inline public function ensureCapacity(size:Int):Array<T> {
