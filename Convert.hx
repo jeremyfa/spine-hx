@@ -4,19 +4,10 @@ import Sys.*;
 import sys.FileSystem;
 import sys.io.File;
 import haxe.io.Path;
+import haxe.Json;
+import js.node.ChildProcess;
 
 using StringTools;
-
-typedef ConvertContext = {
-    javaDir:String,
-    haxeDir:String,
-    relativePath:String,
-    files:Map<String,String>,
-    enums:Map<String,{
-        rootType: String,
-        values: Array<String>
-    }>
-};
 
 class Convert {
 
@@ -36,7 +27,7 @@ class Convert {
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            command('git', ['clone', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['clone', '--depth', '1', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
@@ -49,7 +40,9 @@ class Convert {
             haxeDir: 'spine',
             relativePath: '.',
             files: new Map(),
-            enums: new Map()
+            enums: new Map(),
+            types: new Map(),
+            secondPass: false
         };
         convert(ctx);
 
@@ -74,7 +67,11 @@ using spine.support.extensions.FileExtensions;
 using StringTools;
 ");
 
+        fixCompilerErrors();
+
     } //main
+
+/// Convert
 
     static function convert(ctx:ConvertContext, root:Bool = true, secondPass:Bool = false) {
 
@@ -94,7 +91,9 @@ using StringTools;
                     haxeDir: ctx.haxeDir,
                     relativePath: Path.join([ctx.relativePath, name]),
                     files: ctx.files,
-                    enums: ctx.enums
+                    enums: ctx.enums,
+                    types: ctx.types,
+                    secondPass: secondPass
                 }, false, secondPass);
             }
             else if (path.endsWith('.java')) {
@@ -133,6 +132,7 @@ using StringTools;
         // Do parsing a second time, because we gathered information
         // on the previous pass that we can use now
         if (!secondPass && root) {
+            ctx.secondPass = true;
             convert(ctx, true, true);
         }
 
@@ -211,14 +211,18 @@ using StringTools;
             ?varType:String,
             ?varModifiers:Array<String>,
             ?isVarValue:Bool,
+            ?inProperties:Bool,
             ?until:String,
             ?untilWords:Array<String>
         }):String { return null; }
 
         var inSingleLineComment = false;
         var inMultiLineComment = false;
+        var importedTypes:Map<String,TypeInfo> = new Map();
         var inClass = false;
+        var inClassInfo:TypeInfo = null;
         var inSubClass = false;
+        var inSubClassInfo:TypeInfo = null;
         var classHasConstructor = false;
         var subClassHasConstructor = false;
         var inMethod = false;
@@ -588,10 +592,25 @@ using StringTools;
                 i++;
                 if (inSubClass && openBraces == beforeSubClassBraces) {
                     inSubClass = false;
+                    ctx.types.set(rootType.substring(0, rootType.lastIndexOf('.')) + '.' + inSubClassInfo.name, inSubClassInfo);
                     if (!subClassHasConstructor) {
                         haxe = haxe.substring(0, haxe.length - 1);
                         cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                         haxe += "\n\t\t" + 'public function new() {}\n\t}';
+                    }
+                    var added:Map<String,Bool> = new Map();
+                    var parentInfo:TypeInfo = ctx.types.get(inSubClassInfo.parent);
+                    while (parentInfo != null) {
+                        for (name in parentInfo.properties.keys()) {
+                            var prop = parentInfo.properties.get(name);
+                            if (!added.exists(name) && prop.modifiers.indexOf('static') != -1 && prop.modifiers.indexOf('inline') != -1) {
+                                added.set(name, true);
+                                haxe = haxe.substring(0, haxe.length - 1);
+                                cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                haxe += "\n\t\t" + prop.modifiers.join(' ') + ' var ' + name + ':' + prop.type + ' = ' + parentInfo.name + '.' + name + ';\n\t}';
+                            }
+                        }
+                        parentInfo = parentInfo.parent != null ? ctx.types.get(parentInfo.parent) : null;
                     }
                 }
                 if (inInterface && openBraces == beforeInterfaceBraces) {
@@ -635,10 +654,25 @@ using StringTools;
                 }
                 if (inClass && openBraces == beforeClassBraces) {
                     inClass = false;
+                    ctx.types.set(rootType, inClassInfo);
                     if (!classHasConstructor) {
                         haxe = haxe.substring(0, haxe.length - 1);
                         cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                         haxe += "\n\t" + 'public function new() {}\n}';
+                    }
+                    var added:Map<String,Bool> = new Map();
+                    var parentInfo:TypeInfo = ctx.types.get(inClassInfo.parent);
+                    while (parentInfo != null) {
+                        for (name in parentInfo.properties.keys()) {
+                            var prop = parentInfo.properties.get(name);
+                            if (!added.exists(name) && prop.modifiers.indexOf('static') != -1 && prop.modifiers.indexOf('inline') != -1) {
+                                added.set(name, true);
+                                haxe = haxe.substring(0, haxe.length - 1);
+                                cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                haxe += "\n\t" + prop.modifiers.join(' ') + ' var ' + name + ':' + prop.type + ' = ' + parentInfo.name + '.' + name + ';\n}';
+                            }
+                        }
+                        parentInfo = parentInfo.parent != null ? ctx.types.get(parentInfo.parent) : null;
                     }
                 }
                 if (inMethod && openBraces == beforeMethodBraces) {
@@ -697,10 +731,28 @@ using StringTools;
 
         } //consumeBracket
 
+        function toTypePath(inType:String):String {
+
+            if (rootType.endsWith('.' + inType)) {
+                return rootType;
+            }
+            else {
+                for (key in importedTypes.keys()) {
+                    if (key.endsWith('.' + inType)) {
+                        return key;
+                    }
+                }
+            }
+
+            return rootType.substring(0, rootType.lastIndexOf('.')) + '.' + inType;
+
+        } //toTypePath
+
         consumeExpression = function(?options:{
             ?varType:String,
             ?varModifiers:Array<String>,
             ?isVarValue:Bool,
+            ?inProperties:Bool,
             ?until:String,
             ?untilWords:Array<String>
         }):String {
@@ -715,6 +767,7 @@ using StringTools;
             var until:String = options != null ? options.until : '';
             var untilWords:Array<String> = options != null ? options.untilWords : null;
             var endOfExpression:Array<String> = [];
+            var inProperties = options.inProperties != null ? options.inProperties : false;
 
             while (i < len) {
 
@@ -723,6 +776,7 @@ using StringTools;
                 if (c == ';') {
                     varType = null;
                     varModifiers = null;
+                    inProperties = false;
                 }
 
                 if (consumeCommentOrString()) {
@@ -777,6 +831,7 @@ using StringTools;
                 else if (c == ';' && until.indexOf(';') != -1 && openBraces == openBracesStart && openParens == openParensStart) {
                     varType = null;
                     varModifiers = null;
+                    inProperties = false;
                     haxe += c;
                     i++;
                     stopToken = c;
@@ -790,6 +845,7 @@ using StringTools;
                     if (c == ';') {
                         varType = null;
                         varModifiers = null;
+                        inProperties = false;
                     }
 
                     if (until.indexOf(c) != -1) {
@@ -834,7 +890,6 @@ using StringTools;
                         haxe += RE_CALL.matched(0);
                         openParens++;
                         inCall = true;
-                        var index = haxe.length;
                         consumeExpression({ until: ')' });
                         inCall = false;
                     }
@@ -1034,7 +1089,12 @@ using StringTools;
                                 haxe += arrayType + 'Array2D.create(' + part1 + ', ' + part2 + ')';
                             }
                             else {
-                                haxe += arrayType + 'Array.create(' + part1 + ')';
+                                if (arrayType == 'Float' || arrayType == 'Short' || arrayType == 'String' || arrayType == 'Int' || arrayType == 'Boolean') {
+                                    haxe += arrayType + 'Array.create(' + part1 + ')';
+                                }
+                                else {
+                                    haxe += 'Array.create(' + part1 + ')';
+                                }
                             }
                         }
                         else {
@@ -1369,6 +1429,21 @@ using StringTools;
                         if (!skip) {
                             var name = RE_VAR.matched(2);
 
+                            if (inProperties) {
+                                if (inSubClass) {
+                                    inSubClassInfo.properties.set(name, {
+                                        modifiers: varModifiers != null ? varModifiers : [],
+                                        type: type
+                                    });
+                                }
+                                else if (inClass) {
+                                    inClassInfo.properties.set(name, {
+                                        modifiers: varModifiers != null ? varModifiers : [],
+                                        type: type
+                                    });
+                                }
+                            }
+
                             if (varType != null && varModifiers != null && varModifiers.length > 0) {
                                 haxe += varModifiers.join(' ') + ' ';
                             }
@@ -1390,6 +1465,7 @@ using StringTools;
                             if (end == ';') {
                                 haxe += ';';
                                 varType = null;
+                                inProperties = false;
                                 varModifiers = null;
                                 isVarValue = false;
                             }
@@ -1489,8 +1565,17 @@ using StringTools;
                     else if (inClass && RE_DECL.match(after)) {
 
                         var modifiers = convertModifiers(RE_DECL.matched(1));
+                        var name = RE_DECL.matched(3);
 
                         var keyword = RE_DECL.matched(2);
+
+                        var typeInfo:TypeInfo = {
+                            name: name,
+                            parent: null,
+                            interfaces: new Map(),
+                            methods: new Map(),
+                            properties: new Map()
+                        };
 
                         if (modifiers.exists('private') && keyword == 'class') {
                             haxe += 'private ';
@@ -1499,6 +1584,7 @@ using StringTools;
                         if (keyword == 'class') {
                             inClass = true;
                             inSubClass = true;
+                            inSubClassInfo = typeInfo;
                             subClassHasConstructor = false;
                             beforeSubClassBraces = openBraces;
                             haxe += keyword + ' ';
@@ -1517,7 +1603,6 @@ using StringTools;
 
                         //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
 
-                        var name = RE_DECL.matched(3);
                         if (keyword == 'enum') {
                             inEnumName = name;
                             haxe += name + '(Int) from Int to Int ';
@@ -1527,9 +1612,11 @@ using StringTools;
 
                         var extras = convertDeclExtras(RE_DECL.matched(4));
                         for (item in extras.classes) {
+                            typeInfo.parent = toTypePath(item);
                             haxe += 'extends ' + item + ' ';
                         }
                         for (item in extras.interfaces) {
+                            typeInfo.interfaces.set(toTypePath(item), true);
                             haxe += 'implements ' + item + ' ';
                         }
 
@@ -1550,8 +1637,24 @@ using StringTools;
                     }
                     else if (RE_PROPERTY.match(after)) {
 
+                        var varModifiers:Array<String> = [];
+
                         //println('PROPERTY: ' + RE_PROPERTY.matched(0));
                         var name = RE_PROPERTY.matched(3);
+                        var type = convertType(RE_PROPERTY.matched(2));
+
+                        if (inSubClass) {
+                            inSubClassInfo.properties.set(name, {
+                                modifiers: varModifiers != null ? varModifiers : [],
+                                type: type
+                            });
+                        }
+                        else if (inClass) {
+                            inClassInfo.properties.set(name, {
+                                modifiers: varModifiers != null ? varModifiers : [],
+                                type: type
+                            });
+                        }
 
                         if (inEnum || skippedNames.exists(name)) {
                             haxe += '//';
@@ -1560,7 +1663,11 @@ using StringTools;
                         var modifiers = convertModifiers(RE_PROPERTY.matched(1));
                         
                         var hasAccessModifier = false;
-                        var varModifiers:Array<String> = [];
+                        if (modifiers.exists('final') && modifiers.exists('static') && name.toUpperCase() == name) {
+                            haxe += 'inline ';
+                            hasAccessModifier = true;
+                            varModifiers.push('inline');
+                        }
                         if (modifiers.exists('public')) {
                             haxe += 'public ';
                             hasAccessModifier = true;
@@ -1585,8 +1692,6 @@ using StringTools;
                             varModifiers.push('static');
                         }
 
-                        var type = convertType(RE_PROPERTY.matched(2));
-
                         haxe += 'var ' + name + ':' + type;
                         i += RE_PROPERTY.matched(0).length;
 
@@ -1604,11 +1709,11 @@ using StringTools;
                         }
                         else if (end == '=') {
                             haxe += ' =';
-                            consumeExpression({ until: ';', varType: type, varModifiers: varModifiers, isVarValue: true});
+                            consumeExpression({ until: ';', varType: type, varModifiers: varModifiers, isVarValue: true, inProperties: true });
                         }
                         else if (end == ',') {
                             haxe += ';';
-                            consumeExpression({ until: ';', varType: type, varModifiers: varModifiers});
+                            consumeExpression({ until: ';', varType: type, varModifiers: varModifiers, inProperties: true});
                         }
 
                     }
@@ -1691,10 +1796,32 @@ using StringTools;
 
                         var modifiers = convertModifiers(RE_METHOD.matched(1));
                         var name = RE_METHOD.matched(3);
+                        var type = convertType(RE_METHOD.matched(2));
+                        var args = convertArgs(RE_METHOD.matched(4));
 
                         if (skippedNames.exists(name) || inEnum) {
                             inSkippedMethod = true;
                             haxe += '/*';
+                        }
+                        else {
+                            var methodModifiers = [];
+                            for (key in modifiers.keys()) {
+                                methodModifiers.push(key);
+                            }
+                            if (inSubClass) {
+                                inSubClassInfo.methods.set(name, {
+                                    modifiers: methodModifiers,
+                                    args: args,
+                                    type: type
+                                });
+                            }
+                            else if (inClass) {
+                                inClassInfo.methods.set(name, {
+                                    modifiers: methodModifiers,
+                                    args: args,
+                                    type: type
+                                });
+                            }
                         }
                         
                         if (!inInterface && modifiers.exists('public')) {
@@ -1709,9 +1836,6 @@ using StringTools;
                         if (modifiers.exists('static')) {
                             haxe += 'static ';
                         }
-
-                        var type = convertType(RE_METHOD.matched(2));
-                        var args = convertArgs(RE_METHOD.matched(4));
 
                         haxe += 'function ' + name + '(';
                         var parts = [];
@@ -1771,6 +1895,16 @@ using StringTools;
                 pack = replaceStart(pack, 'com.badlogic.gdx.', 'spine.support.');
                 pack = replaceStart(pack, 'java.util.', 'spine.support.');
 
+                // Compute imported types
+                for (key in ctx.types.keys()) {
+                    if (key == pack) {
+                        importedTypes.set(key, ctx.types.get(key));
+                    }
+                    else if (key.startsWith(pack + '.')) {
+                        importedTypes.set(key, ctx.types.get(key));
+                    }
+                }
+
                 // Add import
                 haxe += 'import ' + pack + ';';
                 i += RE_IMPORT.matched(0).length;
@@ -1779,6 +1913,15 @@ using StringTools;
             else if (word != '' && RE_DECL.match(after)) {
 
                 var modifiers = convertModifiers(RE_DECL.matched(1));
+                var name = RE_DECL.matched(3);
+
+                var typeInfo:TypeInfo = {
+                    name: name,
+                    parent: null,
+                    interfaces: new Map(),
+                    methods: new Map(),
+                    properties: new Map()
+                };
 
                 var keyword = RE_DECL.matched(2);
 
@@ -1788,6 +1931,7 @@ using StringTools;
 
                 if (keyword == 'class') {
                     inClass = true;
+                    inClassInfo = typeInfo;
                     classHasConstructor = false;
                     beforeClassBraces = openBraces;
                     haxe += keyword + ' ';
@@ -1806,7 +1950,6 @@ using StringTools;
 
                 //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
 
-                var name = RE_DECL.matched(3);
                 if (keyword == 'enum') {
                     inEnumName = name;
                     haxe += name + '(Int) from Int to Int ';
@@ -1816,9 +1959,11 @@ using StringTools;
 
                 var extras = convertDeclExtras(RE_DECL.matched(4));
                 for (item in extras.classes) {
+                    typeInfo.parent = item;
                     haxe += 'extends ' + item + ' ';
                 }
                 for (item in extras.interfaces) {
+                    typeInfo.interfaces.set(item, true);
                     haxe += 'implements ' + item + ' ';
                 }
 
@@ -1890,7 +2035,7 @@ using StringTools;
             haxe = haxe.replace('import spine.support.graphics.GL20;', '');
         }
 
-        // Convert enums valueOf() / name()
+        // Convert enums valueOf() / name() / ordinal()
         for (enumName in ctx.enums.keys()) {
             var enumRootType = ctx.enums.get(enumName).rootType;
             var enumValues = ctx.enums.get(enumName).values;
@@ -1898,6 +2043,7 @@ using StringTools;
             haxe = haxe.replace(enumName + '.valueOf(', enumName + '_enum.valueOf(');
             for (val in enumValues) {
                 haxe = haxe.replace(enumName + '.' + val + '.name()', enumName + '_enum.' + val + '_name');
+                haxe = haxe.replace(enumName + '.' + val + '.ordinal()', enumName + '.' + val);
             }
         }
 
@@ -1906,6 +2052,7 @@ using StringTools;
 
         // Replace some Math library calls
         haxe = haxe.replace('Math.max(', 'MathUtils.max(');
+        haxe = haxe.replace('Math.signum(', 'MathUtils.signum(');
 
         // Move inner declarations to top level
         haxe = moveTopLevelDecls(haxe);
@@ -1997,6 +2144,191 @@ using StringTools;
         return mainLines.join("\n") + subLines.join("\n");
 
     } //moveTopLevelDecls
+
+/// Compiler
+
+    /** Haxe compiler is better than our custom parser to detect inconsistencies.
+        Instead of making pointless assumptions, we let the compiler find the
+        remaining errors and try to fix them all from the informations it gives us. */
+    static function fixCompilerErrors():Void {
+
+        println('[run haxe]');
+
+        // Keep track of the changes we make on the files so that
+        // we can still find an error position on a modified file.
+        var changes:Map<String,Array<{start:Int,end:Int,add:Int}>> = new Map();
+
+        // Get diagnostics from haxe compiler
+        var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('haxe', ['build.hxml']).stderr);
+
+        for (item in diagnostics) {
+            if (item.location != 'characters') continue;
+
+            // Take previous changes in account on the range
+            var lineChanges = changes.get(item.filePath+':'+item.line);
+            if (lineChanges == null) {
+                lineChanges = [];
+                changes.set(item.filePath+':'+item.line, lineChanges);
+            }
+            for (aChange in lineChanges) {
+                if (aChange.end <= item.start) {
+                    item.start += aChange.add;
+                    item.end += aChange.add;
+                }
+            }
+
+            //println('[diagnostic] ' + item.message.replace("\n", ' '));
+            if (item.message.startsWith('Float should be Int')) {
+                //println(Json.stringify(item, null, '    '));
+                //println('    -> Wrap in Std.int()');
+
+                var file = File.getContent(item.filePath);
+
+                var lines = file.split("\n");
+                var line = lines[item.line - 1];
+                var snippet = line.substring(item.start, item.end);
+                if (snippet.startsWith('return ')) {
+                    snippet = 'return Std.int(' + snippet.substring(7) + ')';
+                }
+                else if (snippet.indexOf('= ') != -1 && snippet.endsWith(';')) {
+                    snippet = snippet.substring(0, snippet.indexOf('= ') + 2) + 'Std.int(' + snippet.substring(snippet.indexOf('= ') + 2, snippet.length - 1) + ');';
+                }
+                else {
+                    snippet = 'Std.int(' + snippet + ')';
+                }
+
+                // Add new change
+                lineChanges.push({ start: item.start, end: item.end, add: 'Std.int()'.length });
+
+                // Edit line
+                line = line.substring(0, item.start) + snippet + line.substring(item.end);
+                lines[item.line - 1] = line;
+
+                // Save modified file
+                File.saveContent(item.filePath, lines.join("\n"));
+
+                //println('result: ' + line);
+            }
+            else if (item.message == 'Unknown identifier : binarySearch') {
+
+                var file = File.getContent(item.filePath);
+
+                var lines = file.split("\n");
+                var line = lines[item.line - 1];
+
+                // Add new change
+                lineChanges.push({ start: item.start, end: item.end, add: '@:privateAccess Animation.WithStep'.length });
+
+                // Edit line
+                line = line.substring(0, item.start) + '@:privateAccess Animation.binarySearchWithStep' + line.substring(item.end);
+                lines[item.line - 1] = line;
+
+                // Save modified file
+                File.saveContent(item.filePath, lines.join("\n"));
+
+                //println('result: ' + line);
+
+            }
+        }
+
+    } //fixCompilerErrors
+
+    /** Parse haxe compiler output and extract info */
+    public static function parseCompilerOutput(output:String, ?options:ParseCompilerOutputOptions):Array<HaxeCompilerOutputElement> {
+
+        //println(output);
+        //exit(0);
+
+        if (options == null) {
+            options = {};
+        }
+
+        var info:Array<HaxeCompilerOutputElement> = [];
+        var prevInfo = null;
+        var lines = output.split("\n");
+        var cwd = options.cwd;
+        if (cwd == null) cwd = Sys.getCwd();
+        var line, lineStr, filePath, location, start, end, message;
+        var re = RE_HAXE_COMPILER_OUTPUT_LINE;
+
+        for (i in 0...lines.length) {
+
+            lineStr = lines[i];
+
+            if (info.length > 0) {
+                prevInfo = info[info.length - 1];
+            }
+
+            if (re.match(lineStr)) {
+
+                filePath = re.matched(1);
+                line = Std.parseInt(re.matched(2));
+                location = re.matched(3);
+                start = Std.parseInt(re.matched(4));
+                end = Std.parseInt(re.matched(5));
+                message = re.matched(6);
+
+                if (message != null || options.allowEmptyMessage) {
+
+                    // Make file_path absolute if possible
+                    if (cwd != null && !Path.isAbsolute(filePath)) {
+                        filePath = Path.join([cwd, filePath]);
+                    }
+
+                    if (message != null
+                        && prevInfo != null
+                        && prevInfo.message != null
+                        && prevInfo.filePath == filePath
+                        && prevInfo.location == location
+                        && prevInfo.line == line
+                        && prevInfo.start == start
+                        && prevInfo.end == end) {
+                        
+                        // Concatenate multiline message
+                        prevInfo.message += "\n" + message;
+                    }
+                    else {
+                        info.push({
+                            line: line,
+                            filePath: filePath,
+                            location: location,
+                            start: start,
+                            end: end,
+                            message: message
+                        });
+                    }
+                }
+            }
+        } //for lines
+
+        // Prevent duplicate messages as this can happen, like multiple `Unexpected (` at the same location
+        // We may want to remove this snippet in a newer haxe compiler version if the output is never duplicated anymore
+        for (i in 0...info.length) {
+            message = info[i].message;
+            if (message != null) {
+                var messageLines = message.split("\n");
+                var allLinesAreEqual = true;
+                if (messageLines.length > 1) {
+                    lineStr = messageLines[0];
+                    for (l in 0...messageLines.length) {
+                        if (lineStr != messageLines[l]) {
+                            allLinesAreEqual = false;
+                            break;
+                        }
+                        lineStr = messageLines[l];
+                    }
+                    
+                    // If all lines of message are equal, just keep one line
+                    if (allLinesAreEqual) {
+                        info[i].message = lineStr;
+                    }
+                }
+            }
+        }
+
+        return info;
+
+    } //parseCompilerOutput
 
 /// Utils
 
@@ -2110,7 +2442,6 @@ using StringTools;
     static function splitCode(code:String, splitTokens:Array<String>, deep:Bool = false) {
 
         var cleaned = cleanedCode(code);
-        var result = '';
         var i = 0;
         var c = '';
         var cc = '';
@@ -2313,5 +2644,67 @@ using StringTools;
     static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\([^\)]+\))?(\s*)((?:,\s*;)|,|;|\})/;
     static var RE_PARENT_CLASS_THIS = ~/^([a-zA-Z0-9_]+)(\s*)\.\s*this\s*\./;
     static var RE_CASE_BREAKS = ~/(;|})\s*(break|continue|return)\s*(\s[^;]+)?;\s*(\}\s*)?$/;
+    static var RE_HAXE_COMPILER_OUTPUT_LINE = ~/^\s*(.+)?(?=:[0-9]*:):([0-9]+):\s+(characters|lines)\s+([0-9]+)\-([0-9]+)(?:\s+:\s*(.*?))?\s*$/;
 
 } //Convert
+
+typedef ConvertContext = {
+    javaDir:String,
+    haxeDir:String,
+    relativePath:String,
+    files:Map<String,String>,
+    enums:Map<String,{
+        rootType: String,
+        values: Array<String>
+    }>,
+    types:Map<String,TypeInfo>,
+    secondPass:Bool
+}
+
+typedef ParseCompilerOutputOptions = {
+
+    @:optional var allowEmptyMessage:Bool;
+
+    @:optional var cwd:String;
+}
+
+typedef HaxeCompilerOutputElement = {
+
+    var line:Int;
+
+    var filePath:String;
+
+    var location:String;
+
+    var start:Int;
+
+    var end:Int;
+
+    var message:String;
+
+}
+
+typedef TypeInfo = {
+
+    var name:String;
+
+    var parent:String;
+
+    var interfaces:Map<String,Bool>;
+
+    var methods:Map<String,{
+        modifiers:Array<String>,
+        type:String,
+        args:Array<{
+            type:String,
+            name:String
+        }>
+    }>;
+
+    var properties:Map<String,{
+        modifiers:Array<String>,
+        type:String
+    }>;
+
+}
+

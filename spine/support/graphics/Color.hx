@@ -1,5 +1,7 @@
 package spine.support.graphics;
 
+import spine.support.utils.Either;
+
 /** Color class ported from some of libgdx's Color code. */
 class Color {
 
@@ -67,11 +69,34 @@ class Color {
         this.a = a;
     }
     
-    inline public function set(color:Color) {
-        this.r = color.r;
-        this.g = color.g;
-        this.b = color.b;
-        this.a = color.a;
+    public function set(r:Either<Color,Float>, g:Float = -1, b:Float = -1, a:Float = -1) {
+        if (Std.is(r, Float)) {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            if (a != -1) this.a = a;
+        }
+        else {
+            var color:Color = r;
+            this.r = color.r;
+            this.g = color.g;
+            this.b = color.b;
+            this.a = color.a;
+        }
+    }
+    
+    inline public function add(r:Float, g:Float, b:Float, a:Float) {
+        this.r += r;
+        this.g += g;
+        this.b += b;
+        this.a += a;
+    }
+    
+    inline public function mul(r:Float, g:Float, b:Float, a:Float) {
+        this.r *= r;
+        this.g *= g;
+        this.b *= b;
+        this.a *= a;
     }
 
     inline public function setRgba888(value:Int) {

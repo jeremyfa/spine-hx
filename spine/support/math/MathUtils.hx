@@ -13,5 +13,9 @@ class MathUtils {
     inline static public function max<T>(val1:T, val2:T):T {
         return untyped Math.max(untyped val1, untyped val2);
     }
+
+    inline static public function signum(val:Float):Int {
+        return val >= 0 ? 1 : -1;
+    }
     
 }
