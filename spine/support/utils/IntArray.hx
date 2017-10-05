@@ -71,6 +71,14 @@ abstract IntArray(std.Array<Int>) from std.Array<Int> to std.Array<Int> {
         return this[index];
     }
 
+    inline public function set(index:Int, value:Int):Void {
+        this[index] = value;
+    }
+
+    inline public function indexOf(value:Int, identity:Bool):Int {
+        return this.indexOf(value);
+    }
+
     inline public function removeIndex(index:Int):Int {
         var item = this[index];
         this.splice(index, 1);

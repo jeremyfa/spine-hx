@@ -1,3 +1,3 @@
 package spine.support.utils;
 
-typedef ObjectFloatMap<K> = Map<K,Float>;
+typedef ObjectFloatMap<K> = ObjectMap<K,Float>;

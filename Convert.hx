@@ -58,16 +58,18 @@ import spine.support.utils.IntArray2D;
 import spine.support.utils.FloatArray;
 import spine.support.utils.FloatArray2D;
 import spine.support.utils.StringArray;
+import spine.support.utils.StringBuilder;
 import spine.support.math.MathUtils;
 import spine.BlendMode;
 
 using spine.support.extensions.StringExtensions;
 using spine.support.extensions.ArrayExtensions;
 using spine.support.extensions.FileExtensions;
+using spine.support.extensions.SpineExtensions;
 using StringTools;
 ");
 
-        fixCompilerErrors();
+        fixCompilerErrors(ctx);
 
     } //main
 
@@ -233,6 +235,7 @@ using StringTools;
         var inEnumValues:Array<String> = [];
         var extraHaxe = '';
         var inInterface = false;
+        var inInterfaceInfo:TypeInfo = null;
         var inFor = false;
         var inCall = false;
         var continueToLabels:Array<{
@@ -615,6 +618,7 @@ using StringTools;
                 }
                 if (inInterface && openBraces == beforeInterfaceBraces) {
                     inInterface = false;
+                    ctx.types.set(rootType.substring(0, rootType.lastIndexOf('.')) + '.' + inInterfaceInfo.name, inInterfaceInfo);
                 }
                 if (inEnum && openBraces == beforeEnumBraces) {
 
@@ -1086,7 +1090,7 @@ using StringTools;
                             if (part1 == '') part1 = '0';
                             if (part2 != null) {
                                 if (part2 == '') part2 = '0';
-                                haxe += arrayType + 'Array2D.create(' + part1 + ', ' + part2 + ')';
+                                haxe += 'Array.create' + arrayType + 'Array2D(' + part1 + ', ' + part2 + ')';
                             }
                             else {
                                 if (arrayType == 'Float' || arrayType == 'Short' || arrayType == 'String' || arrayType == 'Int' || arrayType == 'Boolean') {
@@ -1455,11 +1459,14 @@ using StringTools;
 
                             var end = RE_VAR.matched(3);
                             if (end == ',' || end == ';') {
-                                if (type == 'Float' || type == 'Int') {
+                                if (type == 'Float' || type == 'Int' || type == 'Short') {
                                     haxe += ' = 0';
                                 }
                                 else if (type == 'Bool') {
                                     haxe += ' = false';
+                                }
+                                else {
+                                    haxe += ' = null';
                                 }
                             }
                             if (end == ';') {
@@ -1504,13 +1511,19 @@ using StringTools;
             }
 
             if (endOfExpression.length > 0) {
-                //println(haxe);
                 for (k in 0...endOfExpression.length) {
                     continueToLabels.shift();
                 }
                 if (stopToken == '}') {
-                    haxe = haxe.substring(0, haxe.length - 1);
-                    haxe += endOfExpression.join(' ') + ' }';
+                    if (RE_EXPR_RETURNS.match(haxe)) {
+                        haxe = haxe.substring(0, haxe.length - RE_EXPR_RETURNS.matched(0).length);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        haxe += RE_EXPR_RETURNS.matched(1) + ' ' + endOfExpression.join(' ') + ' ' + RE_EXPR_RETURNS.matched(2);
+                    } else {
+                        haxe = haxe.substring(0, haxe.length - 1);
+                        cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        haxe += endOfExpression.join(' ') + ' }';
+                    }
                 }
                 else {
                     haxe += ' ' + endOfExpression.join(' ');
@@ -1591,6 +1604,7 @@ using StringTools;
                         }
                         else if (keyword == 'interface') {
                             inInterface = true;
+                            inInterfaceInfo = typeInfo;
                             beforeInterfaceBraces = openBraces;
                             haxe += keyword + ' ';
                         }
@@ -1665,7 +1679,6 @@ using StringTools;
                         var hasAccessModifier = false;
                         if (modifiers.exists('final') && modifiers.exists('static') && name.toUpperCase() == name) {
                             haxe += 'inline ';
-                            hasAccessModifier = true;
                             varModifiers.push('inline');
                         }
                         if (modifiers.exists('public')) {
@@ -1815,6 +1828,13 @@ using StringTools;
                                     type: type
                                 });
                             }
+                            else if (inInterface) {
+                                inInterfaceInfo.methods.set(name, {
+                                    modifiers: methodModifiers,
+                                    args: args,
+                                    type: type
+                                });
+                            }
                             else if (inClass) {
                                 inClassInfo.methods.set(name, {
                                     modifiers: methodModifiers,
@@ -1824,17 +1844,24 @@ using StringTools;
                             }
                         }
                         
+                        var hasAccessModifier = false;
                         if (!inInterface && modifiers.exists('public')) {
                             haxe += 'public ';
+                            hasAccessModifier = true;
                         }
                         if (!inInterface && modifiers.exists('protected')) {
                             haxe += 'public ';
+                            hasAccessModifier = true;
                         }
                         if (!inInterface && modifiers.exists('private')) {
                             haxe += 'private ';
+                            hasAccessModifier = true;
                         }
                         if (modifiers.exists('static')) {
                             haxe += 'static ';
+                        }
+                        if (!hasAccessModifier) {
+                            haxe += 'public '; // Default to public
                         }
 
                         haxe += 'function ' + name + '(';
@@ -1938,6 +1965,7 @@ using StringTools;
                 }
                 else if (keyword == 'interface') {
                     inInterface = true;
+                    inInterfaceInfo = typeInfo;
                     beforeInterfaceBraces = openBraces;
                     haxe += keyword + ' ';
                 }
@@ -1982,6 +2010,7 @@ using StringTools;
 
         // Convert tabs to spaces
         haxe = haxe.replace("\t", '    ');
+        haxe = haxe.replace("\r", '');
 
         // Convert __CONTINUE__ to continue
         haxe = haxe.replace('__CONTINUE__', 'continue');
@@ -1998,6 +2027,7 @@ using StringTools;
         }
         else if (rootType == 'spine.Animation') {
             haxe = haxe.replace('binarySearch(values:FloatArray, target:Float, step:Int)', 'binarySearchWithStep(values:FloatArray, target:Float, step:Int)');
+            haxe = haxe.replace('class Animation {', 'class Animation {\n    private var hashCode = Std.int(Math.random() * 99999999);');
         }
         else if (rootType == 'spine.Skeleton') {
             haxe = haxe.replace('updateCache', 'cache');
@@ -2018,6 +2048,8 @@ using StringTools;
             haxe = haxe.replace('updateWorldTransform(', 'updateWorldTransformWithData(');
             haxe = haxe.replace('updateWorldTransformWithData()', 'updateWorldTransform()');
             haxe = haxe.replace('setScale(scale:Float)', 'setScale2(scale:Float)');
+            haxe = haxe.replace(' cos(', ' Math.cos(');
+            haxe = haxe.replace(' sin(', ' Math.sin(');
         }
         else if (rootType == 'spine.SkeletonBounds') {
             haxe = haxe.replace('containsPoint(polygon:FloatArray, x:Float, y:Float)', 'polygonContainsPoint(polygon:FloatArray, x:Float, y:Float)');
@@ -2050,9 +2082,23 @@ using StringTools;
         // Replace outside-of-for break outer;
         haxe = haxe.replace('break outer;', '{ _gotoLabel_outer = true; continue; }');
 
-        // Replace some Math library calls
+        // Update world transform replaces
+        haxe = haxe.replace('updateWorldTransform(', 'updateWorldTransformWithData(');
+        haxe = haxe.replace('updateWorldTransformWithData()', 'updateWorldTransform()');
+
+        // Replace some Math library calls and similar
         haxe = haxe.replace('Math.max(', 'MathUtils.max(');
+        haxe = haxe.replace('Math.min(', 'MathUtils.min(');
         haxe = haxe.replace('Math.signum(', 'MathUtils.signum(');
+        haxe = haxe.replace('Integer.MAX_VALUE', '999999999');
+        haxe = haxe.replace('Integer.MIN_VALUE', '-999999999');
+        haxe = haxe.replace('Float.MAX_VALUE', '999999999.0');
+        haxe = haxe.replace('Float.MIN_VALUE', '-999999999.0');
+        haxe = haxe.replace('System.arraycopy(', 'Array.copy(');
+        haxe = haxe.replace('Float.isNaN(', 'Math.isNaN(');
+        haxe = haxe.replace('hashCode()', 'getHashCode()');
+        haxe = haxe.replace('MixDirection.In', 'MixDirection.directionIn');
+        haxe = haxe.replace('MixDirection.out', 'MixDirection.directionOut');
 
         // Move inner declarations to top level
         haxe = moveTopLevelDecls(haxe);
@@ -2150,85 +2196,332 @@ using StringTools;
     /** Haxe compiler is better than our custom parser to detect inconsistencies.
         Instead of making pointless assumptions, we let the compiler find the
         remaining errors and try to fix them all from the informations it gives us. */
-    static function fixCompilerErrors():Void {
+    static function fixCompilerErrors(ctx:ConvertContext):Void {
 
-        println('[run haxe]');
+        var pass = 1;
+        var maxPass = 6;
+        var filesCache:Map<String,String> = new Map();
 
-        // Keep track of the changes we make on the files so that
-        // we can still find an error position on a modified file.
-        var changes:Map<String,Array<{start:Int,end:Int,add:Int}>> = new Map();
-
-        // Get diagnostics from haxe compiler
-        var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('haxe', ['build.hxml']).stderr);
-
-        for (item in diagnostics) {
-            if (item.location != 'characters') continue;
-
-            // Take previous changes in account on the range
-            var lineChanges = changes.get(item.filePath+':'+item.line);
-            if (lineChanges == null) {
-                lineChanges = [];
-                changes.set(item.filePath+':'+item.line, lineChanges);
+        function getFile(path:String) {
+            var data = filesCache.get(path);
+            if (data == null) {
+                data = File.getContent(path);
+                filesCache.set(path, data);
             }
-            for (aChange in lineChanges) {
-                if (aChange.end <= item.start) {
-                    item.start += aChange.add;
-                    item.end += aChange.add;
+            return data;
+        }
+        function saveFile(path:String, data:String) {
+            filesCache.set(path, data);
+        }
+
+        while (pass < maxPass) {
+
+            println('[run haxe $pass]');
+
+            for (path in filesCache.keys()) {
+                File.saveContent(path, filesCache.get(path));
+            }
+            filesCache = new Map();
+
+            // Keep track of the changes we make on the files so that
+            // we can still find an error position on a modified file.
+            var changes:Map<String,Array<{start:Int,end:Int,add:Int}>> = new Map();
+
+            // Get diagnostics from haxe compiler
+            var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('haxe', ['build.hxml']).stderr);
+
+            for (item in diagnostics) {
+
+                if (item.location == 'characters' && pass < maxPass / 2) {
+
+                    // Take previous changes in account on the range
+                    var lineChanges = changes.get(item.filePath+':'+item.line);
+                    if (lineChanges == null) {
+                        lineChanges = [];
+                        changes.set(item.filePath+':'+item.line, lineChanges);
+                    }
+                    for (aChange in lineChanges) {
+                        if (aChange.end <= item.start) {
+                            item.start += aChange.add;
+                            item.end += aChange.add;
+                        }
+                    }
+
+                    //println('[diagnostic] ' + item.message.replace("\n", ' '));
+                    if (item.message.startsWith('Float should be Int')) {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var lineNumber = item.line - 1;
+                        var line = lines[lineNumber];
+                        while (lineNumber > 1 && line.trim() == '') {
+                            lineNumber--;
+                            line = lines[lineNumber];
+                        }
+                        var snippet = line.substring(item.start, item.end);
+
+                        if (snippet.startsWith('return ')) {
+                            snippet = 'return Std.int(' + snippet.substring(7) + ')';
+                        }
+                        else if (snippet.indexOf('= ') != -1 && snippet.endsWith(';')) {
+                            snippet = snippet.substring(0, snippet.indexOf('= ') + 2) + 'Std.int(' + snippet.substring(snippet.indexOf('= ') + 2, snippet.length - 1) + ');';
+                        }
+                        else {
+                            snippet = 'Std.int(' + snippet + ')';
+                        }
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: 'Std.int()'.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + snippet + line.substring(item.end);
+                        lines[lineNumber] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message == 'Unknown identifier : binarySearch') {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: 'Animation.WithStep'.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + 'Animation.binarySearchWithStep' + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message == 'Current class does not have a superclass') {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        
+                        var newLine = line.replace('super.toString()', 'Type.getClassName(Type.getClass(this))');
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Edit line
+                        lines[item.line - 1] = newLine;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('Unknown identifier : ')) {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = snippet;
+
+                        if (item.filePath.endsWith('AnimationState.hx')) {
+                            if (newSnippet.toUpperCase() == newSnippet) {
+                                newSnippet = '@:privateAccess AnimationState.' + newSnippet;
+                            } else {
+                                newSnippet = 'AnimationState_this.' + newSnippet;
+                            }
+                        }
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message == 'Too many arguments' || item.message.startsWith('spine.Bone should be Float')) {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        
+                        var newLine = line.replace('applyOne(', 'applyTwo(');
+                        newLine = newLine.replace('apply(', 'applyOne(');
+                        newLine = newLine.replace('Animation.binarySearch(', 'Animation.binarySearchWithStep(');
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Edit line
+                        lines[item.line - 1] = newLine;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message == 'Not enough arguments, expected step:Int') {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var lineNumber = item.line - 1;
+                        var line = lines[lineNumber];
+                        while (lineNumber > 1 && line.trim() == '') {
+                            lineNumber--;
+                            line = lines[lineNumber];
+                        }
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = snippet.replace('Animation.binarySearchWithStep', 'Animation.binarySearch');
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[lineNumber] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('spine.support.utils.FloatArray should be Float')) {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        
+                        var newLine = line.replace('containsPoint(', 'polygonContainsPoint(');
+                        newLine = newLine.replace('intersectsSegment(', 'polygonIntersectsSegment(');
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Edit line
+                        lines[item.line - 1] = newLine;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (RE_ERROR_IDENTIFIER_NOT_PART.match(item.message)) {
+                        var identifier = RE_ERROR_IDENTIFIER_NOT_PART.matched(1);
+                        var newIdentifier = identifier;
+
+                        // Specific case
+                        if (identifier.toLowerCase() == 'in') newIdentifier = 'directionIn';
+                        else if (identifier.toLowerCase() == 'out') newIdentifier = 'directionOut';
+
+                        var type = RE_ERROR_IDENTIFIER_NOT_PART.matched(2);
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: type.length + 1 + newIdentifier.length - identifier.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + type + '.' + newIdentifier + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+
+                    }
+                    else if (RE_ERROR_SHOULD_BE.match(item.message)) {
+                        var type = RE_ERROR_SHOULD_BE.matched(1);
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = snippet;
+
+                        if (type.startsWith('spine.') && snippet.indexOf(' == ') != -1) {
+                            newSnippet = newSnippet.replace(' == ', ' == ' + type + '.');
+                        }
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+
+                    }
+                } else if (item.location == 'lines' && pass >= maxPass / 2) {
+                    if (RE_ERROR_FIELD_NEEDED_BY.match(item.message)) {
+
+                        var missing = RE_ERROR_FIELD_NEEDED_BY.matched(1);
+                        var parent = RE_ERROR_FIELD_NEEDED_BY.matched(2);
+                        var parentInfo = ctx.types.get(parent);
+                        if (parentInfo != null && parentInfo.methods.exists(missing)) {
+
+                            var file = getFile(item.filePath);
+
+                            var method = parentInfo.methods.get(missing);
+
+                            var lines = file.split("\n");
+                            var line = lines[item.start - 1];
+
+                            line += '/*LINE*//*TAB*/';
+                            line += method.modifiers.join(' ') + ' function ' + missing + '(';
+                            var n = 0;
+                            for (arg in method.args) {
+                                if (n++ > 0) line += ', ';
+                                line += arg.name + ':' + arg.type;
+                            }
+                            line += '):' + method.type + ' { ';
+                            line += switch (method.type) {
+                                case 'Float', 'Int', 'Short': 'return 0;';
+                                case 'Bool': 'return false;';
+                                case 'Void': '';
+                                default: 'return null;';
+                            }
+                            line += ' }';
+
+                            // Edit line
+                            lines[item.start - 1] = line;
+
+                            // Save modified file
+                            saveFile(item.filePath, lines.join("\n"));
+
+                        }
+                    }
+                    else if (RE_ERROR_FIELD_OVERRIDE.match(item.message)) {
+
+                        var field = RE_ERROR_FIELD_OVERRIDE.matched(1);
+                        var parent = RE_ERROR_FIELD_OVERRIDE.matched(2);
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.start - 1];
+
+                        line = line.substring(0, line.length - line.ltrim().length) + 'override ' + line.ltrim();
+
+                        // Edit line
+                        lines[item.start - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
                 }
             }
 
-            //println('[diagnostic] ' + item.message.replace("\n", ' '));
-            if (item.message.startsWith('Float should be Int')) {
-                //println(Json.stringify(item, null, '    '));
-                //println('    -> Wrap in Std.int()');
+            pass++;
+        }
 
-                var file = File.getContent(item.filePath);
-
-                var lines = file.split("\n");
-                var line = lines[item.line - 1];
-                var snippet = line.substring(item.start, item.end);
-                if (snippet.startsWith('return ')) {
-                    snippet = 'return Std.int(' + snippet.substring(7) + ')';
-                }
-                else if (snippet.indexOf('= ') != -1 && snippet.endsWith(';')) {
-                    snippet = snippet.substring(0, snippet.indexOf('= ') + 2) + 'Std.int(' + snippet.substring(snippet.indexOf('= ') + 2, snippet.length - 1) + ');';
-                }
-                else {
-                    snippet = 'Std.int(' + snippet + ')';
-                }
-
-                // Add new change
-                lineChanges.push({ start: item.start, end: item.end, add: 'Std.int()'.length });
-
-                // Edit line
-                line = line.substring(0, item.start) + snippet + line.substring(item.end);
-                lines[item.line - 1] = line;
-
-                // Save modified file
-                File.saveContent(item.filePath, lines.join("\n"));
-
-                //println('result: ' + line);
-            }
-            else if (item.message == 'Unknown identifier : binarySearch') {
-
-                var file = File.getContent(item.filePath);
-
-                var lines = file.split("\n");
-                var line = lines[item.line - 1];
-
-                // Add new change
-                lineChanges.push({ start: item.start, end: item.end, add: '@:privateAccess Animation.WithStep'.length });
-
-                // Edit line
-                line = line.substring(0, item.start) + '@:privateAccess Animation.binarySearchWithStep' + line.substring(item.end);
-                lines[item.line - 1] = line;
-
-                // Save modified file
-                File.saveContent(item.filePath, lines.join("\n"));
-
-                //println('result: ' + line);
-
-            }
+        for (path in filesCache.keys()) {
+            File.saveContent(path, filesCache.get(path));
         }
 
     } //fixCompilerErrors
@@ -2541,7 +2834,7 @@ using StringTools;
         'spine.AnimationState.Pool' => {
             replaceWithClass: 'TrackEntryPool',
             classBody: "
-            private class KeyPool extends Pool<TrackEntry> {
+            private class TrackEntryPool extends Pool<TrackEntry> {
                 override function newObject() {
                     return new TrackEntry();
                 }
@@ -2599,9 +2892,9 @@ using StringTools;
         'vertexeffects/SwirlEffect.java' => true
     ];
 
-    static var skippedNames:Map<String,Bool> = [
+    static var skippedNames:Map<String,Bool> = new Map();/*[
         'hashCode' => true
-    ];
+    ];*/
 
     static var skippedConstructors:Map<String,String> = [
         'spine.AnimationState' => '', // Empty animation state
@@ -2644,7 +2937,13 @@ using StringTools;
     static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\([^\)]+\))?(\s*)((?:,\s*;)|,|;|\})/;
     static var RE_PARENT_CLASS_THIS = ~/^([a-zA-Z0-9_]+)(\s*)\.\s*this\s*\./;
     static var RE_CASE_BREAKS = ~/(;|})\s*(break|continue|return)\s*(\s[^;]+)?;\s*(\}\s*)?$/;
+    static var RE_EXPR_RETURNS = ~/(;|})\s*(return\s*(\s[^;]+)?;\s*(\}\s*))$/;
+
     static var RE_HAXE_COMPILER_OUTPUT_LINE = ~/^\s*(.+)?(?=:[0-9]*:):([0-9]+):\s+(characters|lines)\s+([0-9]+)\-([0-9]+)(?:\s+:\s*(.*?))?\s*$/;
+    static var RE_ERROR_IDENTIFIER_NOT_PART = ~/^Identifier '([^']+)' is not part of ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
+    static var RE_ERROR_FIELD_NEEDED_BY = ~/^Field ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?) needed by ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?) is missing/;
+    static var RE_ERROR_FIELD_OVERRIDE = ~/^Field ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?) should be declared with 'override' since it is inherited from superclass ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
+    static var RE_ERROR_SHOULD_BE = ~/should be ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
 
 } //Convert
 

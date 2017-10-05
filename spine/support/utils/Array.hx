@@ -3,11 +3,45 @@ package spine.support.utils;
 @:forward(iterator, length, push, pop, shift, unshift, splice)
 abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
+    public static function copy(src:Dynamic, srcPos:Int, dest:Dynamic, destPos:Int, length:Int) {
+        var src_:Array<Dynamic> = src;
+        var dest_:Array<Dynamic> = dest;
+        for (i in 0...length) {
+            dest_[i + destPos] = src_[i + srcPos];
+        }
+    }
+
     public inline static function create(length:Float = 0):Dynamic {
         var len = Std.int(length);
         var array = new Array<Dynamic>(len != 0 ? len : 16);
         if (length != 0) {
             array.setSize(len);
+        }
+        return array;
+    }
+
+    public inline static function createFloatArray2D(length:Float = 0, length2:Float = 0):FloatArray2D {
+        var len = Std.int(length);
+        var len2 = Std.int(length2);
+        var array = new FloatArray2D(len != 0 ? len : 16);
+        if (length > 0) {
+            array.setSize(len);
+        }
+        for (i in 0...len2) {
+            array[i] = FloatArray.create(length2);
+        }
+        return array;
+    }
+
+    public inline static function createIntArray2D(length:Float = 0, length2:Float = 0):IntArray2D {
+        var len = Std.int(length);
+        var len2 = Std.int(length2);
+        var array = new IntArray2D(len != 0 ? len : 16);
+        if (length > 0) {
+            array.setSize(len);
+        }
+        for (i in 0...len2) {
+            array[i] = IntArray.create(length2);
         }
         return array;
     }
@@ -21,8 +55,10 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
         return this;
     }
 
-    public var size(get,never):Int;
-    inline function get_size():Int {
+    public var size(get,set):Int;
+    inline function get_size():Int { return this.length; }
+    inline function set_size(size:Int):Int {
+        setSize(size);
         return this.length;
     }
 
@@ -44,6 +80,13 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
     inline public function contains(value:T, identity:Bool):Bool {
         return this.indexOf(value) != -1;
+    }
+
+    inline public function removeValue(value:T, identity:Bool):Bool {
+        var index = this.indexOf(value);
+        if (index == -1) return false;
+        this.splice(index, 1);
+        return true;
     }
 
     inline public function setSize(size:Int):Array<T> {
@@ -74,6 +117,14 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
     inline public function get(index:Int):T {
         return this[index];
+    }
+
+    inline public function set(index:Int, value:T):Void {
+        this[index] = value;
+    }
+
+    inline public function indexOf(value:T, identity:Bool):Int {
+        return this.indexOf(value);
     }
 
     inline public function removeIndex(index:Int):T {

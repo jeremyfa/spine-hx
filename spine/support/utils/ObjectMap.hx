@@ -1,15 +1,22 @@
 package spine.support.utils;
 
+@:forward(keys)
 abstract ObjectMap<K,V>(Map<K,Entry<K,V>>) {
 
     inline public function new() {
         this = new Map();
     }
 
-    inline public function get(key:K):V {
+    inline public function get(key:K, defaultValue:V = null):V {
         var entry = this.get(key);
         if (entry != null) return entry.value;
-        return null;
+        return defaultValue;
+    }
+
+    inline public function clear():Void {
+        var keys = [];
+        for (key in this.keys()) keys.push(key);
+        for (key in keys) this.remove(key);
     }
 
     public function put(key:K, value:V):Void {

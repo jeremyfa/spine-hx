@@ -71,6 +71,14 @@ abstract BooleanArray(std.Array<Bool>) from std.Array<Bool> to std.Array<Bool> {
         return this[index];
     }
 
+    inline public function set(index:Int, value:Bool):Void {
+        this[index] = value;
+    }
+
+    inline public function indexOf(value:Bool, identity:Bool):Int {
+        return this.indexOf(value);
+    }
+
     inline public function removeIndex(index:Int):Bool {
         var item = this[index];
         this.splice(index, 1);

@@ -6,7 +6,7 @@ abstract FloatArray(std.Array<Float>) from std.Array<Float> to std.Array<Float> 
     public inline static function create(length:Float = 0):FloatArray {
         var len = Std.int(length);
         var array = new FloatArray(len != 0 ? len : 16);
-        if (length != 0) {
+        if (length > 0) {
             array.setSize(len);
         }
         return array;
@@ -69,6 +69,14 @@ abstract FloatArray(std.Array<Float>) from std.Array<Float> to std.Array<Float> 
 
     inline public function get(index:Int):Float {
         return this[index];
+    }
+
+    inline public function set(index:Int, value:Float):Void {
+        this[index] = value;
+    }
+
+    inline public function indexOf(value:Float, identity:Bool):Int {
+        return this.indexOf(value);
     }
 
     inline public function removeIndex(index:Int):Float {
