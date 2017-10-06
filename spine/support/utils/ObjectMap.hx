@@ -1,16 +1,23 @@
 package spine.support.utils;
 
-@:forward(keys)
-abstract ObjectMap<K,V>(Map<K,Entry<K,V>>) {
+abstract ObjectMap<K,V>(Map<Int,Array<Entry<K,V>>>) {
 
     inline public function new() {
         this = new Map();
     }
 
-    inline public function get(key:K, defaultValue:V = null):V {
-        var entry = this.get(key);
-        if (entry != null) return entry.value;
-        return defaultValue;
+    public function get(key:K, defaultValue:V = null):V {
+        var dKey:Dynamic = key;
+        var entries = this.get(dKey.getHashCode());
+        if (entries != null) {
+            for (entry in entries) {
+                var dEntryKey:Dynamic = entry.key;
+                if (dEntryKey.equals(key)) {
+                    return entry.value;
+                }
+            }
+        }
+        return null;
     }
 
     inline public function clear():Void {
@@ -20,21 +27,53 @@ abstract ObjectMap<K,V>(Map<K,Entry<K,V>>) {
     }
 
     public function put(key:K, value:V):Void {
-        var entry = this.get(key);
-        if (entry == null) {
-            entry = { key: key, value: value };
-            this.set(key, entry);
-        } else {
-            @:privateAccess entry.value = value;
+        var dKey:Dynamic = key;
+        var hashCode = dKey.getHashCode();
+        var entries = this.get(hashCode);
+        if (entries == null) {
+            entries = [];
+            this.set(hashCode, entries);
+        }
+        var i = 0;
+        var didSet = false;
+        for (entry in entries) {
+            var dEntryKey:Dynamic = entry.key;
+            if (dEntryKey.equals(key)) {
+                entries[i].key = key;
+                entries[i].value = value;
+                didSet = true;
+                break;
+            }
+            i++;
+        }
+        if (!didSet) {
+            entries.push(new Entry(key, value));
         }
     }
 
-    inline public function entries() {
-        return this.iterator();
+    public function entries() {
+        var entries = [];
+        for (entryList in this) {
+            for (entry in entryList) {
+                entries.push(entry);
+            }
+        }
+        return entries;
+    }
+
+    public function keys() {
+        var keys = [];
+        for (entryList in this) {
+            for (entry in entryList) {
+                keys.push(entry.key);
+            }
+        }
+        return keys;
     }
 
 }
 
+@:allow(spine.support.utils.ObjectMap)
 @:structInit
 class Entry<K,V> {
 

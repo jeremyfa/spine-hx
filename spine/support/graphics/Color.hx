@@ -69,7 +69,7 @@ class Color {
         this.a = a;
     }
     
-    public function set(r:Either<Color,Float>, g:Float = -1, b:Float = -1, a:Float = -1) {
+    public function set(r:Either<Color,Float>, g:Float = -1, b:Float = -1, a:Float = -1):Color {
         if (Std.is(r, Float)) {
             this.r = r;
             this.g = g;
@@ -83,27 +83,31 @@ class Color {
             this.b = color.b;
             this.a = color.a;
         }
+        return this;
     }
     
-    inline public function add(r:Float, g:Float, b:Float, a:Float) {
+    inline public function add(r:Float, g:Float, b:Float, a:Float):Color {
         this.r += r;
         this.g += g;
         this.b += b;
         this.a += a;
+        return this;
     }
     
-    inline public function mul(r:Float, g:Float, b:Float, a:Float) {
+    inline public function mul(r:Float, g:Float, b:Float, a:Float):Color {
         this.r *= r;
         this.g *= g;
         this.b *= b;
         this.a *= a;
+        return this;
     }
 
-    inline public function setRgba888(value:Int) {
+    inline public function setRgba888(value:Int):Color {
         r = ((value & 0xff000000) >>> 24) / 255.0;
         g = ((value & 0x00ff0000) >>> 16) / 255.0;
         b = ((value & 0x0000ff00) >>> 8) / 255.0;
         a = ((value & 0x000000ff)) / 255.0;
+        return this;
     }
 
 }
