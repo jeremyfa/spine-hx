@@ -1,0 +1,1184 @@
+/******************************************************************************
+ * Spine Runtimes Software License v2.5
+ *
+ * Copyright (c) 2013-2016, Esoteric Software
+ * All rights reserved.
+ *
+ * You are granted a perpetual, non-exclusive, non-sublicensable, and
+ * non-transferable license to use, install, execute, and perform the Spine
+ * Runtimes software and derivative works solely for personal or internal
+ * use. Without the written permission of Esoteric Software (see Section 2 of
+ * the Spine Software License Agreement), you may not (a) modify, translate,
+ * adapt, or develop new applications using the Spine Runtimes or otherwise
+ * create derivative works or improvements of the Spine Runtimes or (b) remove,
+ * delete, alter, or obscure any trademarks or any copyright, trademark, patent,
+ * or other intellectual property or proprietary rights notices on or in the
+ * Software, including any copy thereof. Redistributions in binary or source
+ * form must include this license and terms.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL ESOTERIC SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS INTERRUPTION, OR LOSS OF
+ * USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *****************************************************************************/
+
+package spine;
+
+import spine.Animation.RotateTimeline.*;
+
+import spine.support.utils.Array;
+import spine.support.utils.FloatArray;
+import spine.support.utils.IntArray;
+import spine.support.utils.IntSet;
+import spine.support.utils.Pool;
+import spine.support.utils.Pool.Poolable;
+import spine.Animation.AttachmentTimeline;
+import spine.Animation.DrawOrderTimeline;
+import spine.Animation.MixDirection;
+import spine.Animation.MixDirection_enum;
+import spine.Animation.MixPose;
+import spine.Animation.MixPose_enum;
+import spine.Animation.RotateTimeline;
+import spine.Animation.Timeline;
+
+/** Applies animations over time, queues animations for later playback, mixes (crossfading) between animations, and applies
+ * multiple animations on top of each other (layering).
+ * <p>
+ * See <a href='http://esotericsoftware.com/spine-applying-animations/'>Applying Animations</a> in the Spine Runtimes Guide. */
+class AnimationState {
+    private static var emptyAnimation:Animation = new Animation("<empty>", new Array(0), 0);
+    inline private static var SUBSEQUENT:Int = 0; inline private static var FIRST:Int = 1; inline private static var DIP:Int = 2; inline private static var DIP_MIX:Int = 3;
+
+    private var data:AnimationStateData;
+    public var tracks:Array<TrackEntry> = new Array();
+    private var events:Array<Event> = new Array();
+    public var listeners:Array<AnimationStateListener> = new Array();
+    private var queue:EventQueue = null;
+    private var propertyIDs:IntSet = new IntSet();
+    private var mixingTo:Array<TrackEntry> = new Array();
+    public var animationsChanged:Bool = false;
+    private var timeScale:Float = 1;
+
+    public var trackEntryPool:Pool<TrackEntry> = new TrackEntryPool();
+
+    /** Creates an uninitialized AnimationState. The animation state data must be set before use. */
+    /*public function new() {
+        this.queue = new EventQueue();
+        @:privateAccess this.queue.AnimationState_this = this;
+    }*/
+
+    public function new(data:AnimationStateData) {
+        this.queue = new EventQueue();
+        @:privateAccess this.queue.AnimationState_this = this;
+        if (data == null) throw new IllegalArgumentException("data cannot be null.");
+        this.data = data;
+    }
+
+    /** Increments each track entry {@link TrackEntry#getTrackTime()}, setting queued animations as current if needed. */
+    public function update(delta:Float):Void {
+        delta *= timeScale;
+        var i:Int = 0; var n:Int = tracks.size; while (i < n) {
+            var current:TrackEntry = tracks.get(i);
+            if (current == null) { i++; continue; }
+
+            current.animationLast = current.nextAnimationLast;
+            current.trackLast = current.nextTrackLast;
+
+            var currentDelta:Float = delta * current.timeScale;
+
+            if (current.delay > 0) {
+                current.delay -= currentDelta;
+                if (current.delay > 0) { i++; continue; }
+                currentDelta = -current.delay;
+                current.delay = 0;
+            }
+
+            var next:TrackEntry = current.next;
+            if (next != null) {
+                // When the next entry's delay is passed, change to the next entry, preserving leftover time.
+                var nextTime:Float = current.trackLast - next.delay;
+                if (nextTime >= 0) {
+                    next.delay = 0;
+                    next.trackTime = nextTime + delta * next.timeScale;
+                    current.trackTime += currentDelta;
+                    setCurrent(i, next, true);
+                    while (next.mixingFrom != null) {
+                        next.mixTime += currentDelta;
+                        next = next.mixingFrom;
+                    }
+                    { i++; continue; }
+                }
+            } else if (current.trackLast >= current.trackEnd && current.mixingFrom == null) {
+                // Clear the track when there is no next entry, the track end time is reached, and there is no mixingFrom.
+                tracks.set(i, null);
+                queue.end(current);
+                disposeNext(current);
+                { i++; continue; }
+            }
+            if (current.mixingFrom != null && updateMixingFrom(current, delta)) {
+                // End mixing from entries once all have completed.
+                var from:TrackEntry = current.mixingFrom;
+                current.mixingFrom = null;
+                while (from != null) {
+                    queue.end(from);
+                    from = from.mixingFrom;
+                }
+            }
+
+            current.trackTime += currentDelta;
+        i++; }
+
+        queue.drain();
+    }
+
+    /** Returns true when all mixing from entries are complete. */
+    private function updateMixingFrom(to:TrackEntry, delta:Float):Bool {
+        var from:TrackEntry = to.mixingFrom;
+        if (from == null) return true;
+
+        var finished:Bool = updateMixingFrom(from, delta);
+
+        // Require mixTime > 0 to ensure the mixing from entry was applied at least once.
+        if (to.mixTime > 0 && (to.mixTime >= to.mixDuration || to.timeScale == 0)) {
+            // Require totalAlpha == 0 to ensure mixing is complete, unless mixDuration == 0 (the transition is a single frame).
+            if (from.totalAlpha == 0 || to.mixDuration == 0) {
+                to.mixingFrom = from.mixingFrom;
+                to.interruptAlpha = from.interruptAlpha;
+                queue.end(from);
+            }
+            return finished;
+        }
+
+        from.animationLast = from.nextAnimationLast;
+        from.trackLast = from.nextTrackLast;
+        from.trackTime += delta * from.timeScale;
+        to.mixTime += delta * to.timeScale;
+        return false;
+    }
+
+    /** Poses the skeleton using the track entry animations. There are no side effects other than invoking listeners, so the
+     * animation state can be applied to multiple skeletons to pose them identically.
+     * @return True if any animations were applied. */
+    public function apply(skeleton:Skeleton):Bool {
+        if (skeleton == null) throw new IllegalArgumentException("skeleton cannot be null.");
+        if (animationsChanged) handleAnimationsChanged();
+
+        var events:Array<Event> = this.events;
+        var applied:Bool = false;
+        var i:Int = 0; var n:Int = tracks.size; while (i < n) {
+            var current:TrackEntry = tracks.get(i);
+            if (current == null || current.delay > 0) { i++; continue; }
+            applied = true;
+            var currentPose:MixPose = i == 0 ? MixPose.current : MixPose.currentLayered;
+
+            // Apply mixing from entries first.
+            var mix:Float = current.alpha;
+            if (current.mixingFrom != null)
+                mix *= applyMixingFrom(current, skeleton, currentPose);
+            else if (current.trackTime >= current.trackEnd && current.next == null) //
+                mix = 0; // Set to setup pose the last time the entry will be applied.
+
+            // Apply current entry.
+            var animationLast:Float = current.animationLast; var animationTime:Float = current.getAnimationTime();
+            var timelineCount:Int = current.animation.timelines.size;
+            var timelines = current.animation.timelines.items;
+            if (mix == 1) {
+                var ii:Int = 0; while (ii < timelineCount) {
+                    (cast(timelines[ii], Timeline)).apply(skeleton, animationLast, animationTime, events, 1, MixPose.setup, MixDirection.directionIn); ii++; }
+            } else {
+                var timelineData:IntArray = current.timelineData.items;
+
+                var firstFrame:Bool = current.timelinesRotation.size == 0;
+                if (firstFrame) current.timelinesRotation.setSize(timelineCount << 1);
+                var timelinesRotation:FloatArray = current.timelinesRotation.items;
+
+                var ii:Int = 0; while (ii < timelineCount) {
+                    var timeline:Timeline = cast(timelines[ii], Timeline);
+                    var pose:MixPose = timelineData[ii] >= FIRST ? MixPose.setup : currentPose;
+                    if (Std.is(timeline, RotateTimeline))
+                        applyRotateTimeline(timeline, skeleton, animationTime, mix, pose, timelinesRotation, ii << 1, firstFrame);
+                    else
+                        timeline.apply(skeleton, animationLast, animationTime, events, mix, pose, MixDirection.directionIn);
+                ii++; }
+            }
+            queueEvents(current, animationTime);
+            events.clear();
+            current.nextAnimationLast = animationTime;
+            current.nextTrackLast = current.trackTime;
+        i++; }
+
+        queue.drain();
+        return applied;
+    }
+
+    private function applyMixingFrom(to:TrackEntry, skeleton:Skeleton, currentPose:MixPose):Float {
+        var from:TrackEntry = to.mixingFrom;
+        if (from.mixingFrom != null) applyMixingFrom(from, skeleton, currentPose);
+
+        var mix:Float = 0;
+        if (to.mixDuration == 0) // Single frame mix to undo mixingFrom changes.
+            mix = 1;
+        else {
+            mix = to.mixTime / to.mixDuration;
+            if (mix > 1) mix = 1;
+        }
+
+        var events:Array<Event> = mix < from.eventThreshold ? this.events : null;
+        var attachments:Bool = mix < from.attachmentThreshold; var drawOrder:Bool = mix < from.drawOrderThreshold;
+        var animationLast:Float = from.animationLast; var animationTime:Float = from.getAnimationTime();
+        var timelineCount:Int = from.animation.timelines.size;
+        var timelines = from.animation.timelines.items;
+        var timelineData:IntArray = from.timelineData.items;
+        var timelineDipMix = from.timelineDipMix.items;
+
+        var firstFrame:Bool = from.timelinesRotation.size == 0;
+        if (firstFrame) from.timelinesRotation.setSize(timelineCount << 1);
+        var timelinesRotation:FloatArray = from.timelinesRotation.items;
+
+        var pose:MixPose = null;
+        var alphaDip:Float = from.alpha * to.interruptAlpha; var alphaMix:Float = alphaDip * (1 - mix); var alpha:Float = 0;
+        from.totalAlpha = 0;
+        var i:Int = 0; while (i < timelineCount) {
+            var timeline:Timeline = cast(timelines[i], Timeline);
+            while(true) { var _switchCond0 = (timelineData[i]); {
+            if (_switchCond0 == SUBSEQUENT) {if (!attachments && Std.is(timeline, AttachmentTimeline)) { i++; continue; }
+                if (!drawOrder && Std.is(timeline, DrawOrderTimeline)) { i++; continue; }
+                pose = currentPose;
+                alpha = alphaMix;
+                break;
+            } else if (_switchCond0 == FIRST) {pose = MixPose.setup;
+                alpha = alphaMix;
+                break;
+            } else if (_switchCond0 == DIP) {pose = MixPose.setup;
+                alpha = alphaDip;
+                break;
+            } else {pose = MixPose.setup;
+                alpha = alphaDip;
+                var dipMix:TrackEntry = cast(timelineDipMix[i], TrackEntry);
+                alpha *= MathUtils.max(0, Std.int(1 - dipMix.mixTime / dipMix.mixDuration));
+                break;
+            } } break; }
+            from.totalAlpha += alpha;
+            if (Std.is(timeline, RotateTimeline))
+                applyRotateTimeline(timeline, skeleton, animationTime, alpha, pose, timelinesRotation, i << 1, firstFrame);
+            else
+                timeline.apply(skeleton, animationLast, animationTime, events, alpha, pose, MixDirection.directionOut);
+        i++; }
+
+        if (to.mixDuration > 0) queueEvents(from, animationTime);
+        this.events.clear();
+        from.nextAnimationLast = animationTime;
+        from.nextTrackLast = from.trackTime;
+
+        return mix;
+    }
+
+    private function applyRotateTimeline(timeline:Timeline, skeleton:Skeleton, time:Float, alpha:Float, pose:MixPose, timelinesRotation:FloatArray, i:Int, firstFrame:Bool):Void {
+
+        if (firstFrame) timelinesRotation[i] = 0;
+
+        if (alpha == 1) {
+            timeline.apply(skeleton, 0, time, null, 1, pose, MixDirection.directionIn);
+            return;
+        }
+
+        var rotateTimeline:RotateTimeline = cast(timeline, RotateTimeline);
+        var bone:Bone = skeleton.bones.get(rotateTimeline.boneIndex);
+        var frames:FloatArray = rotateTimeline.frames;
+        if (time < frames[0]) { // Time is before first frame.
+            if (pose == MixPose.setup) bone.rotation = bone.data.rotation;
+            return;
+        }
+
+        var r2:Float = 0;
+        if (time >= frames[frames.length - ENTRIES]) // Time is after last frame.
+            r2 = bone.data.rotation + frames[frames.length + PREV_ROTATION];
+        else {
+            // Interpolate between the previous frame and the current frame.
+            var frame:Int = Animation.binarySearchWithStep(frames, time, ENTRIES);
+            var prevRotation:Float = frames[frame + PREV_ROTATION];
+            var frameTime:Float = frames[frame];
+            var percent:Float = rotateTimeline.getCurvePercent((frame >> 1) - 1,
+                1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
+
+            r2 = frames[frame + ROTATION] - prevRotation;
+            r2 -= (16384 - cast((16384.499999999996 - r2 / 360), Int)) * 360;
+            r2 = prevRotation + r2 * percent + bone.data.rotation;
+            r2 -= (16384 - cast((16384.499999999996 - r2 / 360), Int)) * 360;
+        }
+
+        // Mix between rotations using the direction of the shortest route on the first frame.
+        var r1:Float = pose == MixPose.setup ? bone.data.rotation : bone.rotation;
+        var total:Float = 0; var diff:Float = r2 - r1;
+        if (diff == 0)
+            total = timelinesRotation[i];
+        else {
+            diff -= (16384 - cast((16384.499999999996 - diff / 360), Int)) * 360;
+            var lastTotal:Float = 0; var lastDiff:Float = 0;
+            if (firstFrame) {
+                lastTotal = 0;
+                lastDiff = diff;
+            } else {
+                lastTotal = timelinesRotation[i]; // Angle and direction of mix, including loops.
+                lastDiff = timelinesRotation[i + 1]; // Difference between bones.
+            }
+            var current:Bool = diff > 0; var dir:Bool = lastTotal >= 0;
+            // Detect cross at 0 (not 180).
+            if (MathUtils.signum(lastDiff) != MathUtils.signum(diff) && Math.abs(lastDiff) <= 90) {
+                // A cross after a 360 rotation is a loop.
+                if (Math.abs(lastTotal) > 180) lastTotal += 360 * MathUtils.signum(lastTotal);
+                dir = current;
+            }
+            total = diff + lastTotal - lastTotal % 360; // Store loops as part of lastTotal.
+            if (dir != current) total += 360 * MathUtils.signum(lastTotal);
+            timelinesRotation[i] = total;
+        }
+        timelinesRotation[i + 1] = diff;
+        r1 += total * alpha;
+        bone.rotation = r1 - (16384 - cast((16384.499999999996 - r1 / 360), Int)) * 360;
+    }
+
+    private function queueEvents(entry:TrackEntry, animationTime:Float):Void {
+        var animationStart:Float = entry.animationStart; var animationEnd:Float = entry.animationEnd;
+        var duration:Float = animationEnd - animationStart;
+        var trackLastWrapped:Float = entry.trackLast % duration;
+
+        // Queue events before complete.
+        var events:Array<Event> = this.events;
+        var i:Int = 0; var n:Int = events.size;
+        while (i < n) {
+            var event:Event = events.get(i);
+            if (event.time < trackLastWrapped) break;
+            if (event.time > animationEnd) { i++; continue; } // Discard events outside animation start/end.
+            queue.event(entry, event);
+        i++; }
+
+        // Queue complete if completed a loop iteration or the animation.
+        if (entry.loop ? (trackLastWrapped > entry.trackTime % duration)
+            : (animationTime >= animationEnd && entry.animationLast < animationEnd)) {
+            queue.complete(entry);
+        }
+
+        // Queue events after complete.
+        while (i < n) {
+            var event:Event = events.get(i);
+            if (event.time < animationStart) { i++; continue; } // Discard events outside animation start/end.
+            queue.event(entry, events.get(i));
+        i++; }
+    }
+
+    /** Removes all animations from all tracks, leaving skeletons in their previous pose.
+     * <p>
+     * It may be desired to use {@link AnimationState#setEmptyAnimations(float)} to mix the skeletons back to the setup pose,
+     * rather than leaving them in their previous pose. */
+    public function clearTracks():Void {
+        var oldDrainDisabled:Bool = queue.drainDisabled;
+        queue.drainDisabled = true;
+        var i:Int = 0; var n:Int = tracks.size; while (i < n) {
+            clearTrack(i); i++; }
+        tracks.clear();
+        queue.drainDisabled = oldDrainDisabled;
+        queue.drain();
+    }
+
+    /** Removes all animations from the track, leaving skeletons in their previous pose.
+     * <p>
+     * It may be desired to use {@link AnimationState#setEmptyAnimation(int, float)} to mix the skeletons back to the setup pose,
+     * rather than leaving them in their previous pose. */
+    public function clearTrack(trackIndex:Int):Void {
+        if (trackIndex >= tracks.size) return;
+        var current:TrackEntry = tracks.get(trackIndex);
+        if (current == null) return;
+
+        queue.end(current);
+
+        disposeNext(current);
+
+        var entry:TrackEntry = current;
+        while (true) {
+            var from:TrackEntry = entry.mixingFrom;
+            if (from == null) break;
+            queue.end(from);
+            entry.mixingFrom = null;
+            entry = from;
+        }
+
+        tracks.set(current.trackIndex, null);
+
+        queue.drain();
+    }
+
+    private function setCurrent(index:Int, current:TrackEntry, interrupt:Bool):Void {
+        var from:TrackEntry = expandToIndex(index);
+        tracks.set(index, current);
+
+        if (from != null) {
+            if (interrupt) queue.interrupt(from);
+            current.mixingFrom = from;
+            current.mixTime = 0;
+
+            // Store the interrupted mix percentage.
+            if (from.mixingFrom != null && from.mixDuration > 0)
+                current.interruptAlpha *= MathUtils.min(1, Std.int(from.mixTime / from.mixDuration));
+
+            from.timelinesRotation.clear(); // Reset rotation for mixing out, in case entry was mixed in.
+        }
+
+        queue.start(current);
+    }
+
+    /** Sets an animation by name.
+     * <p>
+     * {@link #setAnimation(int, Animation, boolean)}. */
+    public function setAnimationByName(trackIndex:Int, animationName:String, loop:Bool):TrackEntry {
+        var animation:Animation = data.skeletonData.findAnimation(animationName);
+        if (animation == null) throw new IllegalArgumentException("Animation not found: " + animationName);
+        return setAnimation(trackIndex, animation, loop);
+    }
+
+    /** Sets the current animation for a track, discarding any queued animations.
+     * @param loop If true, the animation will repeat. If false it will not, instead its last frame is applied if played beyond its
+     *           duration. In either case {@link TrackEntry#getTrackEnd()} determines when the track is cleared.
+     * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
+     *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
+    public function setAnimation(trackIndex:Int, animation:Animation, loop:Bool):TrackEntry {
+        if (animation == null) throw new IllegalArgumentException("animation cannot be null.");
+        var interrupt:Bool = true;
+        var current:TrackEntry = expandToIndex(trackIndex);
+        if (current != null) {
+            if (current.nextTrackLast == -1) {
+                // Don't mix from an entry that was never applied.
+                tracks.set(trackIndex, current.mixingFrom);
+                queue.interrupt(current);
+                queue.end(current);
+                disposeNext(current);
+                current = current.mixingFrom;
+                interrupt = false; // mixingFrom is current again, but don't interrupt it twice.
+            } else
+                disposeNext(current);
+        }
+        var entry:TrackEntry = trackEntry(trackIndex, animation, loop, current);
+        setCurrent(trackIndex, entry, interrupt);
+        queue.drain();
+        return entry;
+    }
+
+    /** Queues an animation by name.
+     * <p>
+     * See {@link #addAnimation(int, Animation, boolean, float)}. */
+    public function addAnimationByName(trackIndex:Int, animationName:String, loop:Bool, delay:Float):TrackEntry {
+        var animation:Animation = data.skeletonData.findAnimation(animationName);
+        if (animation == null) throw new IllegalArgumentException("Animation not found: " + animationName);
+        return addAnimation(trackIndex, animation, loop, delay);
+    }
+
+    /** Adds an animation to be played after the current or last queued animation for a track. If the track is empty, it is
+     * equivalent to calling {@link #setAnimation(int, Animation, boolean)}.
+     * @param delay Seconds to begin this animation after the start of the previous animation. May be <= 0 to use the animation
+     *           duration of the previous track minus any mix duration plus the <code>delay</code>.
+     * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
+     *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
+    public function addAnimation(trackIndex:Int, animation:Animation, loop:Bool, delay:Float):TrackEntry {
+        if (animation == null) throw new IllegalArgumentException("animation cannot be null.");
+
+        var last:TrackEntry = expandToIndex(trackIndex);
+        if (last != null) {
+            while (last.next != null) {
+                last = last.next; }
+        }
+
+        var entry:TrackEntry = trackEntry(trackIndex, animation, loop, last);
+
+        if (last == null) {
+            setCurrent(trackIndex, entry, true);
+            queue.drain();
+        } else {
+            last.next = entry;
+            if (delay <= 0) {
+                var duration:Float = last.animationEnd - last.animationStart;
+                if (duration != 0)
+                    delay += duration * (1 + cast((last.trackTime / duration), Int)) - data.getMix(last.animation, animation);
+                else
+                    delay = 0;
+            }
+        }
+
+        entry.delay = delay;
+        return entry;
+    }
+
+    /** Sets an empty animation for a track, discarding any queued animations, and sets the track entry's
+     * {@link TrackEntry#getMixDuration()}.
+     * <p>
+     * Mixing out is done by setting an empty animation. A mix duration of 0 still mixes out over one frame.
+     * <p>
+     * To mix in, first set an empty animation and add an animation using {@link #addAnimation(int, Animation, boolean, float)},
+     * then set the {@link TrackEntry#setMixDuration(float)} on the returned track entry. */
+    public function setEmptyAnimation(trackIndex:Int, mixDuration:Float):TrackEntry {
+        var entry:TrackEntry = setAnimation(trackIndex, emptyAnimation, false);
+        entry.mixDuration = mixDuration;
+        entry.trackEnd = mixDuration;
+        return entry;
+    }
+
+    /** Adds an empty animation to be played after the current or last queued animation for a track, and sets the track entry's
+     * {@link TrackEntry#getMixDuration()}. If the track is empty, it is equivalent to calling
+     * {@link #setEmptyAnimation(int, float)}.
+     * @param delay Seconds to begin this animation after the start of the previous animation. May be <= 0 to use the animation
+     *           duration of the previous track minus any mix duration plus <code>delay</code>.
+     * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
+     *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
+    public function addEmptyAnimation(trackIndex:Int, mixDuration:Float, delay:Float):TrackEntry {
+        if (delay <= 0) delay -= mixDuration;
+        var entry:TrackEntry = addAnimation(trackIndex, emptyAnimation, false, delay);
+        entry.mixDuration = mixDuration;
+        entry.trackEnd = mixDuration;
+        return entry;
+    }
+
+    /** Sets an empty animation for every track, discarding any queued animations, and mixes to it over the specified mix
+     * duration. */
+    public function setEmptyAnimations(mixDuration:Float):Void {
+        var oldDrainDisabled:Bool = queue.drainDisabled;
+        queue.drainDisabled = true;
+        var i:Int = 0; var n:Int = tracks.size; while (i < n) {
+            var current:TrackEntry = tracks.get(i);
+            if (current != null) setEmptyAnimation(current.trackIndex, mixDuration);
+        i++; }
+        queue.drainDisabled = oldDrainDisabled;
+        queue.drain();
+    }
+
+    private function expandToIndex(index:Int):TrackEntry {
+        if (index < tracks.size) return tracks.get(index);
+        tracks.ensureCapacity(index - tracks.size + 1);
+        tracks.size = index + 1;
+        return null;
+    }
+
+    /** @param last May be null. */
+    private function trackEntry(trackIndex:Int, animation:Animation, loop:Bool, last:TrackEntry):TrackEntry {
+        var entry:TrackEntry = trackEntryPool.obtain();
+        entry.trackIndex = trackIndex;
+        entry.animation = animation;
+        entry.loop = loop;
+
+        entry.eventThreshold = 0;
+        entry.attachmentThreshold = 0;
+        entry.drawOrderThreshold = 0;
+
+        entry.animationStart = 0;
+        entry.animationEnd = animation.getDuration();
+        entry.animationLast = -1;
+        entry.nextAnimationLast = -1;
+
+        entry.delay = 0;
+        entry.trackTime = 0;
+        entry.trackLast = -1;
+        entry.nextTrackLast = -1;
+        entry.trackEnd = 999999999.0;
+        entry.timeScale = 1;
+
+        entry.alpha = 1;
+        entry.interruptAlpha = 1;
+        entry.mixTime = 0;
+        entry.mixDuration = last == null ? 0 : data.getMix(last.animation, animation);
+        return entry;
+    }
+
+    private function disposeNext(entry:TrackEntry):Void {
+        var next:TrackEntry = entry.next;
+        while (next != null) {
+            queue.dispose(next);
+            next = next.next;
+        }
+        entry.next = null;
+    }
+
+    private function handleAnimationsChanged():Void {
+        animationsChanged = false;
+
+        var propertyIDs:IntSet = this.propertyIDs;
+        propertyIDs.clear();
+        var mixingTo:Array<TrackEntry> = this.mixingTo;
+
+        var i:Int = 0; var n:Int = tracks.size; while (i < n) {
+            var entry:TrackEntry = tracks.get(i);
+            if (entry != null) entry.setTimelineData(null, mixingTo, propertyIDs);
+        i++; }
+    }
+
+    /** Returns the track entry for the animation currently playing on the track, or null if no animation is currently playing. */
+    public function getCurrent(trackIndex:Int):TrackEntry {
+        if (trackIndex >= tracks.size) return null;
+        return tracks.get(trackIndex);
+    }
+
+    /** Adds a listener to receive events for all track entries. */
+    public function addListener(listener:AnimationStateListener):Void {
+        if (listener == null) throw new IllegalArgumentException("listener cannot be null.");
+        listeners.add(listener);
+    }
+
+    /** Removes the listener added with {@link #addListener(AnimationStateListener)}. */
+    public function removeListener(listener:AnimationStateListener):Void {
+        listeners.removeValue(listener, true);
+    }
+
+    /** Removes all listeners added with {@link #addListener(AnimationStateListener)}. */
+    public function clearListeners():Void {
+        listeners.clear();
+    }
+
+    /** Discards all listener notifications that have not yet been delivered. This can be useful to call from an
+     * {@link AnimationStateListener} when it is known that further notifications that may have been already queued for delivery
+     * are not wanted because new animations are being set. */
+    public function clearListenerNotifications():Void {
+        queue.clear();
+    }
+
+    /** Multiplier for the delta time when the animation state is updated, causing time for all animations to play slower or
+     * faster. Defaults to 1.
+     * <p>
+     * See TrackEntry {@link TrackEntry#getTimeScale()} for affecting a single animation. */
+    public function getTimeScale():Float {
+        return timeScale;
+    }
+
+    public function setTimeScale(timeScale:Float):Void {
+        this.timeScale = timeScale;
+    }
+
+    /** The AnimationStateData to look up mix durations. */
+    public function getData():AnimationStateData {
+        return data;
+    }
+
+    public function setData(data:AnimationStateData):Void {
+        if (data == null) throw new IllegalArgumentException("data cannot be null.");
+        this.data = data;
+    }
+
+    /** The list of tracks that currently have animations, which may contain null entries. */
+    public function getTracks():Array<TrackEntry> {
+        return tracks;
+    }
+
+    public function toString():String {
+        var buffer:StringBuilder = new StringBuilder(64);
+        var i:Int = 0; var n:Int = tracks.size; while (i < n) {
+            var entry:TrackEntry = tracks.get(i);
+            if (entry == null) { i++; continue; }
+            if (buffer.length() > 0) buffer.append(", ");
+            buffer.append(entry.toString());
+        i++; }
+        if (buffer.length() == 0) return "<none>";
+        return buffer.toString();
+    }
+}
+
+/** Stores settings and other state for the playback of an animation on an {@link AnimationState} track.
+ * <p>
+ * References to a track entry must not be kept after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
+class TrackEntry implements Poolable {
+    public var animation:Animation;
+    public var next:TrackEntry; public var mixingFrom:TrackEntry = null;
+    public var listener:AnimationStateListener;
+    public var trackIndex:Int = 0;
+    public var loop:Bool = false;
+    public var eventThreshold:Float = 0; public var attachmentThreshold:Float = 0; public var drawOrderThreshold:Float = 0;
+    public var animationStart:Float = 0; public var animationEnd:Float = 0; public var animationLast:Float = 0; public var nextAnimationLast:Float = 0;
+    public var delay:Float = 0; public var trackTime:Float = 0; public var trackLast:Float = 0; public var nextTrackLast:Float = 0; public var trackEnd:Float = 0; public var timeScale:Float = 0;
+    public var alpha:Float = 0; public var mixTime:Float = 0; public var mixDuration:Float = 0; public var interruptAlpha:Float = 0; public var totalAlpha:Float = 0;
+    public var timelineData:IntArray = new IntArray();
+    public var timelineDipMix:Array<TrackEntry> = new Array();
+    public var timelinesRotation:FloatArray = new FloatArray();
+
+    public function reset():Void {
+        next = null;
+        mixingFrom = null;
+        animation = null;
+        listener = null;
+        timelineData.clear();
+        timelineDipMix.clear();
+        timelinesRotation.clear();
+    }
+
+    /** @param to May be null. */
+    public function setTimelineData(to:TrackEntry, mixingToArray:Array<TrackEntry>, propertyIDs:IntSet):TrackEntry {
+        if (to != null) mixingToArray.add(to);
+        var lastEntry:TrackEntry = mixingFrom != null ? mixingFrom.setTimelineData(this, mixingToArray, propertyIDs) : this;
+        if (to != null) mixingToArray.pop();
+
+        var mixingTo = mixingToArray.items;
+        var mixingToLast:Int = mixingToArray.size - 1;
+        var timelines = animation.timelines.items;
+        var timelinesCount:Int = animation.timelines.size;
+        var timelineData:IntArray = this.timelineData.setSize(timelinesCount);
+        timelineDipMix.clear();
+        var timelineDipMix = this.timelineDipMix.setSize(timelinesCount);
+        var _gotoLabel_outer:Bool; while (true) { _gotoLabel_outer = false; 
+        var i:Int = 0; while (i < timelinesCount) {
+            var id:Int = (cast(timelines[i], Timeline)).getPropertyId();
+            if (!propertyIDs.add(id))
+                timelineData[i] = @:privateAccess AnimationState.SUBSEQUENT;
+            else if (to == null || !to.hasTimeline(id))
+                timelineData[i] = @:privateAccess AnimationState.FIRST;
+            else {
+                var ii:Int = mixingToLast; while (ii >= 0) {
+                    var entry:TrackEntry = cast(mixingTo[ii], TrackEntry);
+                    if (!entry.hasTimeline(id)) {
+                        if (entry.mixDuration > 0) {
+                            timelineData[i] = @:privateAccess AnimationState.DIP_MIX;
+                            timelineDipMix[i] = entry;
+                            { ii--; _gotoLabel_outer = true; break; }
+                        }
+                        break;
+                    }
+                ii--; } if (_gotoLabel_outer) break;
+                timelineData[i] = @:privateAccess AnimationState.DIP;
+            }
+        i++; } if (_gotoLabel_outer) continue; if (!_gotoLabel_outer) break; } return lastEntry;
+    }
+
+    private function hasTimeline(id:Int):Bool {
+        var timelines = animation.timelines.items;
+        var i:Int = 0; var n:Int = animation.timelines.size; while (i < n) {
+            if ((cast(timelines[i], Timeline)).getPropertyId() == id) return true; i++; }
+        return false;
+    }
+
+    /** The index of the track where this track entry is either current or queued.
+     * <p>
+     * See {@link AnimationState#getCurrent(int)}. */
+    public function getTrackIndex():Int {
+        return trackIndex;
+    }
+
+    /** The animation to apply for this track entry. */
+    public function getAnimation():Animation {
+        return animation;
+    }
+
+    public function setAnimation(animation:Animation):Void {
+        this.animation = animation;
+    }
+
+    /** If true, the animation will repeat. If false it will not, instead its last frame is applied if played beyond its
+     * duration. */
+    public function getLoop():Bool {
+        return loop;
+    }
+
+    public function setLoop(loop:Bool):Void {
+        this.loop = loop;
+    }
+
+    /** Seconds to postpone playing the animation. When a track entry is the current track entry, <code>delay</code> postpones
+     * incrementing the {@link #getTrackTime()}. When a track entry is queued, <code>delay</code> is the time from the start of
+     * the previous animation to when the track entry will become the current track entry. */
+    public function getDelay():Float {
+        return delay;
+    }
+
+    public function setDelay(delay:Float):Void {
+        this.delay = delay;
+    }
+
+    /** Current time in seconds this track entry has been the current track entry. The track time determines
+     * {@link #getAnimationTime()}. The track time can be set to start the animation at a time other than 0, without affecting
+     * looping. */
+    public function getTrackTime():Float {
+        return trackTime;
+    }
+
+    public function setTrackTime(trackTime:Float):Void {
+        this.trackTime = trackTime;
+    }
+
+    /** The track time in seconds when this animation will be removed from the track. Defaults to the highest possible float
+     * value, meaning the animation will be applied until a new animation is set or the track is cleared. If the track end time
+     * is reached, no other animations are queued for playback, and mixing from any previous animations is complete, then the
+     * properties keyed by the animation are set to the setup pose and the track is cleared.
+     * <p>
+     * It may be desired to use {@link AnimationState#addEmptyAnimation(int, float, float)} to mix the properties back to the
+     * setup pose over time, rather than have it happen instantly. */
+    public function getTrackEnd():Float {
+        return trackEnd;
+    }
+
+    public function setTrackEnd(trackEnd:Float):Void {
+        this.trackEnd = trackEnd;
+    }
+
+    /** Seconds when this animation starts, both initially and after looping. Defaults to 0.
+     * <p>
+     * When changing the <code>animationStart</code> time, it often makes sense to set {@link #getAnimationLast()} to the same
+     * value to prevent timeline keys before the start time from triggering. */
+    public function getAnimationStart():Float {
+        return animationStart;
+    }
+
+    public function setAnimationStart(animationStart:Float):Void {
+        this.animationStart = animationStart;
+    }
+
+    /** Seconds for the last frame of this animation. Non-looping animations won't play past this time. Looping animations will
+     * loop back to {@link #getAnimationStart()} at this time. Defaults to the animation {@link Animation#duration}. */
+    public function getAnimationEnd():Float {
+        return animationEnd;
+    }
+
+    public function setAnimationEnd(animationEnd:Float):Void {
+        this.animationEnd = animationEnd;
+    }
+
+    /** The time in seconds this animation was last applied. Some timelines use this for one-time triggers. Eg, when this
+     * animation is applied, event timelines will fire all events between the <code>animationLast</code> time (exclusive) and
+     * <code>animationTime</code> (inclusive). Defaults to -1 to ensure triggers on frame 0 happen the first time this animation
+     * is applied. */
+    public function getAnimationLast():Float {
+        return animationLast;
+    }
+
+    public function setAnimationLast(animationLast:Float):Void {
+        this.animationLast = animationLast;
+        nextAnimationLast = animationLast;
+    }
+
+    /** Uses {@link #getTrackTime()} to compute the <code>animationTime</code>, which is between {@link #getAnimationStart()}
+     * and {@link #getAnimationEnd()}. When the <code>trackTime</code> is 0, the <code>animationTime</code> is equal to the
+     * <code>animationStart</code> time. */
+    public function getAnimationTime():Float {
+        if (loop) {
+            var duration:Float = animationEnd - animationStart;
+            if (duration == 0) return animationStart;
+            return (trackTime % duration) + animationStart;
+        }
+        return MathUtils.min(trackTime + animationStart, animationEnd);
+    }
+
+    /** Multiplier for the delta time when the animation state is updated, causing time for this animation to pass slower or
+     * faster. Defaults to 1.
+     * <p>
+     * If <code>timeScale</code> is 0, any {@link #getMixDuration()} will be ignored.
+     * <p>
+     * See AnimationState {@link AnimationState#getTimeScale()} for affecting all animations. */
+    public function getTimeScale():Float {
+        return timeScale;
+    }
+
+    public function setTimeScale(timeScale:Float):Void {
+        this.timeScale = timeScale;
+    }
+
+    /** The listener for events generated by this track entry, or null.
+     * <p>
+     * A track entry returned from {@link AnimationState#setAnimation(int, Animation, boolean)} is already the current animation
+     * for the track, so the track entry listener {@link AnimationStateListener#start(TrackEntry)} will not be called. */
+    public function getListener():AnimationStateListener {
+        return listener;
+    }
+
+    /** @param listener May be null. */
+    public function setListener(listener:AnimationStateListener):Void {
+        this.listener = listener;
+    }
+
+    /** Values < 1 mix this animation with the setup pose or the skeleton's previous pose. Defaults to 1, which overwrites the
+     * skeleton's previous pose with this animation.
+     * <p>
+     * Typically track 0 is used to completely pose the skeleton, then alpha can be used on higher tracks. It doesn't make sense
+     * to use alpha on track 0 if the skeleton pose is from the last frame render. */
+    public function getAlpha():Float {
+        return alpha;
+    }
+
+    public function setAlpha(alpha:Float):Void {
+        this.alpha = alpha;
+    }
+
+    /** When the mix percentage ({@link #getMixTime()} / {@link #getMixDuration()}) is less than the
+     * <code>eventThreshold</code>, event timelines for the animation being mixed out will be applied. Defaults to 0, so event
+     * timelines are not applied for an animation being mixed out. */
+    public function getEventThreshold():Float {
+        return eventThreshold;
+    }
+
+    public function setEventThreshold(eventThreshold:Float):Void {
+        this.eventThreshold = eventThreshold;
+    }
+
+    /** When the mix percentage ({@link #getMixTime()} / {@link #getMixDuration()}) is less than the
+     * <code>attachmentThreshold</code>, attachment timelines for the animation being mixed out will be applied. Defaults to 0,
+     * so attachment timelines are not applied for an animation being mixed out. */
+    public function getAttachmentThreshold():Float {
+        return attachmentThreshold;
+    }
+
+    public function setAttachmentThreshold(attachmentThreshold:Float):Void {
+        this.attachmentThreshold = attachmentThreshold;
+    }
+
+    /** When the mix percentage ({@link #getMixTime()} / {@link #getMixDuration()}) is less than the
+     * <code>drawOrderThreshold</code>, draw order timelines for the animation being mixed out will be applied. Defaults to 0,
+     * so draw order timelines are not applied for an animation being mixed out. */
+    public function getDrawOrderThreshold():Float {
+        return drawOrderThreshold;
+    }
+
+    public function setDrawOrderThreshold(drawOrderThreshold:Float):Void {
+        this.drawOrderThreshold = drawOrderThreshold;
+    }
+
+    /** The animation queued to start after this animation, or null. <code>next</code> makes up a linked list. */
+    public function getNext():TrackEntry {
+        return next;
+    }
+
+    /** Returns true if at least one loop has been completed.
+     * <p>
+     * See {@link AnimationStateListener#complete(TrackEntry)}. */
+    public function isComplete():Bool {
+        return trackTime >= animationEnd - animationStart;
+    }
+
+    /** Seconds from 0 to the {@link #getMixDuration()} when mixing from the previous animation to this animation. May be
+     * slightly more than <code>mixDuration</code> when the mix is complete. */
+    public function getMixTime():Float {
+        return mixTime;
+    }
+
+    public function setMixTime(mixTime:Float):Void {
+        this.mixTime = mixTime;
+    }
+
+    /** Seconds for mixing from the previous animation to this animation. Defaults to the value provided by AnimationStateData
+     * {@link AnimationStateData#getMix(Animation, Animation)} based on the animation before this animation (if any).
+     * <p>
+     * The <code>mixDuration</code> can be set manually rather than use the value from
+     * {@link AnimationStateData#getMix(Animation, Animation)}. In that case, the <code>mixDuration</code> must be set for a new
+     * track entry before {@link AnimationState#update(float)} is next called.
+     * <p>
+     * When using {@link AnimationState#addAnimation(int, Animation, boolean, float)} with a <code>delay</code> <= 0, note the
+     * {@link #getDelay()} is set using the mix duration from the {@link AnimationStateData}. */
+    public function getMixDuration():Float {
+        return mixDuration;
+    }
+
+    public function setMixDuration(mixDuration:Float):Void {
+        this.mixDuration = mixDuration;
+    }
+
+    /** The track entry for the previous animation when mixing from the previous animation to this animation, or null if no
+     * mixing is currently occuring. When mixing from multiple animations, <code>mixingFrom</code> makes up a linked list. */
+    public function getMixingFrom():TrackEntry {
+        return mixingFrom;
+    }
+
+    /** Resets the rotation directions for mixing this entry's rotate timelines. This can be useful to avoid bones rotating the
+     * long way around when using {@link #alpha} and starting animations on other tracks.
+     * <p>
+     * Mixing involves finding a rotation between two others, which has two possible solutions: the short way or the long way
+     * around. The two rotations likely change over time, so which direction is the short or long way also changes. If the short
+     * way was always chosen, bones would flip to the other side when that direction became the long way. TrackEntry chooses the
+     * short way the first time it is applied and remembers that direction. */
+    public function resetRotationDirections():Void {
+        timelinesRotation.clear();
+    }
+
+    public function toString():String {
+        return animation == null ? "<none>" : animation.name;
+    }
+
+    public function new() {}
+}
+
+class EventQueue {
+    private var AnimationState_this:AnimationState;
+    private var objects:Array<Dynamic> = new Array();
+    public var drainDisabled:Bool = false;
+
+    public function start(entry:TrackEntry):Void {
+        objects.add(EventType.start);
+        objects.add(entry);
+        AnimationState_this.animationsChanged = true;
+    }
+
+    public function interrupt(entry:TrackEntry):Void {
+        objects.add(EventType.interrupt);
+        objects.add(entry);
+    }
+
+    public function end(entry:TrackEntry):Void {
+        objects.add(EventType.end);
+        objects.add(entry);
+        AnimationState_this.animationsChanged = true;
+    }
+
+    public function dispose(entry:TrackEntry):Void {
+        objects.add(EventType.dispose);
+        objects.add(entry);
+    }
+
+    public function complete(entry:TrackEntry):Void {
+        objects.add(EventType.complete);
+        objects.add(entry);
+    }
+
+    public function event(entry:TrackEntry, event:Event):Void {
+        objects.add(EventType.event);
+        objects.add(entry);
+        objects.add(event);
+    }
+
+    public function drain():Void {
+        if (drainDisabled) return; // Not reentrant.
+        drainDisabled = true;
+
+        var objects:Array<Dynamic> = this.objects;
+        var listeners:Array<AnimationStateListener> = AnimationState_this.listeners;
+        var i:Int = 0; while (i < objects.size) {
+            var type:EventType = cast(objects.get(i), EventType);
+            var entry:TrackEntry = cast(objects.get(i + 1), TrackEntry);
+            while(true) { var _switchCond1 = (type); {
+            if (_switchCond1 == spine.EventType.start) {if (entry.listener != null) entry.listener.start(entry);
+                var ii:Int = 0; while (ii < listeners.size) {
+                    listeners.get(ii).start(entry); ii++; }
+                break;
+            } else if (_switchCond1 == spine.EventType.interrupt) {if (entry.listener != null) entry.listener.interrupt(entry);
+                var ii:Int = 0; while (ii < listeners.size) {
+                    listeners.get(ii).interrupt(entry); ii++; }
+                break;
+            } else if (_switchCond1 == spine.EventType.end) {if (entry.listener != null) entry.listener.end(entry);
+                var ii:Int = 0; while (ii < listeners.size) {
+                    listeners.get(ii).end(entry); ii++; }
+                // Fall through.
+                if (entry.listener != null) entry.listener.dispose(entry);
+                var ii:Int = 0; while (ii < listeners.size) {
+                    listeners.get(ii).dispose(entry); ii++; }
+                AnimationState_this.trackEntryPool.free(entry);
+                break;
+            } else if (_switchCond1 == spine.EventType.dispose) {if (entry.listener != null) entry.listener.dispose(entry);
+                var ii:Int = 0; while (ii < listeners.size) {
+                    listeners.get(ii).dispose(entry); ii++; }
+                AnimationState_this.trackEntryPool.free(entry);
+                break;
+            } else if (_switchCond1 == spine.EventType.complete) {if (entry.listener != null) entry.listener.complete(entry);
+                var ii:Int = 0; while (ii < listeners.size) {
+                    listeners.get(ii).complete(entry); ii++; }
+                break;
+            } else if (_switchCond1 == spine.EventType.event) {var event:Event = cast(objects.get(i++ + 2), Event);
+                if (entry.listener != null) entry.listener.event(entry, event);
+                var ii:Int = 0; while (ii < listeners.size) {
+                    listeners.get(ii).event(entry, event); ii++; }
+                break;
+            } } break; }
+        i += 2; }
+        clear();
+
+        drainDisabled = false;
+    }
+
+    public function clear():Void {
+        objects.clear();
+    }
+
+    public function new() {}
+}
+
+@:enum abstract EventType(Int) from Int to Int {
+    var start = 0; var interrupt = 1; var end = 2; var dispose = 3; var complete = 4; var event = 5;
+}
+
+    /** The interface which can be implemented to receive TrackEntry events.
+     * <p>
+     * See TrackEntry {@link TrackEntry#setListener(AnimationStateListener)} and AnimationState
+     * {@link AnimationState#addListener(AnimationStateListener)}. */
+interface AnimationStateListener {
+    /** Invoked when this entry has been set as the current entry. */
+    public function start(entry:TrackEntry):Void;
+
+    /** Invoked when another entry has replaced this entry as the current entry. This entry may continue being applied for
+     * mixing. */
+    public function interrupt(entry:TrackEntry):Void;
+
+    /** Invoked when this entry is no longer the current entry and will never be applied again. */
+    public function end(entry:TrackEntry):Void;
+
+    /** Invoked when this entry will be disposed. This may occur without the entry ever being set as the current entry.
+     * References to the entry should not be kept after <code>dispose</code> is called, as it may be destroyed or reused. */
+    public function dispose(entry:TrackEntry):Void;
+
+    /** Invoked every time this entry's animation completes a loop. */
+    public function complete(entry:TrackEntry):Void;
+
+    /** Invoked when this entry's animation triggers an event. */
+    public function event(entry:TrackEntry, event:Event):Void;
+}
+
+class AnimationStateAdapter implements AnimationStateListener {
+    public function start(entry:TrackEntry):Void {
+    }
+
+    public function interrupt(entry:TrackEntry):Void {
+    }
+
+    public function end(entry:TrackEntry):Void {
+    }
+
+    public function dispose(entry:TrackEntry):Void {
+    }
+
+    public function complete(entry:TrackEntry):Void {
+    }
+
+    public function event(entry:TrackEntry, event:Event):Void {
+    }
+
+    public function new() {}
+}
+
+private class TrackEntryPool extends Pool<TrackEntry> {
+    override function newObject() {
+        return new TrackEntry();
+    }
+}
+
+
+
+class EventType_enum {
+
+    public inline static var start_value = 0;
+    public inline static var interrupt_value = 1;
+    public inline static var end_value = 2;
+    public inline static var dispose_value = 3;
+    public inline static var complete_value = 4;
+    public inline static var event_value = 5;
+
+    public inline static var start_name = "start";
+    public inline static var interrupt_name = "interrupt";
+    public inline static var end_name = "end";
+    public inline static var dispose_name = "dispose";
+    public inline static var complete_name = "complete";
+    public inline static var event_name = "event";
+
+    public static function valueOf(value:String):EventType {
+        return switch (value) {
+            case "start": EventType.start;
+            case "interrupt": EventType.interrupt;
+            case "end": EventType.end;
+            case "dispose": EventType.dispose;
+            case "complete": EventType.complete;
+            case "event": EventType.event;
+            default: EventType.start;
+        };
+    }
+
+}

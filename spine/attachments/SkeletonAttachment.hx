@@ -28,8 +28,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-package spine;
+package spine.attachments;
 
-interface Updatable {
-    public function update():Void;
+import spine.Skeleton;
+
+/** Attachment that displays a skeleton. */
+class SkeletonAttachment extends Attachment {
+    private var skeleton:Skeleton;
+
+    public function new(name:String) {
+        super(name);
+    }
+
+    /** @return May return null. */
+    public function getSkeleton():Skeleton {
+        return skeleton;
+    }
+
+    /** @param skeleton May be null. */
+    public function setSkeleton(skeleton:Skeleton):Void {
+        this.skeleton = skeleton;
+    }
 }

@@ -30,54 +30,67 @@
 
 package spine.attachments;
 
-import spine.support.graphics.Color;
-import spine.PathConstraint;
+import spine.support.math.MathUtils.*;
 
-/** An attachment whose vertices make up a composite Bezier curve.
+import spine.support.graphics.Color;
+import spine.support.math.Vector2;
+import spine.Bone;
+
+/** An attachment which is a single point and a rotation. This can be used to spawn projectiles, particles, etc. A bone can be
+ * used in similar ways, but a PointAttachment is slightly less expensive to compute and can be hidden, shown, and placed in a
+ * skin.
  * <p>
- * See {@link PathConstraint} and <a href="http://esotericsoftware.com/spine-paths">Paths</a> in the Spine User Guide. */
-class PathAttachment extends VertexAttachment {
-    public var lengths:FloatArray;
-    public var closed:Bool = false; public var constantSpeed:Bool = false;
+ * See <a href="http://esotericsoftware.com/spine-point-attachments">Point Attachments</a> in the Spine User Guide. */
+class PointAttachment extends Attachment {
+    public var x:Float = 0; public var y:Float = 0; public var rotation:Float = 0;
 
     // Nonessential.
-    public var color:Color = new Color(1, 0.5, 0, 1); // ff7f00ff
+    public var color:Color = new Color(0.9451, 0.9451, 0, 1); // f1f100ff
 
     public function new(name:String) {
         super(name);
     }
 
-    /** If true, the start and end knots are connected. */
-    public function getClosed():Bool {
-        return closed;
+    public function getX():Float {
+        return x;
     }
 
-    public function setClosed(closed:Bool):Void {
-        this.closed = closed;
+    public function setX(x:Float):Void {
+        this.x = x;
     }
 
-    /** If true, additional calculations are performed to make calculating positions along the path more accurate. If false, fewer
-     * calculations are performed but calculating positions along the path is less accurate. */
-    public function getConstantSpeed():Bool {
-        return constantSpeed;
+    public function getY():Float {
+        return y;
     }
 
-    public function setConstantSpeed(constantSpeed:Bool):Void {
-        this.constantSpeed = constantSpeed;
+    public function setY(y:Float):Void {
+        this.y = y;
     }
 
-    /** The lengths along the path in the setup pose from the start of the path to the end of each Bezier curve. */
-    public function getLengths():FloatArray {
-        return lengths;
+    public function getRotation():Float {
+        return rotation;
     }
 
-    public function setLengths(lengths:FloatArray):Void {
-        this.lengths = lengths;
+    public function setRotation(rotation:Float):Void {
+        this.rotation = rotation;
     }
 
-    /** The color of the path as it was in Spine. Available only when nonessential data was exported. Paths are not usually
-     * rendered at runtime. */
+    /** The color of the point attachment as it was in Spine. Available only when nonessential data was exported. Point attachments
+     * are not usually rendered at runtime. */
     public function getColor():Color {
         return color;
+    }
+
+    public function computeWorldPosition(bone:Bone, point:Vector2):Vector2 {
+        point.x = x * bone.getA() + y * bone.getB() + bone.getWorldX();
+        point.y = x * bone.getC() + y * bone.getD() + bone.getWorldY();
+        return point;
+    }
+
+    public function computeWorldRotation(bone:Bone):Float {
+        var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
+        var x:Float = cos * bone.getA() + sin * bone.getB();
+        var y:Float = cos * bone.getC() + sin * bone.getD();
+        return cast(Math.atan2(y, x) * radDeg, Float);
     }
 }

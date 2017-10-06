@@ -1,18 +1,17 @@
 /******************************************************************************
- * Spine Runtimes Software License
- * Version 2.3
+ * Spine Runtimes Software License v2.5
  *
- * Copyright (c) 2013-2015, Esoteric Software
+ * Copyright (c) 2013-2016, Esoteric Software
  * All rights reserved.
  *
- * You are granted a perpetual, non-exclusive, non-sublicensable and
- * non-transferable license to use, install, execute and perform the Spine
- * Runtimes Software (the "Software") and derivative works solely for personal
- * or internal use. Without the written permission of Esoteric Software (see
- * Section 2 of the Spine Software License Agreement), you may not (a) modify,
- * translate, adapt or otherwise create derivative works, improvements of the
- * Software or develop new applications using the Software or (b) remove,
- * delete, alter or obscure any trademarks or any copyright, trademark, patent
+ * You are granted a perpetual, non-exclusive, non-sublicensable, and
+ * non-transferable license to use, install, execute, and perform the Spine
+ * Runtimes software and derivative works solely for personal or internal
+ * use. Without the written permission of Esoteric Software (see Section 2 of
+ * the Spine Software License Agreement), you may not (a) modify, translate,
+ * adapt, or develop new applications using the Spine Runtimes or otherwise
+ * create derivative works or improvements of the Spine Runtimes or (b) remove,
+ * delete, alter, or obscure any trademarks or any copyright, trademark, patent,
  * or other intellectual property or proprietary rights notices on or in the
  * Software, including any copy thereof. Redistributions in binary or source
  * form must include this license and terms.
@@ -22,154 +21,145 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
  * EVENT SHALL ESOTERIC SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS INTERRUPTION, OR LOSS OF
+ * USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine.attachments;
 
+import spine.support.concurrent.atomic.AtomicInteger;
+
+import spine.support.utils.FloatArray;
 import spine.Bone;
 import spine.Skeleton;
 import spine.Slot;
 
-class VertexAttachment extends Attachment
-{
-    public var bones : Array<Int>;
-    public var vertices : Array<Float>;
-    public var worldVerticesLength : Int = 0;
+/** Base class for an attachment with vertices that are transformed by one or more bones and can be deformed by a slot's
+ * {@link Slot#getAttachmentVertices()}. */
+class VertexAttachment extends Attachment {
+    private static var nextID:AtomicInteger = new AtomicInteger();
 
-    public function new(name : String)
-    {
+    private var id:Int = (nextID.getAndIncrement() & 65535) << 11;
+    public var bones:IntArray;
+    public var vertices:FloatArray;
+    public var worldVerticesLength:Int = 0;
+
+    public function new(name:String) {
         super(name);
     }
 
-    public function computeWorldVertices(slot : Slot, worldVertices : Array<Float>) : Void
-    {
-        computeWorldVertices2(slot, 0, worldVerticesLength, worldVertices, 0);
-    }
-
-    /** Transforms local vertices to world coordinates.
-	 * @param start The index of the first local vertex value to transform. Each vertex has 2 values, x and y.
-	 * @param count The number of world vertex values to output. Must be <= {@link #getWorldVerticesLength()} - start.
-	 * @param worldVertices The output world vertices. Must have a length >= offset + count.
-	 * @param offset The worldVertices index to begin writing values. */
-    public function computeWorldVertices2(slot : Slot, start : Int, count : Int, worldVertices : Array<Float>, offset : Int) : Void
-    {
-        count += offset;
-        var skeleton : Skeleton = slot.skeleton;
-        var x : Float = skeleton.x;
-        var y : Float = skeleton.y;
-        var deformArray : Array<Float> = slot.attachmentVertices;
-        var vertices : Array<Float> = this.vertices;
-        var bones : Array<Int> = this.bones;
-        var deform : Array<Float>;
-
-        var v : Int;
-        var w : Int;
-        var n : Int;
-        var i : Int;
-        var skip : Int;
-        var b : Int;
-        var f : Int;
-        var vx : Float;
-        var vy : Float;
-        var wx : Float;
-        var wy : Float;
-        var bone : Bone;
-
-        if (bones == null)
-        {
-            if (deformArray.length > 0)
-            {
-                vertices = deformArray;
-            }
-            bone = slot.bone;
-            x += bone.worldX;
-            y += bone.worldY;
-            var a : Float = bone.a;
-            var bb : Float = bone.b;
-            var c : Float = bone.c;
-            var d : Float = bone.d;
-            v = start;
-            w = offset;
-            while (w < count)
-            {
-                vx = vertices[v]; vy = vertices[v + 1];
-                worldVertices[w] = vx * a + vy * bb + x;
+    /** Transforms the attachment's local {@link #getVertices()} to world coordinates. If the slot has
+     * {@link Slot#getAttachmentVertices()}, they are used to deform the vertices.
+     * <p>
+     * See <a href="http://esotericsoftware.com/spine-runtime-skeletons#World-transforms">World transforms</a> in the Spine
+     * Runtimes Guide.
+     * @param start The index of the first {@link #getVertices()} value to transform. Each vertex has 2 values, x and y.
+     * @param count The number of world vertex values to output. Must be <= {@link #getWorldVerticesLength()} - <code>start</code>.
+     * @param worldVertices The output world vertices. Must have a length >= <code>offset</code> + <code>count</code> *
+     *           <code>stride</code> / 2.
+     * @param offset The <code>worldVertices</code> index to begin writing values.
+     * @param stride The number of <code>worldVertices</code> entries between the value pairs written. */
+    public function computeWorldVertices(slot:Slot, start:Int, count:Int, worldVertices:FloatArray, offset:Int, stride:Int):Void {
+        count = offset + (count >> 1) * stride;
+        var skeleton:Skeleton = slot.getSkeleton();
+        var deformArray:FloatArray = slot.getAttachmentVertices();
+        var vertices:FloatArray = this.vertices;
+        var bones:IntArray = this.bones;
+        if (bones == null) {
+            if (deformArray.size > 0) vertices = deformArray.items;
+            var bone:Bone = slot.getBone();
+            var x:Float = bone.getWorldX(); var y:Float = bone.getWorldY();
+            var a:Float = bone.getA(); var b:Float = bone.getB(); var c:Float = bone.getC(); var d:Float = bone.getD();
+            var v:Int = start; var w:Int = offset; while (w < count) {
+                var vx:Float = vertices[v]; var vy:Float = vertices[v + 1];
+                worldVertices[w] = vx * a + vy * b + x;
                 worldVertices[w + 1] = vx * c + vy * d + y;
-                v += 2;
-                w += 2;
-            }
+            v += 2; w += stride; }
             return;
         }
-        v = 0;skip = 0;
-        i = 0;
-        while (i < start)
-        {
-            n = bones[v];
+        var v:Int = 0; var skip:Int = 0;
+        var i:Int = 0; while (i < start) {
+            var n:Int = bones[v];
             v += n + 1;
             skip += n;
-            i += 2;
-        }
-        var skeletonBones : Array<Bone> = skeleton.bones;
-        if (deformArray.length == 0)
-        {
-            w = offset;
-            b = spine.compat.Compat.parseInt(skip * 3);
-            while (w < count)
-            {
-                wx = x;wy = y;
-                n = bones[v++];
+        i += 2; }
+        var skeletonBones = skeleton.getBones().items;
+        if (deformArray.size == 0) {
+            var w:Int = offset; var b:Int = skip * 3; while (w < count) {
+                var wx:Float = 0; var wy:Float = 0;
+                var n:Int = bones[v++];
                 n += v;
-                                while (v < n)
-                {
-                    bone = skeletonBones[bones[v]];
-                    vx = vertices[b];vy = vertices[b + 1];var weight : Float = vertices[b + 2];
-                    wx += (vx * bone.a + vy * bone.b + bone.worldX) * weight;
-                    wy += (vx * bone.c + vy * bone.d + bone.worldY) * weight;
-                    v++;
-                    b += 3;
-                }
+                while (v < n) {
+                    var bone:Bone = cast(skeletonBones[bones[v]], Bone);
+                    var vx:Float = vertices[b]; var vy:Float = vertices[b + 1]; var weight:Float = vertices[b + 2];
+                    wx += (vx * bone.getA() + vy * bone.getB() + bone.getWorldX()) * weight;
+                    wy += (vx * bone.getC() + vy * bone.getD() + bone.getWorldY()) * weight;
+                v++; b += 3; }
                 worldVertices[w] = wx;
                 worldVertices[w + 1] = wy;
-                w += 2;
-            }
-        }
-        else
-        {
-            deform = deformArray;
-            w = offset;
-            b = spine.compat.Compat.parseInt(skip * 3);
-            f = skip << 1;
-            while (w < count)
-            {
-                wx = x;wy = y;
-                n = bones[v++];
+            w += stride; }
+        } else {
+            var deform:FloatArray = deformArray.items;
+            var w:Int = offset; var b:Int = skip * 3; var f:Int = skip << 1; while (w < count) {
+                var wx:Float = 0; var wy:Float = 0;
+                var n:Int = bones[v++];
                 n += v;
-                while (v < n)
-                {
-                    bone = skeletonBones[bones[v]];
-                    vx = vertices[b] + deform[f];vy = vertices[b + 1] + deform[f + 1];
-                    var weight = vertices[b + 2];
-                    wx += (vx * bone.a + vy * bone.b + bone.worldX) * weight;
-                    wy += (vx * bone.c + vy * bone.d + bone.worldY) * weight;
-                    v++;
-                    b += 3;
-                    f += 2;
-                }
+                while (v < n) {
+                    var bone:Bone = cast(skeletonBones[bones[v]], Bone);
+                    var vx:Float = vertices[b] + deform[f]; var vy:Float = vertices[b + 1] + deform[f + 1]; var weight:Float = vertices[b + 2];
+                    wx += (vx * bone.getA() + vy * bone.getB() + bone.getWorldX()) * weight;
+                    wy += (vx * bone.getC() + vy * bone.getD() + bone.getWorldY()) * weight;
+                v++; b += 3; f += 2; }
                 worldVertices[w] = wx;
                 worldVertices[w + 1] = wy;
-                w += 2;
-            }
+            w += stride; }
         }
     }
 
-    /** Returns true if a deform originally applied to the specified attachment should be applied to this attachment. */
-    public function applyDeform(sourceAttachment : VertexAttachment) : Bool
-    {
+    /** Returns true if a deform originally applied to the specified attachment should be applied to this attachment. The default
+     * implementation returns true only when <code>sourceAttachment</code> is this attachment. */
+    public function applyDeform(sourceAttachment:VertexAttachment):Bool {
         return this == sourceAttachment;
+    }
+
+    /** The bones which affect the {@link #getVertices()}. The array entries are, for each vertex, the number of bones affecting
+     * the vertex followed by that many bone indices, which is the index of the bone in {@link Skeleton#getBones()}. Will be null
+     * if this attachment has no weights. */
+    public function getBones():IntArray {
+        return bones;
+    }
+
+    /** @param bones May be null if this attachment has no weights. */
+    public function setBones(bones:IntArray):Void {
+        this.bones = bones;
+    }
+
+    /** The vertex positions in the bone's coordinate system. For a non-weighted attachment, the values are <code>x,y</code>
+     * entries for each vertex. For a weighted attachment, the values are <code>x,y,weight</code> entries for each bone affecting
+     * each vertex. */
+    public function getVertices():FloatArray {
+        return vertices;
+    }
+
+    public function setVertices(vertices:FloatArray):Void {
+        this.vertices = vertices;
+    }
+
+    /** The maximum number of world vertex values that can be output by
+     * {@link #computeWorldVertices(Slot, int, int, float[], int, int)} using the <code>count</code> parameter. */
+    public function getWorldVerticesLength():Int {
+        return worldVerticesLength;
+    }
+
+    public function setWorldVerticesLength(worldVerticesLength:Int):Void {
+        this.worldVerticesLength = worldVerticesLength;
+    }
+
+    /** Returns a unique ID for this attachment. */
+    public function getId():Int {
+        return id;
     }
 }

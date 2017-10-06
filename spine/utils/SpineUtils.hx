@@ -28,8 +28,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-package spine;
+package spine.utils;
 
-interface Updatable {
-    public function update():Void;
+class SpineUtils {
+    inline public static var PI:Float = 3.1415927;
+    inline public static var PI2:Float = PI * 2;
+    public static var radiansToDegrees:Float = 180 / PI;
+    public static var radDeg:Float = radiansToDegrees;
+    public static var degreesToRadians:Float = PI / 180;
+    public static var degRad:Float = degreesToRadians;
+
+    public static function cosDeg(angle:Float):Float {
+        return cast(Math.cos(angle * degRad), Float);
+    }
+
+    public static function sinDeg(angle:Float):Float {
+        return cast(Math.sin(angle * degRad), Float);
+    }
+
+    public static function cos(angle:Float):Float {
+        return cast(Math.cos(angle), Float);
+    }
+
+    public static function sin(angle:Float):Float {
+        return cast(Math.sin(angle), Float);
+    }
+
+    public static function atan2(y:Float, x:Float):Float {
+        return cast(Math.atan2(y, x), Float);
+    }
+
+    public function new() {}
 }

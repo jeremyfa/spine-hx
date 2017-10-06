@@ -30,6 +30,8 @@
 
 package spine;
 
-interface Updatable {
-    public function update():Void;
+/** The interface for all constraints. */
+interface Constraint extends Updatable {
+    /** The ordinal for the order a skeleton's constraints will be applied. */
+    public function getOrder():Int;
 }

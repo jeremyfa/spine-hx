@@ -28,8 +28,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-package spine;
+package spine.utils;
 
-interface Updatable {
-    public function update():Void;
+import spine.support.utils.Pool;
+import spine.Skeleton;
+import spine.SkeletonData;
+
+class SkeletonPool extends Pool<Skeleton> {
+    private var skeletonData:SkeletonData;
+
+    /*public function new(skeletonData:SkeletonData) {
+        this.skeletonData = skeletonData;
+    }*/
+
+    /*public function new(skeletonData:SkeletonData, initialCapacity:Int) {
+        super(initialCapacity);
+        this.skeletonData = skeletonData;
+    }*/
+
+    public function new(skeletonData:SkeletonData, initialCapacity:Int, max:Int) {
+        super(initialCapacity, max);
+        this.skeletonData = skeletonData;
+    }
+
+    override public function newObject():Skeleton {
+        return new Skeleton(skeletonData);
+    }
 }

@@ -28,8 +28,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-package spine;
+package spine.attachments;
 
-interface Updatable {
-    public function update():Void;
+import spine.support.graphics.Color;
+import spine.SlotData;
+
+/** An attachment with vertices that make up a polygon used for clipping the rendering of other attachments. */
+class ClippingAttachment extends VertexAttachment {
+    public var endSlot:SlotData;
+
+    // Nonessential.
+    public var color:Color = new Color(0.2275, 0.2275, 0.8078, 1); // ce3a3aff
+
+    public function new(name:String) {
+        super(name);
+    }
+
+    /** Clipping is performed between the clipping polygon's slot and the end slot. Returns -1 if clipping is done until the end of
+     * the skeleton's rendering. */
+    public function getEndSlot():SlotData {
+        return endSlot;
+    }
+
+    public function setEndSlot(endSlot:SlotData):Void {
+        this.endSlot = endSlot;
+    }
+
+    /** The color of the clipping polygon as it was in Spine. Available only when nonessential data was exported. Clipping polygons
+     * are not usually rendered at runtime. */
+    public function getColor():Color {
+        return color;
+    }
 }
