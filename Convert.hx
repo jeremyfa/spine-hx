@@ -22,7 +22,7 @@ class Convert {
         if (FileSystem.exists('./spine-runtimes/.git')) {
             println('Update official spine-runtimes repository\u2026');
             setCwd('spine-runtimes');
-            //command('git', ['pull', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['pull', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
             setCwd('..');
         }
         else {
@@ -32,7 +32,7 @@ class Convert {
 
         // Delete previously converted files
         println('Delete previously converted files\u2026');
-        //deleteRecursive('spine', 'support');
+        deleteRecursive('spine', 'support');
 
         // Convert
         var ctx = {
@@ -1399,12 +1399,6 @@ using StringTools;
                             }
                         }
 
-                        /*println('inline: ' + isInline);
-                        println('init: ' + forInit);
-                        println('cond: ' + forCondition);
-                        println('incr: ' + forIncrement);*/
-                        //exit(0);
-
                     }
                     else if (controls.exists(word)) {
                         haxe += word;
@@ -1615,8 +1609,6 @@ using StringTools;
                             haxe += '@:enum abstract ';
                         }
 
-                        //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
-
                         if (keyword == 'enum') {
                             inEnumName = name;
                             haxe += name + '(Int) from Int to Int ';
@@ -1653,7 +1645,6 @@ using StringTools;
 
                         var varModifiers:Array<String> = [];
 
-                        //println('PROPERTY: ' + RE_PROPERTY.matched(0));
                         var name = RE_PROPERTY.matched(3);
                         var type = convertType(RE_PROPERTY.matched(2));
 
@@ -1732,8 +1723,6 @@ using StringTools;
                     }
                     else if (RE_CONSTRUCTOR.match(after)) {
 
-                        //println('CONSTRUCTOR: ' + RE_CONSTRUCTOR.matched(0));
-
                         var skip = false;
                         if (inEnum) {
                             skip = true;
@@ -1804,8 +1793,6 @@ using StringTools;
 
                     }
                     else if (RE_METHOD.match(after)) {
-
-                        //println('METHOD: ' + RE_METHOD.matched(0));
 
                         var modifiers = convertModifiers(RE_METHOD.matched(1));
                         var name = RE_METHOD.matched(3);
@@ -1975,8 +1962,6 @@ using StringTools;
                     beforeEnumBraces = openBraces;
                     haxe += '@:enum abstract ';
                 }
-
-                //println(keyword.toUpperCase() + ': ' + RE_DECL.matched(0));
 
                 if (keyword == 'enum') {
                     inEnumName = name;
@@ -2199,7 +2184,7 @@ using StringTools;
     static function fixCompilerErrors(ctx:ConvertContext):Void {
 
         var pass = 1;
-        var maxPass = 6;
+        var maxPass = 8;
         var filesCache:Map<String,String> = new Map();
 
         function getFile(path:String) {
@@ -2222,6 +2207,7 @@ using StringTools;
                 File.saveContent(path, filesCache.get(path));
             }
             filesCache = new Map();
+            var numFixed = 0;
 
             // Keep track of the changes we make on the files so that
             // we can still find an error position on a modified file.
@@ -2232,7 +2218,7 @@ using StringTools;
 
             for (item in diagnostics) {
 
-                if (item.location == 'characters' && pass < maxPass / 2) {
+                if (item.location == 'characters') {
 
                     // Take previous changes in account on the range
                     var lineChanges = changes.get(item.filePath+':'+item.line);
@@ -2247,8 +2233,8 @@ using StringTools;
                         }
                     }
 
-                    //println('[diagnostic] ' + item.message.replace("\n", ' '));
                     if (item.message.startsWith('Float should be Int')) {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2282,6 +2268,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (item.message == 'Unknown identifier : binarySearch') {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2299,6 +2286,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (item.message == 'Current class does not have a superclass') {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2317,6 +2305,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (item.message.startsWith('Unknown identifier : ')) {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2344,6 +2333,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (item.message == 'Too many arguments' || item.message.startsWith('spine.Bone should be Float')) {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2364,6 +2354,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (item.message == 'Not enough arguments, expected step:Int') {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2388,6 +2379,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (item.message.startsWith('spine.support.utils.FloatArray should be Float')) {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2407,6 +2399,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (RE_ERROR_IDENTIFIER_NOT_PART.match(item.message)) {
+                        numFixed++;
                         var identifier = RE_ERROR_IDENTIFIER_NOT_PART.matched(1);
                         var newIdentifier = identifier;
 
@@ -2433,6 +2426,7 @@ using StringTools;
 
                     }
                     else if (RE_ERROR_SHOULD_BE.match(item.message)) {
+                        numFixed++;
                         var type = RE_ERROR_SHOULD_BE.matched(1);
 
                         var file = getFile(item.filePath);
@@ -2457,13 +2451,14 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
 
                     }
-                } else if (item.location == 'lines' && pass >= maxPass / 2) {
+                } else if (item.location == 'lines') {
                     if (RE_ERROR_FIELD_NEEDED_BY.match(item.message)) {
 
                         var missing = RE_ERROR_FIELD_NEEDED_BY.matched(1);
                         var parent = RE_ERROR_FIELD_NEEDED_BY.matched(2);
                         var parentInfo = ctx.types.get(parent);
                         if (parentInfo != null && parentInfo.methods.exists(missing)) {
+                            numFixed++;
 
                             var file = getFile(item.filePath);
 
@@ -2497,6 +2492,7 @@ using StringTools;
                         }
                     }
                     else if (RE_ERROR_FIELD_OVERRIDE.match(item.message)) {
+                        numFixed++;
 
                         var field = RE_ERROR_FIELD_OVERRIDE.matched(1);
                         var parent = RE_ERROR_FIELD_OVERRIDE.matched(2);
@@ -2517,20 +2513,31 @@ using StringTools;
                 }
             }
 
+            if (numFixed == 0) {
+                if (diagnostics.length > 0) {
+                    println('    -> There are still errors that could not be fixed\u2026');
+                } else {
+                    println('    -> Everything has been fixed!');
+                }
+                break;
+            }
+            else {
+                println('    -> Fixed ' + numFixed + ' error' + (numFixed != 1 ? 's' : ''));
+            }
             pass++;
         }
 
         for (path in filesCache.keys()) {
-            File.saveContent(path, filesCache.get(path));
+            var data = filesCache.get(path);
+            data = data.replace('/*LINE*/', '\n');
+            data = data.replace('/*TAB*/', '    ');
+            File.saveContent(path, data);
         }
 
     } //fixCompilerErrors
 
     /** Parse haxe compiler output and extract info */
     public static function parseCompilerOutput(output:String, ?options:ParseCompilerOutputOptions):Array<HaxeCompilerOutputElement> {
-
-        //println(output);
-        //exit(0);
 
         if (options == null) {
             options = {};
