@@ -8,7 +8,8 @@ class ArrayExtensions<T> {
             array.splice(size, size - len);
         }
         else if (len < size) {
-            array[size - 1] = null;
+            var dArray:Array<Dynamic> = array;
+            dArray[size - 1] = null;
         }
         return array;
     }
