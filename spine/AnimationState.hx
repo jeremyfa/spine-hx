@@ -1097,10 +1097,10 @@ class EventQueue {
     var start = 0; var interrupt = 1; var end = 2; var dispose = 3; var complete = 4; var event = 5;
 }
 
-    /** The interface which can be implemented to receive TrackEntry events.
-     * <p>
-     * See TrackEntry {@link TrackEntry#setListener(AnimationStateListener)} and AnimationState
-     * {@link AnimationState#addListener(AnimationStateListener)}. */
+/** The interface which can be implemented to receive TrackEntry events.
+ * <p>
+ * See TrackEntry {@link TrackEntry#setListener(AnimationStateListener)} and AnimationState
+ * {@link AnimationState#addListener(AnimationStateListener)}. */
 interface AnimationStateListener {
     /** Invoked when this entry has been set as the current entry. */
     public function start(entry:TrackEntry):Void;

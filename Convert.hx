@@ -2137,7 +2137,11 @@ using StringTools;
 
         for (line in lines) {
             if (lastWasInSub && cleanedCode(line, { canBeInComment: true }).trim() == '') {
-                subLines.push(line);
+                if (line.startsWith('    ')) {
+                    subLines.push(line.substring(4));
+                } else {
+                    subLines.push(line);
+                }
             }
             else {
                 lastWasInSub = false;
@@ -2204,7 +2208,10 @@ using StringTools;
             println('[run haxe $pass]');
 
             for (path in filesCache.keys()) {
-                File.saveContent(path, filesCache.get(path));
+                var data = filesCache.get(path);
+                data = data.replace('/*LINE*/', '\n');
+                data = data.replace('/*TAB*/', '    ');
+                File.saveContent(path, data);
             }
             filesCache = new Map();
             var numFixed = 0;

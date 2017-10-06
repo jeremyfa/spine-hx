@@ -165,18 +165,18 @@ class PathConstraintData {
     //public static var values:PositionMode[] = PositionMode.values();
 }
 
-    /** Controls how bones after the first bone are positioned along the path.
-     * <p>
-     * See <a href="http://esotericsoftware.com/spine-path-constraints#Spacing-mode">Spacing mode</a> in the Spine User Guide. */
+/** Controls how bones after the first bone are positioned along the path.
+ * <p>
+ * See <a href="http://esotericsoftware.com/spine-path-constraints#Spacing-mode">Spacing mode</a> in the Spine User Guide. */
 @:enum abstract SpacingMode(Int) from Int to Int {
     var length = 0; var fixed = 1; var percent = 2;
 
     //public static var values:SpacingMode[] = SpacingMode.values();
 }
 
-    /** Controls how bones are rotated, translated, and scaled to match the path.
-     * <p>
-     * See <a href="http://esotericsoftware.com/spine-path-constraints#Rotate-mode">Rotate mode</a> in the Spine User Guide. */
+/** Controls how bones are rotated, translated, and scaled to match the path.
+ * <p>
+ * See <a href="http://esotericsoftware.com/spine-path-constraints#Rotate-mode">Rotate mode</a> in the Spine User Guide. */
 @:enum abstract RotateMode(Int) from Int to Int {
     var tangent = 0; var chain = 1; var chainScale = 2;
 

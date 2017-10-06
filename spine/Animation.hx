@@ -159,9 +159,9 @@ interface Timeline {
     public function getPropertyId():Int;
 }
 
-    /** Controls how a timeline is mixed with the setup or current pose.
-     * <p>
-     * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixPose, MixDirection)}. */
+/** Controls how a timeline is mixed with the setup or current pose.
+ * <p>
+ * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixPose, MixDirection)}. */
 @:enum abstract MixPose(Int) from Int to Int {
     /** The timeline value is mixed with the setup pose (the current pose is not used). */
     var setup = 0;
@@ -174,10 +174,10 @@ interface Timeline {
     var currentLayered = 2;
 }
 
-    /** Indicates whether a timeline's <code>alpha</code> is mixing out over time toward 0 (the setup or current pose) or mixing in
-     * toward 1 (the timeline's pose).
-     * <p>
-     * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixPose, MixDirection)}. */
+/** Indicates whether a timeline's <code>alpha</code> is mixing out over time toward 0 (the setup or current pose) or mixing in
+ * toward 1 (the timeline's pose).
+ * <p>
+ * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixPose, MixDirection)}. */
 @:enum abstract MixDirection(Int) from Int to Int {
     var directionIn = 0; var directionOut = 1;
 }
@@ -191,8 +191,10 @@ interface Timeline {
     var twoColor = 14;
 }
 
-    /** The base class for timelines that use interpolation between key frame values. */
-class CurveTimeline implements Timeline {/*LINE*//*TAB*/public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {  }/*LINE*//*TAB*/public function getPropertyId():Int { return 0; }
+/** The base class for timelines that use interpolation between key frame values. */
+class CurveTimeline implements Timeline {
+    public function getPropertyId():Int { return 0; }
+    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {  }
     inline public static var LINEAR:Float = 0; inline public static var STEPPED:Float = 1; inline public static var BEZIER:Float = 2;
     inline private static var BEZIER_SIZE:Int = 10 * 2 - 1;
 
@@ -278,7 +280,7 @@ class CurveTimeline implements Timeline {/*LINE*//*TAB*/public function apply(sk
     }
 }
 
-    /** Changes a bone's local {@link Bone#getRotation()}. */
+/** Changes a bone's local {@link Bone#getRotation()}. */
 class RotateTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 2;
     inline public static var PREV_TIME:Int = -2; inline public static var PREV_ROTATION:Int = -1;
@@ -372,7 +374,7 @@ class RotateTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a bone's local {@link Bone#getX()} and {@link Bone#getY()}. */
+/** Changes a bone's local {@link Bone#getX()} and {@link Bone#getY()}. */
 class TranslateTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 3;
     inline public static var PREV_TIME:Int = -3; inline public static var PREV_X:Int = -2; inline public static var PREV_Y:Int = -1;
@@ -462,7 +464,7 @@ class TranslateTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a bone's local {@link Bone#getScaleX()} and {@link Bone#getScaleY()}. */
+/** Changes a bone's local {@link Bone#getScaleX()} and {@link Bone#getScaleY()}. */
 class ScaleTimeline extends TranslateTimeline {
     public function new(frameCount:Int) {
         super(frameCount);
@@ -549,7 +551,7 @@ class ScaleTimeline extends TranslateTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a bone's local {@link Bone#getShearX()} and {@link Bone#getShearY()}. */
+/** Changes a bone's local {@link Bone#getShearX()} and {@link Bone#getShearY()}. */
 class ShearTimeline extends TranslateTimeline {
     public function new(frameCount:Int) {
         super(frameCount);
@@ -620,7 +622,7 @@ class ShearTimeline extends TranslateTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a slot's {@link Slot#getColor()}. */
+/** Changes a slot's {@link Slot#getColor()}. */
 class ColorTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 5;
     inline private static var PREV_TIME:Int = -5; inline private static var PREV_R:Int = -4; inline private static var PREV_G:Int = -3; inline private static var PREV_B:Int = -2; inline private static var PREV_A:Int = -1;
@@ -719,7 +721,7 @@ class ColorTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a slot's {@link Slot#getColor()} and {@link Slot#getDarkColor()} for two color tinting. */
+/** Changes a slot's {@link Slot#getColor()} and {@link Slot#getDarkColor()} for two color tinting. */
 class TwoColorTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 8;
     inline private static var PREV_TIME:Int = -8; inline private static var PREV_R:Int = -7; inline private static var PREV_G:Int = -6; inline private static var PREV_B:Int = -5; inline private static var PREV_A:Int = -4;
@@ -838,7 +840,7 @@ class TwoColorTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a slot's {@link Slot#getAttachment()}. */
+/** Changes a slot's {@link Slot#getAttachment()}. */
 class AttachmentTimeline implements Timeline {
     public var slotIndex:Int = 0;
     public var frames:FloatArray; // time, ...
@@ -913,7 +915,7 @@ class AttachmentTimeline implements Timeline {
     }
 }
 
-    /** Changes a slot's {@link Slot#getAttachmentVertices()} to deform a {@link VertexAttachment}. */
+/** Changes a slot's {@link Slot#getAttachmentVertices()} to deform a {@link VertexAttachment}. */
 class DeformTimeline extends CurveTimeline {
     private static var zeros:FloatArray = FloatArray.create(64);
 
@@ -1084,7 +1086,7 @@ class DeformTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Fires an {@link Event} when specific animation times are reached. */
+/** Fires an {@link Event} when specific animation times are reached. */
 class EventTimeline implements Timeline {
     private var frames:FloatArray; // time, ...
     private var events:Array<Event>;
@@ -1149,7 +1151,7 @@ class EventTimeline implements Timeline {
     }
 }
 
-    /** Changes a skeleton's {@link Skeleton#getDrawOrder()}. */
+/** Changes a skeleton's {@link Skeleton#getDrawOrder()}. */
 class DrawOrderTimeline implements Timeline {
     private var frames:FloatArray; // time, ...
     private var drawOrders:IntArray2D;
@@ -1217,7 +1219,7 @@ class DrawOrderTimeline implements Timeline {
     }
 }
 
-    /** Changes an IK constraint's {@link IkConstraint#getMix()} and {@link IkConstraint#getBendDirection()}. */
+/** Changes an IK constraint's {@link IkConstraint#getMix()} and {@link IkConstraint#getBendDirection()}. */
 class IkConstraintTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 3;
     inline private static var PREV_TIME:Int = -3; inline private static var PREV_MIX:Int = -2; inline private static var PREV_BEND_DIRECTION:Int = -1;
@@ -1310,7 +1312,7 @@ class IkConstraintTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a transform constraint's mixes. */
+/** Changes a transform constraint's mixes. */
 class TransformConstraintTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 5;
     inline private static var PREV_TIME:Int = -5; inline private static var PREV_ROTATE:Int = -4; inline private static var PREV_TRANSLATE:Int = -3; inline private static var PREV_SCALE:Int = -2; inline private static var PREV_SHEAR:Int = -1;
@@ -1419,7 +1421,7 @@ class TransformConstraintTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a path constraint's {@link PathConstraint#getPosition()}. */
+/** Changes a path constraint's {@link PathConstraint#getPosition()}. */
 class PathConstraintPositionTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 2;
     inline public static var PREV_TIME:Int = -2; inline public static var PREV_VALUE:Int = -1;
@@ -1501,7 +1503,7 @@ class PathConstraintPositionTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a path constraint's {@link PathConstraint#getSpacing()}. */
+/** Changes a path constraint's {@link PathConstraint#getSpacing()}. */
 class PathConstraintSpacingTimeline extends PathConstraintPositionTimeline {
     public function new(frameCount:Int) {
         super(frameCount);
@@ -1561,7 +1563,7 @@ class PathConstraintSpacingTimeline extends PathConstraintPositionTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-    /** Changes a path constraint's mixes. */
+/** Changes a path constraint's mixes. */
 class PathConstraintMixTimeline extends CurveTimeline {
     inline public static var ENTRIES:Int = 3;
     inline private static var PREV_TIME:Int = -3; inline private static var PREV_ROTATE:Int = -2; inline private static var PREV_TRANSLATE:Int = -1;
