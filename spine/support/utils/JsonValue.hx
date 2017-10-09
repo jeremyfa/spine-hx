@@ -260,7 +260,7 @@ class JsonChild implements JsonValue {
 
     public var size(get,never):Int;
     function get_size():Int {
-        return data.length;
+        return data[index].length;
     }
 
     public var child(get,never):JsonValue;
