@@ -231,7 +231,7 @@ class TransformConstraint implements Constraint {
             var rotation:Float = bone.arotation;
             if (rotateMix != 0) {
                 var r:Float = target.arotation - rotation + data.offsetRotation;
-                r -= (16384 - cast((16384.499999999996 - r / 360), Int)) * 360;
+                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
                 rotation += r * rotateMix;
             }
 
@@ -250,7 +250,7 @@ class TransformConstraint implements Constraint {
             var shearY:Float = bone.ashearY;
             if (shearMix > 0) {
                 var r:Float = target.ashearY - shearY + data.offsetShearY;
-                r -= (16384 - cast((16384.499999999996 - r / 360), Int)) * 360;
+                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
                 bone.shearY += r * shearMix;
             }
 

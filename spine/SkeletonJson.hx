@@ -474,10 +474,10 @@ class SkeletonJson {
         var weights:FloatArray = new FloatArray(verticesLength * 3 * 3);
         var bones:IntArray = new IntArray(verticesLength * 3);
         var i:Int = 0; var n:Int = vertices.length; while (i < n) {
-            var boneCount:Int = cast(vertices[i++], Int);
+            var boneCount:Int = Std.int(vertices[i++]);
             bones.add(boneCount);
             var nn:Int = i + boneCount * 4; while (i < nn) {
-                bones.add(cast(vertices[i], Int));
+                bones.add(Std.int(vertices[i]));
                 weights.add(vertices[i + 1] * scale);
                 weights.add(vertices[i + 2] * scale);
                 weights.add(vertices[i + 3]);

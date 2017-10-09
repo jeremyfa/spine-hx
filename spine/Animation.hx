@@ -329,7 +329,7 @@ class RotateTimeline extends CurveTimeline {
             if (_switchCond0 == setup) {bone.rotation = bone.data.rotation;
                 return;
             } else if (_switchCond0 == current) {var r:Float = bone.data.rotation - bone.rotation;
-                r -= (16384 - cast((16384.499999999996 - r / 360), Int)) * 360;
+                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
                 bone.rotation += r * alpha;
             } } break; }
             return;
@@ -340,7 +340,7 @@ class RotateTimeline extends CurveTimeline {
                 bone.rotation = bone.data.rotation + frames[frames.length + PREV_ROTATION] * alpha;
             else {
                 var r:Float = bone.data.rotation + frames[frames.length + PREV_ROTATION] - bone.rotation;
-                r -= (16384 - cast((16384.499999999996 - r / 360), Int)) * 360; // Wrap within -180 and 180.
+                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360; // Wrap within -180 and 180.
                 bone.rotation += r * alpha;
             }
             return;
@@ -353,14 +353,14 @@ class RotateTimeline extends CurveTimeline {
         var percent:Float = getCurvePercent((frame >> 1) - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
 
         var r:Float = frames[frame + ROTATION] - prevRotation;
-        r -= (16384 - cast((16384.499999999996 - r / 360), Int)) * 360;
+        r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
         r = prevRotation + r * percent;
         if (pose == setup) {
-            r -= (16384 - cast((16384.499999999996 - r / 360), Int)) * 360;
+            r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
             bone.rotation = bone.data.rotation + r * alpha;
         } else {
             r = bone.data.rotation + r - bone.rotation;
-            r -= (16384 - cast((16384.499999999996 - r / 360), Int)) * 360;
+            r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
             bone.rotation += r * alpha;
         }
     }
@@ -1279,10 +1279,10 @@ class IkConstraintTimeline extends CurveTimeline {
             if (pose == setup) {
                 constraint.mix = constraint.data.mix + (frames[frames.length + PREV_MIX] - constraint.data.mix) * alpha;
                 constraint.bendDirection = direction == spine.MixDirection.directionOut ? constraint.data.bendDirection
-                    : cast(frames[frames.length + PREV_BEND_DIRECTION], Int);
+                    : Std.int(frames[frames.length + PREV_BEND_DIRECTION]);
             } else {
                 constraint.mix += (frames[frames.length + PREV_MIX] - constraint.mix) * alpha;
-                if (direction == spine.MixDirection.directionIn) constraint.bendDirection = cast(frames[frames.length + PREV_BEND_DIRECTION], Int);
+                if (direction == spine.MixDirection.directionIn) constraint.bendDirection = Std.int(frames[frames.length + PREV_BEND_DIRECTION]);
             }
             return;
         }
@@ -1296,10 +1296,10 @@ class IkConstraintTimeline extends CurveTimeline {
         if (pose == setup) {
             constraint.mix = constraint.data.mix + (mix + (frames[frame + MIX] - mix) * percent - constraint.data.mix) * alpha;
             constraint.bendDirection = direction == spine.MixDirection.directionOut ? constraint.data.bendDirection
-                : cast(frames[frame + PREV_BEND_DIRECTION], Int);
+                : Std.int(frames[frame + PREV_BEND_DIRECTION]);
         } else {
             constraint.mix += (mix + (frames[frame + MIX] - mix) * percent - constraint.mix) * alpha;
-            if (direction == spine.MixDirection.directionIn) constraint.bendDirection = cast(frames[frame + PREV_BEND_DIRECTION], Int);
+            if (direction == spine.MixDirection.directionIn) constraint.bendDirection = Std.int(frames[frame + PREV_BEND_DIRECTION]);
         }
     }
 

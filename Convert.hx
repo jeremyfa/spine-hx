@@ -793,9 +793,14 @@ using StringTools;
                     }
                 }
                 else if (c == '(' && RE_CAST.match(after)) {
-                    haxe += 'cast(' + RE_CAST.matched(2).ltrim();
+                    var castType = convertType(RE_CAST.matched(1));
+
+                    if (castType == 'Int') {
+                        haxe += 'Std.int(' + RE_CAST.matched(2).ltrim();
+                    } else {
+                        haxe += 'cast(' + RE_CAST.matched(2).ltrim();
+                    }
                     i += RE_CAST.matched(0).length;
-                    var castType = RE_CAST.matched(1);
 
                     var index = haxe.length;
                     var aStop = consumeExpression({ until: ');,' });
@@ -805,7 +810,12 @@ using StringTools;
                     i--;
                     haxe = haxe.substring(0, index);
                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                    haxe += castPart + ', ' + convertType(castType) + ')';
+
+                    if (castType == 'Int') {
+                        haxe += castPart + ')';
+                    } else {
+                        haxe += castPart + ', ' + castType + ')';
+                    }
 
                     /*if (aStop == ';') {
                         varType = null;

@@ -308,9 +308,9 @@ class AnimationState {
                 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
 
             r2 = frames[frame + ROTATION] - prevRotation;
-            r2 -= (16384 - cast((16384.499999999996 - r2 / 360), Int)) * 360;
+            r2 -= (16384 - Std.int((16384.499999999996 - r2 / 360))) * 360;
             r2 = prevRotation + r2 * percent + bone.data.rotation;
-            r2 -= (16384 - cast((16384.499999999996 - r2 / 360), Int)) * 360;
+            r2 -= (16384 - Std.int((16384.499999999996 - r2 / 360))) * 360;
         }
 
         // Mix between rotations using the direction of the shortest route on the first frame.
@@ -319,7 +319,7 @@ class AnimationState {
         if (diff == 0)
             total = timelinesRotation[i];
         else {
-            diff -= (16384 - cast((16384.499999999996 - diff / 360), Int)) * 360;
+            diff -= (16384 - Std.int((16384.499999999996 - diff / 360))) * 360;
             var lastTotal:Float = 0; var lastDiff:Float = 0;
             if (firstFrame) {
                 lastTotal = 0;
@@ -341,7 +341,7 @@ class AnimationState {
         }
         timelinesRotation[i + 1] = diff;
         r1 += total * alpha;
-        bone.rotation = r1 - (16384 - cast((16384.499999999996 - r1 / 360), Int)) * 360;
+        bone.rotation = r1 - (16384 - Std.int((16384.499999999996 - r1 / 360))) * 360;
     }
 
     private function queueEvents(entry:TrackEntry, animationTime:Float):Void {
@@ -503,7 +503,7 @@ class AnimationState {
             if (delay <= 0) {
                 var duration:Float = last.animationEnd - last.animationStart;
                 if (duration != 0)
-                    delay += duration * (1 + cast((last.trackTime / duration), Int)) - data.getMix(last.animation, animation);
+                    delay += duration * (1 + Std.int((last.trackTime / duration))) - data.getMix(last.animation, animation);
                 else
                     delay = 0;
             }
