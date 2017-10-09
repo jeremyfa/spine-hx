@@ -198,8 +198,13 @@ class TextureAtlas
                     region.originalWidth = Std.parseInt(tuple[0]);
                     region.originalHeight = Std.parseInt(tuple[1]);
                     
-                    region.packedWidth = region.originalWidth;
-                    region.packedHeight = region.originalHeight;
+                    if (region.rotate) {
+                        region.packedWidth = region.originalHeight;
+                        region.packedHeight = region.originalWidth;
+                    } else {
+                        region.packedWidth = region.originalWidth;
+                        region.packedHeight = region.originalHeight;
+                    }
 
                     reader.readTuple(tuple);
                     region.offsetX = Std.parseInt(tuple[0]);
