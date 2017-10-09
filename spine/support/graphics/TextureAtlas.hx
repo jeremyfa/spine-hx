@@ -197,6 +197,9 @@ class TextureAtlas
 
                     region.originalWidth = Std.parseInt(tuple[0]);
                     region.originalHeight = Std.parseInt(tuple[1]);
+                    
+                    region.packedWidth = region.originalWidth;
+                    region.packedHeight = region.originalHeight;
 
                     reader.readTuple(tuple);
                     region.offsetX = Std.parseInt(tuple[0]);
@@ -326,18 +329,18 @@ class AtlasPage
 class AtlasRegion extends TextureRegion
 {
     public var name : String;
-    public var x : Int;
-    public var y : Int;
-    public var width : Int;
-    public var height : Int;
-    public var packedWidth : Int;
-    public var packedHeight : Int;
-    public var offsetX : Float;
-    public var offsetY : Float;
-    public var originalWidth : Int;
-    public var originalHeight : Int;
-    public var index : Int;
-    public var rotate : Bool;
+    public var x : Int = 0;
+    public var y : Int = 0;
+    public var width : Int = 0;
+    public var height : Int = 0;
+    public var packedWidth : Int = 0;
+    public var packedHeight : Int = 0;
+    public var offsetX : Float = 0;
+    public var offsetY : Float = 0;
+    public var originalWidth : Int = 0;
+    public var originalHeight : Int = 0;
+    public var index : Int = 0;
+    public var rotate : Bool = false;
     public var splits : Array<Int>;
     public var pads : Array<Int>;
     public var page : AtlasPage;
