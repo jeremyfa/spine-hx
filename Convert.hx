@@ -2221,7 +2221,15 @@ using StringTools;
             var changes:Map<String,Array<{start:Int,end:Int,add:Int}>> = new Map();
 
             // Get diagnostics from haxe compiler
-            var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('haxe', ['build.hxml']).stderr);
+            // (we target a static platform to catch errors that might happen only on these)
+            /*var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('haxe', [
+                '--macro', 'ImportAll.run("spine")',
+                '-js main',
+                '--no-output'
+            ]).stderr);*/
+            var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('haxe', [
+                'build-static.hxml'
+            ]).stderr);
 
             for (item in diagnostics) {
 
@@ -2246,11 +2254,11 @@ using StringTools;
                         var file = getFile(item.filePath);
 
                         var lines = file.split("\n");
-                        var lineNumber = item.line - 1;
-                        var line = lines[lineNumber];
-                        while (lineNumber > 1 && line.trim() == '') {
-                            lineNumber--;
-                            line = lines[lineNumber];
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
+                        while (lineIndex > 1 && line.trim() == '') {
+                            lineIndex--;
+                            line = lines[lineIndex];
                         }
                         var snippet = line.substring(item.start, item.end);
 
@@ -2269,7 +2277,7 @@ using StringTools;
 
                         // Edit line
                         line = line.substring(0, item.start) + snippet + line.substring(item.end);
-                        lines[lineNumber] = line;
+                        lines[lineIndex] = line;
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
@@ -2366,12 +2374,8 @@ using StringTools;
                         var file = getFile(item.filePath);
 
                         var lines = file.split("\n");
-                        var lineNumber = item.line - 1;
-                        var line = lines[lineNumber];
-                        while (lineNumber > 1 && line.trim() == '') {
-                            lineNumber--;
-                            line = lines[lineNumber];
-                        }
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
                         var snippet = line.substring(item.start, item.end);
                         var newSnippet = snippet.replace('Animation.binarySearchWithStep', 'Animation.binarySearch');
 
@@ -2380,7 +2384,28 @@ using StringTools;
 
                         // Edit line
                         line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
-                        lines[lineNumber] = line;
+                        lines[lineIndex] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('On static platforms, null can\'t be used as basic type ')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = '0';
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[lineIndex] = line;
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));

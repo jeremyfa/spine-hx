@@ -241,7 +241,7 @@ class AnimationState {
         if (firstFrame) from.timelinesRotation.setSize(timelineCount << 1);
         var timelinesRotation:FloatArray = from.timelinesRotation.items;
 
-        var pose:MixPose = null;
+        var pose:MixPose = 0;
         var alphaDip:Float = from.alpha * to.interruptAlpha; var alphaMix:Float = alphaDip * (1 - mix); var alpha:Float = 0;
         from.totalAlpha = 0;
         var i:Int = 0; while (i < timelineCount) {
