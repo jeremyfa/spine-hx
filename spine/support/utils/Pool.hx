@@ -11,7 +11,6 @@ class Pool<T> {
     /** @param max The maximum number of free objects to store in this pool. */
     public function new(initialCapacity:Int = 64, max:Int = 999999999) {
         freeObjects = [];
-        freeObjects.setSize(initialCapacity);
         this.max = max;
     }
     public function free(object:T):Void {
