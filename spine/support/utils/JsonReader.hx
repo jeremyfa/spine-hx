@@ -10,7 +10,7 @@ class JsonReader {
 
     public function parse(file:FileHandle):JsonValue {
 
-        return new JsonDynamic(Json.parse(file.path));
+        return new JsonDynamic(Json.parse(file.getContent()));
 
     } //parse
 

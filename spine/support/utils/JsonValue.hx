@@ -59,7 +59,7 @@ class JsonDynamic implements JsonValue {
     }
 
     public function get(key:String):JsonValue {
-        if (Std.is(data, Array)) {
+        if (Std.is(data, Array) || Std.is(data, std.Array)) {
             return null;
         } else {
             return Reflect.hasField(data, key) ? new JsonDynamic(Reflect.field(data, key)) : null;
@@ -67,9 +67,15 @@ class JsonDynamic implements JsonValue {
     }
 
     public function getChild(key:String):JsonValue {
-        var item = Reflect.field(data, key);
-        if (item == null) return null;
-        else return new JsonDynamic(item).child;
+        var item:Dynamic = Reflect.field(data, key);
+        if (item == null) {
+            return null;
+        }
+        else {
+            var value = new JsonDynamic(item);
+            var child = value.child;
+            return child;
+        }
     }
 
     public function getString(key:String, defaultValue:String = null):String {
@@ -78,7 +84,7 @@ class JsonDynamic implements JsonValue {
 
     public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
         if (Std.is(key, Int)) {
-            if (Std.is(data, Array)) {
+            if (Std.is(data, Array) || Std.is(data, std.Array)) {
                 return data[key];
             } else {
                 return defaultValue;
@@ -122,7 +128,7 @@ class JsonDynamic implements JsonValue {
     }
 
     public function isArray():Bool{
-        return Std.is(data, Array);
+        return Std.is(data, Array) || Std.is(data, std.Array);
     }
 
     public var next(get,never):JsonValue;
@@ -142,9 +148,11 @@ class JsonDynamic implements JsonValue {
 
     public var child(get,never):JsonValue;
     public function get_child():JsonValue {
-        var item = data;
-        if (item == null) return null;
-        else if (Std.is(item, Array)) {
+        var item:Dynamic = data;
+        if (item == null) {
+            return null;
+        }
+        else if (Std.is(item, Array) || Std.is(item, std.Array)) {
             return new JsonChild(item, 0);
         }
         else {
@@ -156,7 +164,6 @@ class JsonDynamic implements JsonValue {
             }
             return new JsonChild(values, 0, keys);
         }
-        return null;
     }
 
 } //JsonDynamic
@@ -186,7 +193,7 @@ class JsonChild implements JsonValue {
     }
 
     public function getChild(key:String):JsonValue {
-        var item = Reflect.field(data[index], key);
+        var item:Dynamic = Reflect.field(data[index], key);
         if (item == null) return null;
         else return new JsonDynamic(item).child;
     }
@@ -197,7 +204,7 @@ class JsonChild implements JsonValue {
 
     public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
         if (Std.is(key, Int)) {
-            if (Std.is(data[index], Array)) {
+            if (Std.is(data[index], Array) || Std.is(data[index], std.Array)) {
                 return data[index][key];
             } else {
                 return 0;
@@ -233,7 +240,7 @@ class JsonChild implements JsonValue {
     }
 
     public function isArray():Bool{
-        return Std.is(data[index], Array);
+        return Std.is(data[index], Array) || Std.is(data[index], std.Array);
     }
 
     public var next(get,never):JsonValue;
@@ -258,9 +265,9 @@ class JsonChild implements JsonValue {
 
     public var child(get,never):JsonValue;
     public function get_child():JsonValue {
-        var item = data[index];
+        var item:Dynamic = data[index];
         if (item == null) return null;
-        else if (Std.is(item, Array)) {
+        else if (Std.is(item, Array) || Std.is(item, std.Array)) {
             return new JsonChild(item, 0);
         }
         else {
