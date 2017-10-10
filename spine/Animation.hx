@@ -43,6 +43,7 @@ import spine.attachments.VertexAttachment;
 /** A simple container for a list of timelines and a name. */
 class Animation {
     private var hashCode = Std.int(Math.random() * 99999999);
+
     public var name:String;
     public var timelines:Array<Timeline>;
     public var duration:Float = 0;

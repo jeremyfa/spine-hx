@@ -40,6 +40,8 @@ import spine.Animation.DeformTimeline;
  * <p>
  * See <a href="http://esotericsoftware.com/spine-meshes">Mesh attachments</a> in the Spine User Guide. */
 class MeshAttachment extends VertexAttachment {
+    public var rendererObject:Dynamic = null;
+
     private var region:TextureRegion;
     private var path:String;
     private var regionUVs:FloatArray; private var uvs:FloatArray = null;

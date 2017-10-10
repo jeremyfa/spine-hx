@@ -40,6 +40,8 @@ import spine.Bone;
  * <p>
  * See <a href="http://esotericsoftware.com/spine-regions">Region attachments</a> in the Spine User Guide. */
 class RegionAttachment extends Attachment {
+    public var rendererObject:Dynamic = null;
+
     inline public static var BLX:Int = 0;
     inline public static var BLY:Int = 1;
     inline public static var ULX:Int = 2;

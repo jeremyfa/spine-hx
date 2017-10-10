@@ -2022,7 +2022,7 @@ using StringTools;
         }
         else if (rootType == 'spine.Animation') {
             haxe = haxe.replace('binarySearch(values:FloatArray, target:Float, step:Int)', 'binarySearchWithStep(values:FloatArray, target:Float, step:Int)');
-            haxe = haxe.replace('class Animation {', 'class Animation {\n    private var hashCode = Std.int(Math.random() * 99999999);');
+            haxe = haxe.replace('class Animation {', 'class Animation {\n    private var hashCode = Std.int(Math.random() * 99999999);\n');
         }
         else if (rootType == 'spine.Skeleton') {
             haxe = haxe.replace('updateCache', 'cache');
@@ -2060,6 +2060,12 @@ using StringTools;
         }
         else if (rootType == 'spine.BlendMode') {
             haxe = haxe.replace('import spine.support.graphics.GL20;', '');
+        }
+        else if (rootType == 'spine.attachments.RegionAttachment') {
+            haxe = haxe.replace(' extends Attachment {', ' extends Attachment {\n    public var rendererObject:Dynamic = null;\n');
+        }
+        else if (rootType == 'spine.attachments.MeshAttachment') {
+            haxe = haxe.replace(' extends VertexAttachment {', ' extends VertexAttachment {\n    public var rendererObject:Dynamic = null;\n');
         }
 
         // Convert enums valueOf() / name() / ordinal()
