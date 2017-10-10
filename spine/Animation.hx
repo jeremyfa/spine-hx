@@ -259,7 +259,7 @@ class CurveTimeline implements Timeline {
 
     /** Returns the interpolated percentage for the specified key frame and linear percentage. */
     public function getCurvePercent(frameIndex:Int, percent:Float):Float {
-        percent = MathUtils.clamp(Std.int(percent), 0, 1);
+        percent = MathUtils.clamp(percent, 0, 1);
         var curves:FloatArray = this.curves;
         var i:Int = frameIndex * BEZIER_SIZE;
         var type:Float = curves[i];
