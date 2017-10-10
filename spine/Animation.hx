@@ -918,8 +918,6 @@ class AttachmentTimeline implements Timeline {
 
 /** Changes a slot's {@link Slot#getAttachmentVertices()} to deform a {@link VertexAttachment}. */
 class DeformTimeline extends CurveTimeline {
-    private static var zeros:FloatArray = FloatArray.create(64);
-
     public var slotIndex:Int = 0;
     public var attachment:VertexAttachment;
     private var frames:FloatArray; // time, ...
@@ -978,26 +976,22 @@ class DeformTimeline extends CurveTimeline {
         if (!(Std.is(slotAttachment, VertexAttachment)) || !(cast(slotAttachment, VertexAttachment)).applyDeform(attachment)) return;
 
         var verticesArray:FloatArray = slot.getAttachmentVertices();
+        if (verticesArray.size == 0) alpha = 1;
+
         var frameVertices:FloatArray2D = this.frameVertices;
         var vertexCount:Int = frameVertices[0].length;
-        var vertices:FloatArray = verticesArray.setSize(vertexCount);
 
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
             while(true) { var _switchCond6 = (pose); {
-            if (_switchCond6 == setup) {var zeroVertices:FloatArray = null;
-                if (vertexAttachment.getBones() == null) {
-                    // Unweighted vertex positions (setup pose).
-                    zeroVertices = vertexAttachment.getVertices();
-                } else {
-                    // Weighted deform offsets (zeros).
-                    zeroVertices = zeros;
-                    if (zeroVertices.length < vertexCount) zeros = zeroVertices = FloatArray.create(vertexCount);
-                }
-                Array.copy(zeroVertices, 0, vertices, 0, vertexCount);
+            if (_switchCond6 == setup) {verticesArray.clear();
                 return;
-            } else if (_switchCond6 == current) {if (alpha == 1) break;
+            } else if (_switchCond6 == current) {if (alpha == 1) {
+                    verticesArray.clear();
+                    return;
+                }
+                var vertices:FloatArray = verticesArray.setSize(vertexCount);
                 if (vertexAttachment.getBones() == null) {
                     // Unweighted vertex positions.
                     var setupVertices:FloatArray = vertexAttachment.getVertices();
@@ -1012,6 +1006,8 @@ class DeformTimeline extends CurveTimeline {
             } } break; }
             return;
         }
+
+        var vertices:FloatArray = verticesArray.setSize(vertexCount);
 
         if (time >= frames[frames.length - 1]) { // Time is after last frame.
             var lastVertices:FloatArray = frameVertices[frames.length - 1];
