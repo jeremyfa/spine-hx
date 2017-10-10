@@ -141,7 +141,7 @@ class Bone implements Updatable {
         worldX = pa * x + pb * y + parent.worldX;
         worldY = pc * x + pd * y + parent.worldY;
 
-        while(true) { var _switchCond0 = (data.transformMode); {
+        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (data.transformMode); {
         if (_switchCond0 == normal) {
             var rotationY:Float = rotation + 90 + shearY;
             var la:Float = cosDeg(rotation + shearX) * scaleX;

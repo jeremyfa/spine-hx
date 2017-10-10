@@ -326,7 +326,7 @@ class RotateTimeline extends CurveTimeline {
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond0 = (pose); {
+            var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (pose); {
             if (_switchCond0 == setup) {
                 bone.rotation = bone.data.rotation;
                 return;
@@ -423,7 +423,7 @@ class TranslateTimeline extends CurveTimeline {
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond1 = (pose); {
+            var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (pose); {
             if (_switchCond1 == setup) {
                 bone.x = bone.data.x;
                 bone.y = bone.data.y;
@@ -484,7 +484,7 @@ class ScaleTimeline extends TranslateTimeline {
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond2 = (pose); {
+            var _continueAfterSwitch2 = false; while(true) { var _switchCond2 = (pose); {
             if (_switchCond2 == setup) {
                 bone.scaleX = bone.data.scaleX;
                 bone.scaleY = bone.data.scaleY;
@@ -573,7 +573,7 @@ class ShearTimeline extends TranslateTimeline {
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond3 = (pose); {
+            var _continueAfterSwitch3 = false; while(true) { var _switchCond3 = (pose); {
             if (_switchCond3 == setup) {
                 bone.shearX = bone.data.shearX;
                 bone.shearY = bone.data.shearY;
@@ -679,7 +679,7 @@ class ColorTimeline extends CurveTimeline {
         var slot:Slot = skeleton.slots.get(slotIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond4 = (pose); {
+            var _continueAfterSwitch4 = false; while(true) { var _switchCond4 = (pose); {
             if (_switchCond4 == setup) {
                 slot.color.set(slot.data.color);
                 return;
@@ -784,7 +784,7 @@ class TwoColorTimeline extends CurveTimeline {
         var slot:Slot = skeleton.slots.get(slotIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond5 = (pose); {
+            var _continueAfterSwitch5 = false; while(true) { var _switchCond5 = (pose); {
             if (_switchCond5 == setup) {
                 slot.color.set(slot.data.color);
                 slot.darkColor.set(slot.data.darkColor);
@@ -996,7 +996,7 @@ class DeformTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
-            while(true) { var _switchCond6 = (pose); {
+            var _continueAfterSwitch6 = false; while(true) { var _switchCond6 = (pose); {
             if (_switchCond6 == setup) {
                 verticesArray.clear();
                 return;
@@ -1276,7 +1276,7 @@ class IkConstraintTimeline extends CurveTimeline {
         var constraint:IkConstraint = skeleton.ikConstraints.get(ikConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond7 = (pose); {
+            var _continueAfterSwitch7 = false; while(true) { var _switchCond7 = (pose); {
             if (_switchCond7 == setup) {
                 constraint.mix = constraint.data.mix;
                 constraint.bendDirection = constraint.data.bendDirection;
@@ -1374,7 +1374,7 @@ class TransformConstraintTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             var data:TransformConstraintData = constraint.data;
-            while(true) { var _switchCond8 = (pose); {
+            var _continueAfterSwitch8 = false; while(true) { var _switchCond8 = (pose); {
             if (_switchCond8 == setup) {
                 constraint.rotateMix = data.rotateMix;
                 constraint.translateMix = data.translateMix;
@@ -1482,7 +1482,7 @@ class PathConstraintPositionTimeline extends CurveTimeline {
         var constraint:PathConstraint = skeleton.pathConstraints.get(pathConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond9 = (pose); {
+            var _continueAfterSwitch9 = false; while(true) { var _switchCond9 = (pose); {
             if (_switchCond9 == setup) {
                 constraint.position = constraint.data.position;
                 return;
@@ -1535,7 +1535,7 @@ class PathConstraintSpacingTimeline extends PathConstraintPositionTimeline {
         var constraint:PathConstraint = skeleton.pathConstraints.get(pathConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond10 = (pose); {
+            var _continueAfterSwitch10 = false; while(true) { var _switchCond10 = (pose); {
             if (_switchCond10 == setup) {
                 constraint.spacing = constraint.data.spacing;
                 return;
@@ -1629,7 +1629,7 @@ class PathConstraintMixTimeline extends CurveTimeline {
         var constraint:PathConstraint = skeleton.pathConstraints.get(pathConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            while(true) { var _switchCond11 = (pose); {
+            var _continueAfterSwitch11 = false; while(true) { var _switchCond11 = (pose); {
             if (_switchCond11 == setup) {
                 constraint.rotateMix = constraint.data.rotateMix;
                 constraint.translateMix = constraint.data.translateMix;

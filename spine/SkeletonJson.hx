@@ -322,7 +322,7 @@ class SkeletonJson {
 
         var type:String = map.getString("type", AttachmentType_enum.region_name);
 
-        while(true) { var _switchCond0 = (AttachmentType_enum.valueOf(type)); {
+        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (AttachmentType_enum.valueOf(type)); {
         if (_switchCond0 == region) {
             var path:String = map.getString("path", name);
             var region:RegionAttachment = attachmentLoader.newRegionAttachment(skin, name, path);

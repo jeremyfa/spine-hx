@@ -225,6 +225,7 @@ using StringTools;
         var inClassInfo:TypeInfo = null;
         var inSubClass = false;
         var inSubClassInfo:TypeInfo = null;
+        var loopStack:Array<String> = [];
         var classHasConstructor = false;
         var subClassHasConstructor = false;
         var inMethod = false;
@@ -917,9 +918,14 @@ using StringTools;
                     }
                     else if (word == 'switch' && RE_SWITCH.match(after)) {
 
+                        loopStack.push('switch');
+
                         openParens++;
                         i += RE_SWITCH.matched(0).length;
-                        var switchCondName = '_switchCond' + (nextSwitchIndex++);
+                        var switchIndex = nextSwitchIndex++;
+                        var continueAfterName = '_continueAfterSwitch' + switchIndex;
+                        var switchCondName = '_switchCond' + switchIndex;
+                        haxe += 'var ' + continueAfterName + ' = false; ';
                         haxe += 'while(true) { var ' + switchCondName + ' = (';
 
                         consumeExpression({ until: ')' });
@@ -973,7 +979,36 @@ using StringTools;
                             });
                         }
 
+                        var hasContinues = false;
+                        function convertContinues(code) {
+                            var parts = splitCode(code, ['continue'], true);
+                            var n = 0;
+                            var newCode = parts[n++];
+                            while (n < parts.length) {
+                                var part = parts[n];
+                                var breakCode = '';
+                                if (RE_CONTINUE.match(part)) {
+
+                                    hasContinues = true;
+                                    breakCode += continueAfterName + ' = true; break;';
+
+                                    if (breakCode.split(';').length > 2) {
+                                        breakCode = '{ ' + breakCode + ' }';
+                                    }
+
+                                    breakCode += part.substring(RE_CONTINUE.matched(0).length);
+                                    newCode += breakCode;
+                                }
+                                else {
+                                    fail('Failed to parse continue');
+                                }
+                                n++;
+                            }
+                            return newCode;
+                        }
+
                         for (aCase in cases) {
+                            aCase.body = convertContinues(aCase.body);
                             var cleaned = cleanedCode(aCase.body, { cleanSpaces: true }).trim();
                             var hasBrace = cleaned.startsWith('{');
                             if (RE_CASE_BREAKS.match(cleaned)) {
@@ -1026,6 +1061,12 @@ using StringTools;
                         }
 
                         haxe += '} break; }';
+
+                        if (hasContinues) {
+                            haxe += ' if (' + continueAfterName + ') continue;';
+                        }
+
+                        loopStack.pop();
 
                     }
                     else if (word == 'new') {
@@ -1191,6 +1232,8 @@ using StringTools;
                     }
                     else if (word == 'while' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
 
+                        loopStack.push('while');
+
                         i += word.length;
                         c = cleanedJava.charAt(i);
                         while (c != '(') {
@@ -1199,7 +1242,6 @@ using StringTools;
                         }
                         i++;
                         openParens++;
-
                         haxe += 'while (';
 
                         consumeExpression({ until: ')' });
@@ -1240,8 +1282,12 @@ using StringTools;
                             item.depth--;
                         }
 
+                        loopStack.pop();
+
                     }
                     else if (word == 'for' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
+
+                        loopStack.push('for');
 
                         if (RE_FOREACH.match(cleanedAfter)) {
                             // For each (for (A a : B) ...)
@@ -1416,6 +1462,8 @@ using StringTools;
                                 item.depth--;
                             }
                         }
+
+                        loopStack.pop();
 
                     }
                     else if (controls.exists(word)) {
@@ -2996,6 +3044,7 @@ using StringTools;
     static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
     static var RE_CATCH = ~/^catch\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*\)/;
     static var RE_LABEL = ~/^(outer)\s*:/;
+    static var RE_CONTINUE = ~/^(continue)(\s*);/;
     static var RE_CONTINUE_OR_BREAK = ~/^(continue|break)(?:\s+(outer)\s*)?;/;
     static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\([^\)]+\))?(\s*)((?:,\s*;)|,|;|\})/;
     static var RE_PARENT_CLASS_THIS = ~/^([a-zA-Z0-9_]+)(\s*)\.\s*this\s*\./;

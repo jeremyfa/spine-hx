@@ -246,10 +246,10 @@ class AnimationState {
         from.totalAlpha = 0;
         var i:Int = 0; while (i < timelineCount) {
             var timeline:Timeline = cast(timelines[i], Timeline);
-            while(true) { var _switchCond0 = (timelineData[i]); {
+            var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (timelineData[i]); {
             if (_switchCond0 == SUBSEQUENT) {
-                if (!attachments && Std.is(timeline, AttachmentTimeline)) { i++; continue; }
-                if (!drawOrder && Std.is(timeline, DrawOrderTimeline)) { i++; continue; }
+                if (!attachments && Std.is(timeline, AttachmentTimeline)) { _continueAfterSwitch0 = true; break; }
+                if (!drawOrder && Std.is(timeline, DrawOrderTimeline)) { _continueAfterSwitch0 = true; break; }
                 pose = currentPose;
                 alpha = alphaMix;
                 break;
@@ -267,7 +267,7 @@ class AnimationState {
                 var dipMix:TrackEntry = cast(timelineDipMix[i], TrackEntry);
                 alpha *= MathUtils.max(0, Std.int(1 - dipMix.mixTime / dipMix.mixDuration));
                 break;
-            } } break; }
+            } } break; } if (_continueAfterSwitch0) { i++; continue; }
             from.totalAlpha += alpha;
             if (Std.is(timeline, RotateTimeline))
                 applyRotateTimeline(timeline, skeleton, animationTime, alpha, pose, timelinesRotation, i << 1, firstFrame);
@@ -1051,7 +1051,7 @@ class EventQueue {
         var i:Int = 0; while (i < objects.size) {
             var type:EventType = cast(objects.get(i), EventType);
             var entry:TrackEntry = cast(objects.get(i + 1), TrackEntry);
-            while(true) { var _switchCond1 = (type); {
+            var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (type); {
             if (_switchCond1 == spine.EventType.start) {
                 if (entry.listener != null) entry.listener.start(entry);
                 var ii:Int = 0; while (ii < listeners.size) {

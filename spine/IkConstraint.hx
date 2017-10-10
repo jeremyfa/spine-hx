@@ -79,7 +79,7 @@ class IkConstraint implements Constraint {
     public function update():Void {
         var target:Bone = this.target;
         var bones:Array<Bone> = this.bones;
-        while(true) { var _switchCond0 = (bones.size); {
+        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (bones.size); {
         if (_switchCond0 == 1) {
             applyOne(bones.first(), target.worldX, target.worldY, mix);
             break;
