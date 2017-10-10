@@ -247,18 +247,22 @@ class AnimationState {
         var i:Int = 0; while (i < timelineCount) {
             var timeline:Timeline = cast(timelines[i], Timeline);
             while(true) { var _switchCond0 = (timelineData[i]); {
-            if (_switchCond0 == SUBSEQUENT) {if (!attachments && Std.is(timeline, AttachmentTimeline)) { i++; continue; }
+            if (_switchCond0 == SUBSEQUENT) {
+                if (!attachments && Std.is(timeline, AttachmentTimeline)) { i++; continue; }
                 if (!drawOrder && Std.is(timeline, DrawOrderTimeline)) { i++; continue; }
                 pose = currentPose;
                 alpha = alphaMix;
                 break;
-            } else if (_switchCond0 == FIRST) {pose = MixPose.setup;
+            } else if (_switchCond0 == FIRST) {
+                pose = MixPose.setup;
                 alpha = alphaMix;
                 break;
-            } else if (_switchCond0 == DIP) {pose = MixPose.setup;
+            } else if (_switchCond0 == DIP) {
+                pose = MixPose.setup;
                 alpha = alphaDip;
                 break;
-            } else {pose = MixPose.setup;
+            } else {
+                pose = MixPose.setup;
                 alpha = alphaDip;
                 var dipMix:TrackEntry = cast(timelineDipMix[i], TrackEntry);
                 alpha *= MathUtils.max(0, Std.int(1 - dipMix.mixTime / dipMix.mixDuration));
@@ -1048,15 +1052,18 @@ class EventQueue {
             var type:EventType = cast(objects.get(i), EventType);
             var entry:TrackEntry = cast(objects.get(i + 1), TrackEntry);
             while(true) { var _switchCond1 = (type); {
-            if (_switchCond1 == spine.EventType.start) {if (entry.listener != null) entry.listener.start(entry);
+            if (_switchCond1 == spine.EventType.start) {
+                if (entry.listener != null) entry.listener.start(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).start(entry); ii++; }
                 break;
-            } else if (_switchCond1 == spine.EventType.interrupt) {if (entry.listener != null) entry.listener.interrupt(entry);
+            } else if (_switchCond1 == spine.EventType.interrupt) {
+                if (entry.listener != null) entry.listener.interrupt(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).interrupt(entry); ii++; }
                 break;
-            } else if (_switchCond1 == spine.EventType.end) {if (entry.listener != null) entry.listener.end(entry);
+            } else if (_switchCond1 == spine.EventType.end) {
+                if (entry.listener != null) entry.listener.end(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).end(entry); ii++; }
                 // Fall through.
@@ -1065,16 +1072,19 @@ class EventQueue {
                     listeners.get(ii).dispose(entry); ii++; }
                 AnimationState_this.trackEntryPool.free(entry);
                 break;
-            } else if (_switchCond1 == spine.EventType.dispose) {if (entry.listener != null) entry.listener.dispose(entry);
+            } else if (_switchCond1 == spine.EventType.dispose) {
+                if (entry.listener != null) entry.listener.dispose(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).dispose(entry); ii++; }
                 AnimationState_this.trackEntryPool.free(entry);
                 break;
-            } else if (_switchCond1 == spine.EventType.complete) {if (entry.listener != null) entry.listener.complete(entry);
+            } else if (_switchCond1 == spine.EventType.complete) {
+                if (entry.listener != null) entry.listener.complete(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).complete(entry); ii++; }
                 break;
-            } else if (_switchCond1 == spine.EventType.event) {var event:Event = cast(objects.get(i++ + 2), Event);
+            } else if (_switchCond1 == spine.EventType.event) {
+                var event:Event = cast(objects.get(i++ + 2), Event);
                 if (entry.listener != null) entry.listener.event(entry, event);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).event(entry, event); ii++; }

@@ -80,9 +80,11 @@ class IkConstraint implements Constraint {
         var target:Bone = this.target;
         var bones:Array<Bone> = this.bones;
         while(true) { var _switchCond0 = (bones.size); {
-        if (_switchCond0 == 1) {applyOne(bones.first(), target.worldX, target.worldY, mix);
+        if (_switchCond0 == 1) {
+            applyOne(bones.first(), target.worldX, target.worldY, mix);
             break;
-        } else if (_switchCond0 == 2) {applyTwo(bones.first(), bones.get(1), target.worldX, target.worldY, bendDirection, mix);
+        } else if (_switchCond0 == 2) {
+            applyTwo(bones.first(), bones.get(1), target.worldX, target.worldY, bendDirection, mix);
             break;
         } } break; }
     }

@@ -186,7 +186,8 @@ class Bone implements Updatable {
             d = pc * lb + pd * ld;
             break;
         }
-        else if (_switchCond0 == noScale) {    {
+        else if (_switchCond0 == noScale) {
+            {
             var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
             var za:Float = pa * cos + pb * sin;
             var zc:Float = pc * cos + pd * sin;

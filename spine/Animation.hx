@@ -327,9 +327,11 @@ class RotateTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond0 = (pose); {
-            if (_switchCond0 == setup) {bone.rotation = bone.data.rotation;
+            if (_switchCond0 == setup) {
+                bone.rotation = bone.data.rotation;
                 return;
-            } else if (_switchCond0 == current) {var r:Float = bone.data.rotation - bone.rotation;
+            } else if (_switchCond0 == current) {
+                var r:Float = bone.data.rotation - bone.rotation;
                 r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
                 bone.rotation += r * alpha;
             } } break; }
@@ -422,10 +424,12 @@ class TranslateTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond1 = (pose); {
-            if (_switchCond1 == setup) {bone.x = bone.data.x;
+            if (_switchCond1 == setup) {
+                bone.x = bone.data.x;
                 bone.y = bone.data.y;
                 return;
-            } else if (_switchCond1 == current) {bone.x += (bone.data.x - bone.x) * alpha;
+            } else if (_switchCond1 == current) {
+                bone.x += (bone.data.x - bone.x) * alpha;
                 bone.y += (bone.data.y - bone.y) * alpha;
             } } break; }
             return;
@@ -481,10 +485,12 @@ class ScaleTimeline extends TranslateTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond2 = (pose); {
-            if (_switchCond2 == setup) {bone.scaleX = bone.data.scaleX;
+            if (_switchCond2 == setup) {
+                bone.scaleX = bone.data.scaleX;
                 bone.scaleY = bone.data.scaleY;
                 return;
-            } else if (_switchCond2 == current) {bone.scaleX += (bone.data.scaleX - bone.scaleX) * alpha;
+            } else if (_switchCond2 == current) {
+                bone.scaleX += (bone.data.scaleX - bone.scaleX) * alpha;
                 bone.scaleY += (bone.data.scaleY - bone.scaleY) * alpha;
             } } break; }
             return;
@@ -568,10 +574,12 @@ class ShearTimeline extends TranslateTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond3 = (pose); {
-            if (_switchCond3 == setup) {bone.shearX = bone.data.shearX;
+            if (_switchCond3 == setup) {
+                bone.shearX = bone.data.shearX;
                 bone.shearY = bone.data.shearY;
                 return;
-            } else if (_switchCond3 == current) {bone.shearX += (bone.data.shearX - bone.shearX) * alpha;
+            } else if (_switchCond3 == current) {
+                bone.shearX += (bone.data.shearX - bone.shearX) * alpha;
                 bone.shearY += (bone.data.shearY - bone.shearY) * alpha;
             } } break; }
             return;
@@ -672,9 +680,11 @@ class ColorTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond4 = (pose); {
-            if (_switchCond4 == setup) {slot.color.set(slot.data.color);
+            if (_switchCond4 == setup) {
+                slot.color.set(slot.data.color);
                 return;
-            } else if (_switchCond4 == current) {var color:Color = slot.color; var setup:Color = slot.data.color;
+            } else if (_switchCond4 == current) {
+                var color:Color = slot.color; var setup:Color = slot.data.color;
                 color.add((setup.r - color.r) * alpha, (setup.g - color.g) * alpha, (setup.b - color.b) * alpha,
                     (setup.a - color.a) * alpha);
             } } break; }
@@ -775,10 +785,12 @@ class TwoColorTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond5 = (pose); {
-            if (_switchCond5 == setup) {slot.color.set(slot.data.color);
+            if (_switchCond5 == setup) {
+                slot.color.set(slot.data.color);
                 slot.darkColor.set(slot.data.darkColor);
                 return;
-            } else if (_switchCond5 == current) {var light:Color = slot.color; var dark:Color = slot.darkColor; var setupLight:Color = slot.data.color; var setupDark:Color = slot.data.darkColor;
+            } else if (_switchCond5 == current) {
+                var light:Color = slot.color; var dark:Color = slot.darkColor; var setupLight:Color = slot.data.color; var setupDark:Color = slot.data.darkColor;
                 light.add((setupLight.r - light.r) * alpha, (setupLight.g - light.g) * alpha, (setupLight.b - light.b) * alpha,
                     (setupLight.a - light.a) * alpha);
                 dark.add((setupDark.r - dark.r) * alpha, (setupDark.g - dark.g) * alpha, (setupDark.b - dark.b) * alpha, 0);
@@ -985,9 +997,11 @@ class DeformTimeline extends CurveTimeline {
         if (time < frames[0]) { // Time is before first frame.
             var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
             while(true) { var _switchCond6 = (pose); {
-            if (_switchCond6 == setup) {verticesArray.clear();
+            if (_switchCond6 == setup) {
+                verticesArray.clear();
                 return;
-            } else if (_switchCond6 == current) {if (alpha == 1) {
+            } else if (_switchCond6 == current) {
+                if (alpha == 1) {
                     verticesArray.clear();
                     return;
                 }
@@ -1263,10 +1277,12 @@ class IkConstraintTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond7 = (pose); {
-            if (_switchCond7 == setup) {constraint.mix = constraint.data.mix;
+            if (_switchCond7 == setup) {
+                constraint.mix = constraint.data.mix;
                 constraint.bendDirection = constraint.data.bendDirection;
                 return;
-            } else if (_switchCond7 == current) {constraint.mix += (constraint.data.mix - constraint.mix) * alpha;
+            } else if (_switchCond7 == current) {
+                constraint.mix += (constraint.data.mix - constraint.mix) * alpha;
                 constraint.bendDirection = constraint.data.bendDirection;
             } } break; }
             return;
@@ -1359,12 +1375,14 @@ class TransformConstraintTimeline extends CurveTimeline {
         if (time < frames[0]) { // Time is before first frame.
             var data:TransformConstraintData = constraint.data;
             while(true) { var _switchCond8 = (pose); {
-            if (_switchCond8 == setup) {constraint.rotateMix = data.rotateMix;
+            if (_switchCond8 == setup) {
+                constraint.rotateMix = data.rotateMix;
                 constraint.translateMix = data.translateMix;
                 constraint.scaleMix = data.scaleMix;
                 constraint.shearMix = data.shearMix;
                 return;
-            } else if (_switchCond8 == current) {constraint.rotateMix += (data.rotateMix - constraint.rotateMix) * alpha;
+            } else if (_switchCond8 == current) {
+                constraint.rotateMix += (data.rotateMix - constraint.rotateMix) * alpha;
                 constraint.translateMix += (data.translateMix - constraint.translateMix) * alpha;
                 constraint.scaleMix += (data.scaleMix - constraint.scaleMix) * alpha;
                 constraint.shearMix += (data.shearMix - constraint.shearMix) * alpha;
@@ -1465,9 +1483,11 @@ class PathConstraintPositionTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond9 = (pose); {
-            if (_switchCond9 == setup) {constraint.position = constraint.data.position;
+            if (_switchCond9 == setup) {
+                constraint.position = constraint.data.position;
                 return;
-            } else if (_switchCond9 == current) {constraint.position += (constraint.data.position - constraint.position) * alpha;
+            } else if (_switchCond9 == current) {
+                constraint.position += (constraint.data.position - constraint.position) * alpha;
             } } break; }
             return;
         }
@@ -1516,9 +1536,11 @@ class PathConstraintSpacingTimeline extends PathConstraintPositionTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond10 = (pose); {
-            if (_switchCond10 == setup) {constraint.spacing = constraint.data.spacing;
+            if (_switchCond10 == setup) {
+                constraint.spacing = constraint.data.spacing;
                 return;
-            } else if (_switchCond10 == current) {constraint.spacing += (constraint.data.spacing - constraint.spacing) * alpha;
+            } else if (_switchCond10 == current) {
+                constraint.spacing += (constraint.data.spacing - constraint.spacing) * alpha;
             } } break; }
             return;
         }
@@ -1608,10 +1630,12 @@ class PathConstraintMixTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             while(true) { var _switchCond11 = (pose); {
-            if (_switchCond11 == setup) {constraint.rotateMix = constraint.data.rotateMix;
+            if (_switchCond11 == setup) {
+                constraint.rotateMix = constraint.data.rotateMix;
                 constraint.translateMix = constraint.data.translateMix;
                 return;
-            } else if (_switchCond11 == current) {constraint.rotateMix += (constraint.data.rotateMix - constraint.rotateMix) * alpha;
+            } else if (_switchCond11 == current) {
+                constraint.rotateMix += (constraint.data.rotateMix - constraint.rotateMix) * alpha;
                 constraint.translateMix += (constraint.data.translateMix - constraint.translateMix) * alpha;
             } } break; }
             return;

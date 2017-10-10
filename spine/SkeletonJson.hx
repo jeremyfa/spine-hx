@@ -351,7 +351,8 @@ class SkeletonJson {
             if (color != null) box.getColor().set(Color.valueOf(color));
             return box;
         }
-        else if (_switchCond0 == mesh) {    {
+        else if (_switchCond0 == mesh) {
+            {
             var path:String = map.getString("path", name);
             var mesh:MeshAttachment = attachmentLoader.newMeshAttachment(skin, name, path);
             if (mesh == null) return null;

@@ -995,17 +995,25 @@ using StringTools;
                                 haxe += 'else ';
                             }
                             var hasBrace = aCase.body.ltrim().startsWith('{');
-                            if (!hasBrace) haxe += '{';
+                            if (!hasBrace) {
+                                haxe += '{';
+                                var lastLine = haxe.substring(haxe.lastIndexOf("\n") + 1);
+                                var indent = lastLine.substring(0, lastLine.length - lastLine.ltrim().length);
+                                haxe += "\n" + indent + "\t";
+                            }
                             haxe += aCase.body;
                             if (aCase.fallThrough) {
                                 var m = 1;
                                 while (n + m < cases.length) {
                                     var nextCase = cases[n + m];
+                                    var nextHasBrace = nextCase.body.ltrim().startsWith('{');
                                     if (hasBrace) {
                                         var caseEnd = haxe.substring(haxe.lastIndexOf('}'));
                                         haxe = haxe.substring(0, haxe.lastIndexOf('}'));
                                         haxe += nextCase.body;
                                         haxe += caseEnd;
+                                    } else if (nextHasBrace) {
+                                        haxe += nextCase.body;
                                     } else {
                                         haxe += '    ' + nextCase.body;
                                     }
