@@ -54,8 +54,10 @@ abstract ObjectMap<K,V>(Map<Int,Array<Entry<K,V>>>) {
     public function entries() {
         var entries = [];
         for (entryList in this) {
-            for (entry in entryList) {
-                entries.push(entry);
+            if (entryList != null) { // Not sure why we need to check this in js :(
+                for (entry in entryList) {
+                    entries.push(entry);
+                }
             }
         }
         return entries;
