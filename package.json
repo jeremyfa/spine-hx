@@ -1,0 +1,22 @@
+{
+  "name": "spine-hx",
+  "version": "1.0.0",
+  "description": "Spine runtime for Haxe ported from official AS3 runtime.",
+  "main": "convert.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeremyfa/spine-hx.git"
+  },
+  "author": "",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/jeremyfa/spine-hx/issues"
+  },
+  "homepage": "https://github.com/jeremyfa/spine-hx#readme",
+  "dependencies": {
+    "source-map-support": "^0.4.18"
+  }
+}

@@ -1,0 +1,3 @@
+--macro ImportAll.run("spine")
+-js main.js
+--no-output
