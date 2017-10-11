@@ -200,7 +200,7 @@ class IkConstraint implements Constraint {
         y = cwy - pp.worldY;
         var dx:Float = (x * d - y * b) * id - px; var dy:Float = (y * a - x * c) * id - py;
         var l1:Float = cast(Math.sqrt(dx * dx + dy * dy), Float); var l2:Float = child.data.length * csx; var a1:Float = 0; var a2:Float = 0;
-        var _gotoLabel_outer:Bool; while (true) { _gotoLabel_outer = false; 
+        var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
         if (u) {
             l2 *= psx;
             var cos:Float = (tx * tx + ty * ty - l1 * l1 - l2 * l2) / (2 * l1 * l2);
@@ -228,7 +228,7 @@ class IkConstraint implements Constraint {
                     y = cast(Math.sqrt(dd - r * r) * bendDir, Float);
                     a1 = ta - atan2(y, r);
                     a2 = atan2(y / psy, (r - l1) / psx);
-                    { _gotoLabel_outer = true; continue; }
+                    { _gotoLabel_outer = 1; break; }
                 }
             }
             var minAngle:Float = PI; var minX:Float = l1 - a; var minDist:Float = minX * minX; var minY:Float = 0;
@@ -259,7 +259,7 @@ class IkConstraint implements Constraint {
                 a1 = ta - atan2(maxY * bendDir, maxX);
                 a2 = maxAngle * bendDir;
             }
-        }
+        } if (_gotoLabel_outer == 0) break; }
         var os:Float = atan2(cy, cx) * s2;
         var rotation:Float = parent.arotation;
         a1 = (a1 - os) * radDeg + os1 - rotation;
@@ -273,5 +273,5 @@ class IkConstraint implements Constraint {
             a2 -= 360;
         else if (a2 < -180) a2 += 360;
         child.updateWorldTransformWithData(cx, cy, rotation + a2 * alpha, child.ascaleX, child.ascaleY, child.ashearX, child.ashearY);
-    if (!_gotoLabel_outer) break; } }
+    }
 }

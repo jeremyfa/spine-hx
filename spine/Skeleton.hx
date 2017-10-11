@@ -172,34 +172,34 @@ class Skeleton {
         var pathConstraints:Array<PathConstraint> = this.pathConstraints;
         var ikCount:Int = ikConstraints.size; var transformCount:Int = transformConstraints.size; var pathCount:Int = pathConstraints.size;
         var constraintCount:Int = ikCount + transformCount + pathCount;
-        var _gotoLabel_outer:Bool; while (true) { _gotoLabel_outer = false; 
+        var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
         var i:Int = 0; while (i < constraintCount) {
             var ii:Int = 0; while (ii < ikCount) {
                 var constraint:IkConstraint = ikConstraints.get(ii);
                 if (constraint.data.order == i) {
                     sortIkConstraint(constraint);
-                    { ii++; _gotoLabel_outer = true; break; }
+                    { ii++; _gotoLabel_outer = 2; break; }
                 }
-            ii++; } if (_gotoLabel_outer) break;
+            ii++; } if (_gotoLabel_outer == 2) { _gotoLabel_outer = 0; { i++; continue; } } if (_gotoLabel_outer >= 1) break;
             var ii:Int = 0; while (ii < transformCount) {
                 var constraint:TransformConstraint = transformConstraints.get(ii);
                 if (constraint.data.order == i) {
                     sortTransformConstraint(constraint);
-                    { ii++; _gotoLabel_outer = true; break; }
+                    { ii++; _gotoLabel_outer = 2; break; }
                 }
-            ii++; } if (_gotoLabel_outer) break;
+            ii++; } if (_gotoLabel_outer == 2) { _gotoLabel_outer = 0; { i++; continue; } } if (_gotoLabel_outer >= 1) break;
             var ii:Int = 0; while (ii < pathCount) {
                 var constraint:PathConstraint = pathConstraints.get(ii);
                 if (constraint.data.order == i) {
                     sortPathConstraint(constraint);
-                    { ii++; _gotoLabel_outer = true; break; }
+                    { ii++; _gotoLabel_outer = 2; break; }
                 }
-            ii++; } if (_gotoLabel_outer) break;
-        i++; } if (_gotoLabel_outer) continue;
+            ii++; } if (_gotoLabel_outer == 2) { _gotoLabel_outer = 0; { i++; continue; } } if (_gotoLabel_outer >= 1) break;
+        i++; } if (_gotoLabel_outer == 2) continue; if (_gotoLabel_outer >= 1) break;
 
         var i:Int = 0; var n:Int = bones.size; while (i < n) {
-            sortBone(bones.get(i)); i++; } if (_gotoLabel_outer) continue;
-    if (!_gotoLabel_outer) break; } }
+            sortBone(bones.get(i)); i++; } if (_gotoLabel_outer == 2) continue; if (_gotoLabel_outer >= 1) break;
+    if (_gotoLabel_outer == 0) break; } }
 
     private function sortIkConstraint(constraint:IkConstraint):Void {
         var target:Bone = constraint.target;

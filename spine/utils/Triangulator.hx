@@ -71,7 +71,7 @@ class Triangulator {
             // Find ear tip.
             var previous:Int = vertexCount - 1; var i:Int = 0; var next:Int = 1;
             while (true) {
-                var _gotoLabel_outer:Bool; while (true) { _gotoLabel_outer = false; 
+                var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
                 if (!isConcave[i]) {
                     var p1:Int = indices[previous] << 1; var p2:Int = indices[i] << 1; var p3:Int = indices[next] << 1;
                     var p1x:Float = vertices[p1]; var p1y:Float = vertices[p1 + 1];
@@ -83,25 +83,25 @@ class Triangulator {
                         var vx:Float = vertices[v]; var vy:Float = vertices[v + 1];
                         if (positiveArea(p3x, p3y, p1x, p1y, vx, vy)) {
                             if (positiveArea(p1x, p1y, p2x, p2y, vx, vy)) {
-                                if (positiveArea(p2x, p2y, p3x, p3y, vx, vy)) { _gotoLabel_outer = true; break; }
+                                if (positiveArea(p2x, p2y, p3x, p3y, vx, vy)) { _gotoLabel_outer = 1; break; }
                             }
                         }
-                    ii = (ii + 1) % vertexCount; } if (_gotoLabel_outer) continue;
+                    ii = (ii + 1) % vertexCount; } if (_gotoLabel_outer == 2) continue; if (_gotoLabel_outer >= 1) break;
                     break;
-                }
+                } if (_gotoLabel_outer == 0) break; }
 
                 if (next == 0) {
                     do {
                         if (!isConcave[i]) break;
                         i--;
-                    } while (i > 0); if (_gotoLabel_outer) continue;
+                    } while (i > 0);
                     break;
                 }
 
                 previous = i;
                 i = next;
                 next = (next + 1) % vertexCount;
-            if (!_gotoLabel_outer) break; } }
+            }
 
             // Cut ear tip.
             triangles.add(indices[(vertexCount + i - 1) % vertexCount]);

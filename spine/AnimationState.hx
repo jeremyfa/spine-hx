@@ -727,7 +727,7 @@ class TrackEntry implements Poolable {
         var timelineData:IntArray = this.timelineData.setSize(timelinesCount);
         timelineDipMix.clear();
         var timelineDipMix = this.timelineDipMix.setSize(timelinesCount);
-        var _gotoLabel_outer:Bool; while (true) { _gotoLabel_outer = false; 
+        var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
         var i:Int = 0; while (i < timelinesCount) {
             var id:Int = (cast(timelines[i], Timeline)).getPropertyId();
             if (!propertyIDs.add(id))
@@ -741,14 +741,14 @@ class TrackEntry implements Poolable {
                         if (entry.mixDuration > 0) {
                             timelineData[i] = @:privateAccess AnimationState.DIP_MIX;
                             timelineDipMix[i] = entry;
-                            { ii--; _gotoLabel_outer = true; break; }
+                            { ii--; _gotoLabel_outer = 2; break; }
                         }
                         break;
                     }
-                ii--; } if (_gotoLabel_outer) break;
+                ii--; } if (_gotoLabel_outer == 2) { _gotoLabel_outer = 0; { i++; continue; } } if (_gotoLabel_outer >= 1) break;
                 timelineData[i] = @:privateAccess AnimationState.DIP;
             }
-        i++; } if (_gotoLabel_outer) continue; if (!_gotoLabel_outer) break; } return lastEntry;
+        i++; } if (_gotoLabel_outer == 2) continue; if (_gotoLabel_outer >= 1) break; if (_gotoLabel_outer == 0) break; } return lastEntry;
     }
 
     private function hasTimeline(id:Int):Bool {

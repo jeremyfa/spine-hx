@@ -225,7 +225,10 @@ using StringTools;
         var inClassInfo:TypeInfo = null;
         var inSubClass = false;
         var inSubClassInfo:TypeInfo = null;
-        var loopStack:Array<String> = [];
+        var loopStack:Array<{
+            control:String,
+            label:String
+        }> = [];
         var classHasConstructor = false;
         var subClassHasConstructor = false;
         var inMethod = false;
@@ -888,11 +891,11 @@ using StringTools;
                     else if (RE_LABEL.match(after) && haxe.indexOf('case ', cast Math.max(0, haxe.lastIndexOf("\n"))) == -1) {
                         i += RE_LABEL.matched(0).length;
                         var flagName = '_gotoLabel_' + RE_LABEL.matched(1);
-                        haxe += 'var ' + flagName + ':Bool; while (true) { ' + flagName + ' = false; ';
-                        endOfExpression.unshift('if (!' + flagName + ') break; }');
+                        haxe += 'var ' + flagName + ':Int; while (true) { ' + flagName + ' = 0; ';
+                        endOfExpression.unshift('if (' + flagName + ' == 0) break; }');
                         continueToLabels.unshift({
-                            breakCode: 'if (' + flagName + ') break',
-                            continueCode: 'if (' + flagName + ') continue',
+                            breakCode: 'if (' + flagName + ' >= 1) break',
+                            continueCode: 'if (' + flagName + ' == 2) continue',
                             depth: 0
                         });
                     }
@@ -918,7 +921,10 @@ using StringTools;
                     }
                     else if (word == 'switch' && RE_SWITCH.match(after)) {
 
-                        loopStack.push('switch');
+                        loopStack.push({
+                            control: 'switch',
+                            label: null
+                        });
 
                         openParens++;
                         i += RE_SWITCH.matched(0).length;
@@ -1166,6 +1172,13 @@ using StringTools;
                         }
                     }
                     else if (word == 'if' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
+
+                        var javaBefore = cleanedJava.substring(0, i);
+                        var labelName = null;
+                        if (RE_LABEL_BEFORE.match(javaBefore)) {
+                            labelName = RE_LABEL_BEFORE.matched(1);
+                        }
+
                         i += word.length;
                         haxe += word;
                         c = cleanedJava.charAt(i);
@@ -1177,7 +1190,82 @@ using StringTools;
                         haxe += '(';
                         i++;
                         openParens++;
-                        //consumeExpression({ until: ')' });
+
+                        consumeExpression({ until: ')' });
+
+                        // Is the rest inline?
+                        var isInline = false;
+                        var n = i;
+                        var nc = cleanedJava.charAt(n);
+                        while (n < len && nc != ';' && nc != '{') {
+                            n++;
+                            nc = cleanedJava.charAt(n);
+                        }
+                        if (nc == ';') isInline = true;
+
+                        if (isInline) {
+                            consumeExpression({ until: ';' });
+                            i--;
+                            haxe = haxe.substring(0, haxe.length-1);
+                            cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                        }
+                        else {
+                            i = n + 1;
+                            openBraces++;
+                            haxe += ' {';
+                            consumeExpression({ until: '}' });
+                        }
+
+                        // Handle labeled if
+                        if (labelName != null && !isInline) {
+
+                            while (RE_ELSE.match(cleanedJava.substring(i))) {
+
+                                haxe += java.substring(i, i + RE_ELSE.matched(1).length);
+                                i += RE_ELSE.matched(1).length;
+                                haxe += 'else';
+                                i += 4;
+
+                                var ifPart = RE_ELSE.matched(2);
+                                // Else followed by if (else if)
+                                if (ifPart != null && ifPart.trim() != '') {
+                                    haxe += RE_ELSE.matched(3) + '(';
+                                    i += RE_ELSE.matched(3).length + 1;
+                                    openParens++;
+                                    consumeExpression({ until: ')' });
+                                }
+
+                                // Is the rest inline?
+                                var isInline = false;
+                                var n = i;
+                                var nc = cleanedJava.charAt(n);
+                                while (n < len && nc != ';' && nc != '{') {
+                                    n++;
+                                    nc = cleanedJava.charAt(n);
+                                }
+                                if (nc == ';') isInline = true;
+
+                                if (isInline) {
+                                    consumeExpression({ until: ';' });
+                                    i--;
+                                    haxe = haxe.substring(0, haxe.length-1);
+                                    cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
+                                }
+                                else {
+                                    i = n + 1;
+                                    openBraces++;
+                                    haxe += ' {';
+                                    consumeExpression({ until: '}' });
+                                }
+                            }
+
+                            // Add label end of expression
+                            var expr = endOfExpression.shift();
+                            haxe += ' ' + expr;
+                            continueToLabels.shift();
+
+                        }
+
                     }
                     else if (word == 'do' && cleanedAfter.substr(word.length).ltrim().startsWith('{')) {
 
@@ -1223,6 +1311,7 @@ using StringTools;
                                 }
                                 else {
                                     haxe += ' ' + item.continueCode + ';';
+                                    haxe += ' ' + item.breakCode + ';';
                                 }
                                 item.depth--;
                             }
@@ -1232,7 +1321,17 @@ using StringTools;
                     }
                     else if (word == 'while' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
 
-                        loopStack.push('while');
+                        loopStack.push({
+                            control: 'while',
+                            label: null
+                        });
+
+                        var javaBefore = cleanedJava.substring(0, i);
+                        var labelName = null;
+                        if (RE_LABEL_BEFORE.match(javaBefore)) {
+                            labelName = RE_LABEL_BEFORE.matched(1);
+                            loopStack[loopStack.length - 1].label = labelName;
+                        }
 
                         i += word.length;
                         c = cleanedJava.charAt(i);
@@ -1278,6 +1377,7 @@ using StringTools;
                             }
                             else {
                                 haxe += ' ' + item.continueCode + ';';
+                                haxe += ' ' + item.breakCode + ';';
                             }
                             item.depth--;
                         }
@@ -1287,7 +1387,17 @@ using StringTools;
                     }
                     else if (word == 'for' && cleanedAfter.substr(word.length).ltrim().startsWith('(')) {
 
-                        loopStack.push('for');
+                        loopStack.push({
+                            control: 'switch',
+                            label: null
+                        });
+
+                        var javaBefore = cleanedJava.substring(0, i);
+                        var labelName = null;
+                        if (RE_LABEL_BEFORE.match(javaBefore)) {
+                            labelName = RE_LABEL_BEFORE.matched(1);
+                            loopStack[loopStack.length - 1].label = labelName;
+                        }
 
                         if (RE_FOREACH.match(cleanedAfter)) {
                             // For each (for (A a : B) ...)
@@ -1313,7 +1423,7 @@ using StringTools;
                             if (isInline) {
                                 haxe += ' {';
                                 consumeExpression({ until: ';' });
-                                haxe += ' }';
+                                haxe += ' ';
                             }
                             else {
                                 i = n + 1;
@@ -1322,7 +1432,21 @@ using StringTools;
                                 consumeExpression({ until: '}' });
                                 haxe = haxe.substring(0, haxe.length - 1);
                                 cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
-                                haxe += '}';
+                            }
+
+                            haxe += '}';
+
+                            var itemIndex = 0;
+                            var stackLen = loopStack.length;
+                            for (item in loopStack) {
+                                if (item.label != null) {
+                                    if (itemIndex == stackLen - 2) {
+                                        haxe += ' if (_gotoLabel_' + item.label + ' == 2) { _gotoLabel_' + item.label + ' = 0; continue; }';
+                                    } else if (itemIndex < stackLen - 2) {
+                                        haxe += ' if (_gotoLabel_' + item.label + ' == 2) break;';
+                                    }
+                                }
+                                itemIndex++;
                             }
 
                             for (item in continueToLabels) {
@@ -1331,6 +1455,7 @@ using StringTools;
                                 }
                                 else {
                                     haxe += ' ' + item.continueCode + ';';
+                                    haxe += ' ' + item.breakCode + ';';
                                 }
                                 item.depth--;
                             }
@@ -1402,7 +1527,8 @@ using StringTools;
 
                                         var label = RE_CONTINUE_OR_BREAK.matched(2);
                                         if (label != null && label.trim() != '') {
-                                            breakCode += '_gotoLabel_' + RE_CONTINUE_OR_BREAK.matched(2) + ' = true; break;';
+                                            var flag = part.startsWith('continue') ? '2' : '1';
+                                            breakCode += '_gotoLabel_' + RE_CONTINUE_OR_BREAK.matched(2) + ' = ' + flag + '; break;';
                                         }
                                         else {
                                             breakCode += RE_CONTINUE_OR_BREAK.matched(0).replace('continue', '__CONTINUE__');
@@ -1432,8 +1558,8 @@ using StringTools;
                                 startIndex = haxe.length;
                                 consumeExpression({ until: ';' });
                                 convertContinuesAndBreaks();
-                                if (forIncrement.trim() != '') haxe += ' ' + forIncrement + '; }';
-                                else haxe += ' }';
+                                if (forIncrement.trim() != '') haxe += ' ' + forIncrement + ';';
+                                haxe += ' }';
                             }
                             else {
                                 i = n + 1;
@@ -1445,11 +1571,22 @@ using StringTools;
                                 haxe = haxe.substring(0, haxe.length - 1);
                                 cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
                                 if (forIncrement.trim() != '') {
-                                    haxe += forIncrement + '; }';
+                                    haxe += forIncrement + '; ';
                                 }
-                                else {
-                                    haxe += '}';
+                                haxe += '}';
+                            }
+
+                            var itemIndex = 0;
+                            var stackLen = loopStack.length;
+                            for (item in loopStack) {
+                                if (item.label != null) {
+                                    if (itemIndex == stackLen - 2) {
+                                        haxe += ' if (_gotoLabel_' + item.label + ' == 2) { _gotoLabel_' + item.label + ' = 0; continue; }';
+                                    } else if (itemIndex < stackLen - 2) {
+                                        haxe += ' if (_gotoLabel_' + item.label + ' == 2) break;';
+                                    }
                                 }
+                                itemIndex++;
                             }
 
                             for (item in continueToLabels) {
@@ -1458,6 +1595,7 @@ using StringTools;
                                 }
                                 else {
                                     haxe += ' ' + item.continueCode + ';';
+                                    haxe += ' ' + item.breakCode + ';';
                                 }
                                 item.depth--;
                             }
@@ -2136,8 +2274,9 @@ using StringTools;
             }
         }
 
-        // Replace outside-of-for break outer;
-        haxe = haxe.replace('break outer;', '{ _gotoLabel_outer = true; continue; }');
+        // Replace outside-of-for break/continue outer;
+        haxe = haxe.replace('break outer;', '{ _gotoLabel_outer = 1; break; }');
+        haxe = haxe.replace('continue outer;', '{ _gotoLabel_outer = 1; continue; }');
 
         // Update world transform replaces
         haxe = haxe.replace('updateWorldTransform(', 'updateWorldTransformWithData(');
@@ -3036,6 +3175,7 @@ using StringTools;
     static var RE_NEW_ARRAY = ~/^new\s+([a-zA-Z0-9_]+)\s*\[/;
     static var RE_NEW_INSTANCE = ~/^new\s+([a-zA-Z0-9_]+)\s*\((\s*\))?/;
     static var RE_SWITCH = ~/^switch\s*\(/;
+    static var RE_ELSE = ~/^(\s*)else((\s+if\s*)\([^{]+\))?/;
     static var RE_CASE = ~/^(case|default)\s*(?:([^:]+)\s*)?:\s*/;
     static var RE_INSTANCEOF = ~/^([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+instanceof\s+([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
     static var RE_CAST = ~/^\(\s*([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s*\)\s*((?:[a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)|(?:\([^\(\)]+\)))/;
@@ -3044,6 +3184,7 @@ using StringTools;
     static var RE_FOREACH = ~/^for\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*:/;
     static var RE_CATCH = ~/^catch\s*\(\s*([a-zA-Z0-9,<>\[\]_ ]+)\s+([a-zA-Z0-9_]+)\s*\)/;
     static var RE_LABEL = ~/^(outer)\s*:/;
+    static var RE_LABEL_BEFORE = ~/(outer)\s*:\s*$/;
     static var RE_CONTINUE = ~/^(continue)(\s*);/;
     static var RE_CONTINUE_OR_BREAK = ~/^(continue|break)(?:\s+(outer)\s*)?;/;
     static var RE_ENUM_VALUE = ~/^([a-zA-Z0-9_]+)(\([^\)]+\))?(\s*)((?:,\s*;)|,|;|\})/;

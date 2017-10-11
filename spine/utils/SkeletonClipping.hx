@@ -94,7 +94,7 @@ class SkeletonClipping {
         var index:Short = 0;
         clippedVertices.clear();
         clippedTriangles.clear();
-        var _gotoLabel_outer:Bool; while (true) { _gotoLabel_outer = false; 
+        var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
         var i:Int = 0; while (i < trianglesLength) {
             var vertexOffset:Int = triangles[i] << 1;
             var x1:Float = vertices[vertexOffset]; var y1:Float = vertices[vertexOffset + 1];
@@ -136,7 +136,7 @@ class SkeletonClipping {
                         clippedVerticesItems[s] = u1 * a + u2 * b + u3 * c;
                         clippedVerticesItems[s + 1] = v1 * a + v2 * b + v3 * c;
                         s += 2;
-                    ii += 2; } if (_gotoLabel_outer) break;
+                    ii += 2; } if (_gotoLabel_outer == 2) break; if (_gotoLabel_outer >= 1) break;
 
                     s = clippedTriangles.size;
                     var clippedTrianglesItems:ShortArray = clippedTriangles.setSize(s + 3 * (clipOutputCount - 2));
@@ -146,7 +146,7 @@ class SkeletonClipping {
                         clippedTrianglesItems[s + 1] = cast((index + ii), Short);
                         clippedTrianglesItems[s + 2] = cast((index + ii + 1), Short);
                         s += 3;
-                    ii++; } if (_gotoLabel_outer) break;
+                    ii++; } if (_gotoLabel_outer == 2) break; if (_gotoLabel_outer >= 1) break;
                     index += clipOutputCount + 1;
 
                 } else {
@@ -195,11 +195,11 @@ class SkeletonClipping {
                     clippedTrianglesItems[s + 1] = cast((index + 1), Short);
                     clippedTrianglesItems[s + 2] = cast((index + 2), Short);
                     index += 3;
-                    { p++; _gotoLabel_outer = true; break; }
+                    { p++; _gotoLabel_outer = 2; break; }
                 }
-            p++; } if (_gotoLabel_outer) break;
-        i += 3; } if (_gotoLabel_outer) continue;
-    if (!_gotoLabel_outer) break; } }
+            p++; } if (_gotoLabel_outer == 2) { _gotoLabel_outer = 0; { i += 3; continue; } } if (_gotoLabel_outer >= 1) break;
+        i += 3; } if (_gotoLabel_outer == 2) continue; if (_gotoLabel_outer >= 1) break;
+    if (_gotoLabel_outer == 0) break; } }
 
     /** Clips the input triangle against the convex, clockwise clipping area. If the triangle lies entirely within the clipping
      * area, false is returned. The clipping area must duplicate the first vertex at the end of the vertices list. */
