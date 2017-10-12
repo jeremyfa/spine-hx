@@ -748,7 +748,8 @@ class TrackEntry implements Poolable {
                 ii--; } if (_gotoLabel_outer == 2) { _gotoLabel_outer = 0; { i++; continue; } } if (_gotoLabel_outer >= 1) break;
                 timelineData[i] = @:privateAccess AnimationState.DIP;
             }
-        i++; } if (_gotoLabel_outer == 2) continue; if (_gotoLabel_outer >= 1) break; if (_gotoLabel_outer == 0) break; } return lastEntry;
+        i++; } if (_gotoLabel_outer == 0) break; }
+        return lastEntry;
     }
 
     private function hasTimeline(id:Int):Bool {

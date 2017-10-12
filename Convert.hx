@@ -1371,6 +1371,13 @@ using StringTools;
                             consumeExpression({ until: '}' });
                         }
 
+                        if (labelName != null) {
+                            // Add label end of expression
+                            var expr = endOfExpression.shift();
+                            haxe += ' ' + expr;
+                            continueToLabels.shift();
+                        }
+
                         for (item in continueToLabels) {
                             if (item.depth > 1) {
                                 haxe += ' ' + item.breakCode + ';';
@@ -1447,6 +1454,13 @@ using StringTools;
                                     }
                                 }
                                 itemIndex++;
+                            }
+
+                            if (labelName != null) {
+                                // Add label end of expression
+                                var expr = endOfExpression.shift();
+                                haxe += ' ' + expr;
+                                continueToLabels.shift();
                             }
 
                             for (item in continueToLabels) {
@@ -1587,6 +1601,13 @@ using StringTools;
                                     }
                                 }
                                 itemIndex++;
+                            }
+
+                            if (labelName != null) {
+                                // Add label end of expression
+                                var expr = endOfExpression.shift();
+                                haxe += ' ' + expr;
+                                continueToLabels.shift();
                             }
 
                             for (item in continueToLabels) {

@@ -198,8 +198,8 @@ class SkeletonClipping {
                     { p++; _gotoLabel_outer = 2; break; }
                 }
             p++; } if (_gotoLabel_outer == 2) { _gotoLabel_outer = 0; { i += 3; continue; } } if (_gotoLabel_outer >= 1) break;
-        i += 3; } if (_gotoLabel_outer == 2) continue; if (_gotoLabel_outer >= 1) break;
-    if (_gotoLabel_outer == 0) break; } }
+        i += 3; } if (_gotoLabel_outer == 0) break; }
+    }
 
     /** Clips the input triangle against the convex, clockwise clipping area. If the triangle lies entirely within the clipping
      * area, false is returned. The clipping area must duplicate the first vertex at the end of the vertices list. */
