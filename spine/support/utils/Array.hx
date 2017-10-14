@@ -123,7 +123,7 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
         this[index] = value;
     }
 
-    inline public function indexOf(value:T, identity:Bool):Int {
+    inline public function indexOf(value:T, ?identity:Bool):Int {
         return this.indexOf(value);
     }
 
