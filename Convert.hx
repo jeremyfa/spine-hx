@@ -2276,12 +2276,6 @@ using StringTools;
         else if (rootType == 'spine.BlendMode') {
             haxe = haxe.replace('import spine.support.graphics.GL20;', '');
         }
-        else if (rootType == 'spine.attachments.RegionAttachment') {
-            haxe = haxe.replace(' extends Attachment {', ' extends Attachment {\n    public var rendererObject:Dynamic = null;\n');
-        }
-        else if (rootType == 'spine.attachments.MeshAttachment') {
-            haxe = haxe.replace(' extends VertexAttachment {', ' extends VertexAttachment {\n    public var rendererObject:Dynamic = null;\n');
-        }
 
         // Convert enums valueOf() / name() / ordinal()
         for (enumName in ctx.enums.keys()) {
