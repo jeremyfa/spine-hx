@@ -147,6 +147,9 @@ class JsonDynamic implements JsonValue {
 
     public var size(get,never):Int;
     function get_size():Int {
+        if (Std.is(data, Array) || Std.is(data, std.Array)) {
+            return data.length;
+        }
         return Reflect.fields(data).length;
     }
 
