@@ -4,7 +4,6 @@ package spine.support.utils;
 abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
     public static function copy<T>(src:std.Array<T>, srcPos:Int, dest:Dynamic, destPos:Int, length:Int) {
-        trace('len: ' + length);
         for (i in 0...length) {
             dest[i + destPos] = src[i + srcPos];
         }
