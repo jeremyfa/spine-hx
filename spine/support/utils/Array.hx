@@ -3,11 +3,10 @@ package spine.support.utils;
 @:forward(iterator, length, push, pop, shift, unshift, splice)
 abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
-    public static function copy(src:Dynamic, srcPos:Int, dest:Dynamic, destPos:Int, length:Int) {
-        var src_:Array<Dynamic> = src;
-        var dest_:Array<Dynamic> = dest;
+    public static function copy<T>(src:std.Array<T>, srcPos:Int, dest:Dynamic, destPos:Int, length:Int) {
+        trace('len: ' + length);
         for (i in 0...length) {
-            dest_[i + destPos] = src_[i + srcPos];
+            dest[i + destPos] = src[i + srcPos];
         }
     }
 
