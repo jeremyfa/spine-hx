@@ -46,6 +46,10 @@ class JsonDynamic implements JsonValue {
 
     private var data:Dynamic;
 
+    function toString() {
+        return 'JsonDynamic:'+data;
+    }
+
     public function new(data:Dynamic) {
         this.data = data;
     }
@@ -169,6 +173,10 @@ class JsonDynamic implements JsonValue {
 } //JsonDynamic
 
 class JsonChild implements JsonValue {
+
+    function toString() {
+        return 'JsonChild:'+data[index];
+    }
 
     public var keys:Array<String>;
     public var data:Array<Dynamic>;
