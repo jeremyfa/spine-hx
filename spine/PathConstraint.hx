@@ -30,7 +30,6 @@
 
 package spine;
 
-
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
 import spine.PathConstraintData.PositionMode;
@@ -49,6 +48,7 @@ import spine.utils.SpineUtils;
  * See <a href="http://esotericsoftware.com/spine-path-constraints">Path constraints</a> in the Spine User Guide. */
 class PathConstraint implements Constraint {
     inline private static var NONE:Int = -1; inline private static var BEFORE:Int = -2; inline private static var AFTER:Int = -3;
+    private static var epsilon:Float = 0.00001;
 
     public var data:PathConstraintData;
     public var bones:Array<Bone>;
@@ -116,11 +116,15 @@ class PathConstraint implements Constraint {
             var i:Int = 0; var n:Int = spacesCount - 1; while (i < n) {
                 var bone:Bone = cast(bones[i], Bone);
                 var setupLength:Float = bone.data.length;
-                if (setupLength == 0) setupLength = 0.000000001;
-                var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
-                var length:Float = cast(Math.sqrt(x * x + y * y), Float);
-                if (scale) lengths[i] = length;                
-                spaces[++i] = (lengthSpacing ? setupLength + spacing : spacing) * length / setupLength;
+                if (setupLength < epsilon) {
+                    if (scale) lengths[i] = 0;
+                    spaces[++i] = 0;
+                } else {
+                    var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
+                    var length:Float = cast(Math.sqrt(x * x + y * y), Float);
+                    if (scale) lengths[i] = length;
+                    spaces[++i] = (lengthSpacing ? setupLength + spacing : spacing) * length / setupLength;
+                }
             }
         } else {
             var i:Int = 1; while (i < spacesCount) {
@@ -145,7 +149,7 @@ class PathConstraint implements Constraint {
             var x:Float = positions[p]; var y:Float = positions[p + 1]; var dx:Float = x - boneX; var dy:Float = y - boneY;
             if (scale) {
                 var length:Float = lengths[i];
-                if (length != 0) {
+                if (length >= epsilon) {
                     var s:Float = (cast(Math.sqrt(dx * dx + dy * dy) / length - 1, Float)) * rotateMix + 1;
                     bone.a *= s;
                     bone.c *= s;
@@ -157,7 +161,7 @@ class PathConstraint implements Constraint {
                 var a:Float = bone.a; var b:Float = bone.b; var c:Float = bone.c; var d:Float = bone.d; var r:Float = 0; var cos:Float = 0; var sin:Float = 0;
                 if (tangents)
                     r = positions[p - 1];
-                else if (spaces[i + 1] == 0)
+                else if (spaces[i + 1] < epsilon)
                     r = positions[p + 2];
                 else
                     r = cast(Math.atan2(dy, dx), Float);
@@ -249,7 +253,7 @@ class PathConstraint implements Constraint {
                         path.computeWorldVertices(target, curve * 6 + 2, 8, world, 0, 2);
                 }
                 addCurvePosition(p, world[0], world[1], world[2], world[3], world[4], world[5], world[6], world[7], out, o,
-                    tangents || (i > 0 && space == 0));
+                    tangents || (i > 0 && space < epsilon));
             i++; o += 3; }
             return out;
         }
@@ -397,7 +401,7 @@ class PathConstraint implements Constraint {
                 }
                 break;
             segment++; }
-            addCurvePosition(p * 0.1, x1, y1, cx1, cy1, cx2, cy2, x2, y2, out, o, tangents || (i > 0 && space == 0));
+            addCurvePosition(p * 0.1, x1, y1, cx1, cy1, cx2, cy2, x2, y2, out, o, tangents || (i > 0 && space < epsilon));
         i++; o += 3; }
         return out;
     }
@@ -417,13 +421,14 @@ class PathConstraint implements Constraint {
     }
 
     private function addCurvePosition(p:Float, x1:Float, y1:Float, cx1:Float, cy1:Float, cx2:Float, cy2:Float, x2:Float, y2:Float, out:FloatArray, o:Int, tangents:Bool):Void {
-        if (p == 0 || Math.isNaN(p)) p = 0.0001;
+        if (p < epsilon || Math.isNaN(p)) p = epsilon;
         var tt:Float = p * p; var ttt:Float = tt * p; var u:Float = 1 - p; var uu:Float = u * u; var uuu:Float = uu * u;
         var ut:Float = u * p; var ut3:Float = ut * 3; var uut3:Float = u * ut3; var utt3:Float = ut3 * p;
         var x:Float = x1 * uuu + cx1 * uut3 + cx2 * utt3 + x2 * ttt; var y:Float = y1 * uuu + cy1 * uut3 + cy2 * utt3 + y2 * ttt;
         out[o] = x;
         out[o + 1] = y;
-        if (tangents) out[o + 2] = cast(Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt)), Float);
+        if (tangents)
+            out[o + 2] = cast(Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt)), Float);
     }
 
     public function getOrder():Int {
