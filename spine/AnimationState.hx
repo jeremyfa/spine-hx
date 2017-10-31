@@ -246,9 +246,10 @@ class AnimationState {
         if (from.mixingFrom != null) applyMixingFrom(from, skeleton, currentPose);
 
         var mix:Float = 0;
-        if (to.mixDuration == 0) // Single frame mix to undo mixingFrom changes.
+        if (to.mixDuration == 0) { // Single frame mix to undo mixingFrom changes.
             mix = 1;
-        else {
+            currentPose = MixPose.setup;
+        } else {
             mix = to.mixTime / to.mixDuration;
             if (mix > 1) mix = 1;
         }
@@ -283,18 +284,12 @@ class AnimationState {
                 break;
             } else if (_switchCond0 == DIP) {
                 pose = MixPose.setup;
-                alpha = mix == 1 ? 0 : alphaDip;
+                alpha = alphaDip;
                 break;
             } else {
                 pose = MixPose.setup;
-                if (mix == 1)
-                    alpha = 0;
-                else {
-                    alpha = alphaDip;
-                    var dipMix:TrackEntry = cast(timelineDipMix[i], TrackEntry);
-                    alpha *= MathUtils.max(0, Std.int(1 - dipMix.mixTime / dipMix.mixDuration));
-                }
-                break;
+                var dipMix:TrackEntry = cast(timelineDipMix[i], TrackEntry);
+                alpha = alphaDip * MathUtils.max(0, Std.int(1 - dipMix.mixTime / dipMix.mixDuration));
             } } break; } if (_continueAfterSwitch0) { i++; continue; }
             from.totalAlpha += alpha;
             if (Std.is(timeline, RotateTimeline))
