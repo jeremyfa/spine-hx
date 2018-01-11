@@ -45,6 +45,8 @@ import spine.BoneData.TransformMode_enum;
  * local transform that can be applied to compute the world transform. The local transform and applied transform may differ if a
  * constraint or application code modifies the world transform after it was computed from the local transform. */
 class Bone implements Updatable {
+    public static var yDown = false;
+
     public var data:BoneData;
     public var skeleton:Skeleton;
     public var parent:Bone;
@@ -123,7 +125,7 @@ class Bone implements Updatable {
                 la = -la;
                 lb = -lb;
             }
-            if (skeleton.flipY) {
+            if (skeleton.flipY != Bone.yDown) {
                 y = -y;
                 lc = -lc;
                 ld = -ld;
@@ -203,7 +205,7 @@ class Bone implements Updatable {
             var lb:Float = cosDeg(90 + shearY) * scaleY;
             var lc:Float = sinDeg(shearX) * scaleX;
             var ld:Float = sinDeg(90 + shearY) * scaleY;            
-            if (data.transformMode != TransformMode.noScaleOrReflection ? pa * pd - pb * pc < 0 : skeleton.flipX != skeleton.flipY) {
+            if (data.transformMode != TransformMode.noScaleOrReflection ? pa * pd - pb * pc < 0 : ((skeleton.flipX != skeleton.flipY) != Bone.yDown)) {
                 zb = -zb;
                 zd = -zd;
             }            
@@ -229,7 +231,7 @@ class Bone implements Updatable {
             var lb:Float = cosDeg(90 + shearY) * scaleY;
             var lc:Float = sinDeg(shearX) * scaleX;
             var ld:Float = sinDeg(90 + shearY) * scaleY;            
-            if (data.transformMode != TransformMode.noScaleOrReflection ? pa * pd - pb * pc < 0 : skeleton.flipX != skeleton.flipY) {
+            if (data.transformMode != TransformMode.noScaleOrReflection ? pa * pd - pb * pc < 0 : ((skeleton.flipX != skeleton.flipY) != Bone.yDown)) {
                 zb = -zb;
                 zd = -zd;
             }            
@@ -244,7 +246,7 @@ class Bone implements Updatable {
             a = -a;
             b = -b;
         }
-        if (skeleton.flipY) {
+        if (skeleton.flipY != Bone.yDown) {
             c = -c;
             d = -d;
         }
