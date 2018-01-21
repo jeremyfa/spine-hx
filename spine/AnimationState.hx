@@ -529,9 +529,13 @@ class AnimationState {
             last.next = entry;
             if (delay <= 0) {
                 var duration:Float = last.animationEnd - last.animationStart;
-                if (duration != 0)
-                    delay += duration * (1 + Std.int((last.trackTime / duration))) - data.getMix(last.animation, animation);
-                else
+                if (duration != 0) {
+                    if (last.loop)
+                        delay += duration * (1 + Std.int((last.trackTime / duration)));
+                    else
+                        delay += duration;
+                    delay -= data.getMix(last.animation, animation);                
+                }    else
                     delay = 0;
             }
         }
