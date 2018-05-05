@@ -9,7 +9,7 @@ class StringExtensions {
 
     /** Hash code for mappings. */
     inline public static function getHashCode(str:String):Int {
-        var hash = 0, i, chr;
+        var hash = 0, chr;
         if (str.length == 0) return hash;
         for (i in 0...str.length) {
             chr   = str.charCodeAt(i);

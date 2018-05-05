@@ -3,9 +3,10 @@ package spine.support.utils;
 @:forward(iterator, length, push, pop, shift, unshift, splice)
 abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
-    public static function copy<T>(src:std.Array<T>, srcPos:Int, dest:Dynamic, destPos:Int, length:Int) {
+    public static function copy<T>(src:std.Array<T>, srcPos:Int, dest:std.Array<T>, destPos:Int, length:Int) {
         for (i in 0...length) {
-            dest[i + destPos] = src[i + srcPos];
+            //dest[i + destPos] = src[i + srcPos];
+            dest.unsafeSet(i + destPos, src.unsafeGet(i + srcPos));
         }
     }
 
@@ -26,7 +27,8 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
             array.setSize(len);
         }
         for (i in 0...len2) {
-            array[i] = FloatArray.create(length2);
+            //array[i] = FloatArray.create(length2);
+            array.unsafeSet(i, FloatArray.create(length2));
         }
         return array;
     }
@@ -39,7 +41,8 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
             array.setSize(len);
         }
         for (i in 0...len2) {
-            array[i] = IntArray.create(length2);
+            //array[i] = IntArray.create(length2);
+            array.unsafeSet(i, IntArray.create(length2));
         }
         return array;
     }
@@ -108,17 +111,20 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
         var len = i + items.length;
         setSize(len);
         for (item in items) {
-            this[i++] = item;
+            //this[i++] = item;
+            this.unsafeSet(i++, item);
             if (--count <= 0) break;
         }
     }
 
     inline public function get(index:Int):T {
-        return this[index];
+        //return this[index];
+        return this.unsafeGet(index);
     }
 
     inline public function set(index:Int, value:T):Void {
-        this[index] = value;
+        //this[index] = value;
+        this.unsafeSet(index, value);
     }
 
     inline public function indexOf(value:T, ?identity:Bool):Int {
@@ -126,7 +132,8 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
     }
 
     inline public function removeIndex(index:Int):T {
-        var item = this[index];
+        //var item = this[index];
+        var item = this.unsafeGet(index);
         this.splice(index, 1);
         return item;
     }

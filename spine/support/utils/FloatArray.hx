@@ -62,17 +62,20 @@ abstract FloatArray(std.Array<Float>) from std.Array<Float> to std.Array<Float> 
         var len = i + items.length;
         setSize(len);
         for (item in items) {
-            this[i++] = item;
+            //this[i++] = item;
+            this.unsafeSet(i++, item);
             if (--count <= 0) break;
         }
     }
 
     inline public function get(index:Int):Float {
-        return this[index];
+        //return this[index];
+        return this.unsafeGet(index);
     }
 
     inline public function set(index:Int, value:Float):Void {
-        this[index] = value;
+        //this[index] = value;
+        this.unsafeSet(index, value);
     }
 
     inline public function indexOf(value:Float, identity:Bool):Int {

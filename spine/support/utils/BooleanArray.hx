@@ -62,17 +62,20 @@ abstract BooleanArray(std.Array<Bool>) from std.Array<Bool> to std.Array<Bool> {
         var len = i + items.length;
         setSize(len);
         for (item in items) {
-            this[i++] = item;
+            //this[i++] = item;
+            this.unsafeSet(i++, item);
             if (--count <= 0) break;
         }
     }
 
     inline public function get(index:Int):Bool {
-        return this[index];
+        //return this[index];
+        return this.unsafeGet(index);
     }
 
     inline public function set(index:Int, value:Bool):Void {
-        this[index] = value;
+        //this[index] = value;
+        this.unsafeSet(index, value);
     }
 
     inline public function indexOf(value:Bool, identity:Bool):Int {
@@ -80,7 +83,8 @@ abstract BooleanArray(std.Array<Bool>) from std.Array<Bool> to std.Array<Bool> {
     }
 
     inline public function removeIndex(index:Int):Bool {
-        var item = this[index];
+        //var item = this[index];
+        var item = this.unsafeGet(index);
         this.splice(index, 1);
         return item;
     }
