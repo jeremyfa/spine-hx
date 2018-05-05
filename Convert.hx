@@ -3152,6 +3152,7 @@ using StringTools;
         'SkeletonBinary.java' => true,
         'utils/SkeletonActor.java' => true,
         'utils/SkeletonActorPool.java' => true,
+        'utils/SkeletonDrawable.java' => true,
         'utils/TwoColorPolygonBatch.java' => true,
         'vertexeffects/JitterEffect.java' => true,
         'vertexeffects/SwirlEffect.java' => true
