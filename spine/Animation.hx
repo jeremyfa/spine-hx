@@ -1686,7 +1686,7 @@ class MixPose_enum {
     public inline static var current_name = "current";
     public inline static var currentLayered_name = "currentLayered";
 
-    public static function valueOf(value:String):MixPose {
+    public inline static function valueOf(value:String):MixPose {
         return switch (value) {
             case "setup": MixPose.setup;
             case "current": MixPose.current;
@@ -1705,7 +1705,7 @@ class MixDirection_enum {
     public inline static var directionIn_name = "directionIn";
     public inline static var directionOut_name = "directionOut";
 
-    public static function valueOf(value:String):MixDirection {
+    public inline static function valueOf(value:String):MixDirection {
         return switch (value) {
             case "directionIn": MixDirection.directionIn;
             case "directionOut": MixDirection.directionOut;
@@ -1749,7 +1749,7 @@ class TimelineType_enum {
     public inline static var pathConstraintMix_name = "pathConstraintMix";
     public inline static var twoColor_name = "twoColor";
 
-    public static function valueOf(value:String):TimelineType {
+    public inline static function valueOf(value:String):TimelineType {
         return switch (value) {
             case "rotate": TimelineType.rotate;
             case "translate": TimelineType.translate;

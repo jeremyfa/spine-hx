@@ -1216,7 +1216,7 @@ class EventType_enum {
     public inline static var complete_name = "complete";
     public inline static var event_name = "event";
 
-    public static function valueOf(value:String):EventType {
+    public inline static function valueOf(value:String):EventType {
         return switch (value) {
             case "start": EventType.start;
             case "interrupt": EventType.interrupt;

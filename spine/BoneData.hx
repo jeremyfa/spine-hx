@@ -208,7 +208,7 @@ class TransformMode_enum {
     public inline static var noScale_name = "noScale";
     public inline static var noScaleOrReflection_name = "noScaleOrReflection";
 
-    public static function valueOf(value:String):TransformMode {
+    public inline static function valueOf(value:String):TransformMode {
         return switch (value) {
             case "normal": TransformMode.normal;
             case "onlyTranslation": TransformMode.onlyTranslation;

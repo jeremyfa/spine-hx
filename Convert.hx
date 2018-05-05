@@ -646,7 +646,7 @@ using StringTools;
                         n++;
                     }
                     extraHaxe += '\n';
-                    extraHaxe += '    public static function valueOf(value:String):' + inEnumName + ' {\n';
+                    extraHaxe += '    public inline static function valueOf(value:String):' + inEnumName + ' {\n';
                     extraHaxe += '        return switch (value) {\n';
                     n = 0;
                     for (val in inEnumValues) {

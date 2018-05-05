@@ -55,7 +55,7 @@ class AttachmentType_enum {
     public inline static var point_name = "point";
     public inline static var clipping_name = "clipping";
 
-    public static function valueOf(value:String):AttachmentType {
+    public inline static function valueOf(value:String):AttachmentType {
         return switch (value) {
             case "region": AttachmentType.region;
             case "boundingbox": AttachmentType.boundingbox;

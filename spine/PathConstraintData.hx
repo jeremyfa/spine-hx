@@ -191,7 +191,7 @@ class PositionMode_enum {
     public inline static var fixed_name = "fixed";
     public inline static var percent_name = "percent";
 
-    public static function valueOf(value:String):PositionMode {
+    public inline static function valueOf(value:String):PositionMode {
         return switch (value) {
             case "fixed": PositionMode.fixed;
             case "percent": PositionMode.percent;
@@ -211,7 +211,7 @@ class SpacingMode_enum {
     public inline static var fixed_name = "fixed";
     public inline static var percent_name = "percent";
 
-    public static function valueOf(value:String):SpacingMode {
+    public inline static function valueOf(value:String):SpacingMode {
         return switch (value) {
             case "length": SpacingMode.length;
             case "fixed": SpacingMode.fixed;
@@ -232,7 +232,7 @@ class RotateMode_enum {
     public inline static var chain_name = "chain";
     public inline static var chainScale_name = "chainScale";
 
-    public static function valueOf(value:String):RotateMode {
+    public inline static function valueOf(value:String):RotateMode {
         return switch (value) {
             case "tangent": RotateMode.tangent;
             case "chain": RotateMode.chain;

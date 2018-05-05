@@ -71,7 +71,7 @@ class BlendMode_enum {
     public inline static var multiply_name = "multiply";
     public inline static var screen_name = "screen";
 
-    public static function valueOf(value:String):BlendMode {
+    public inline static function valueOf(value:String):BlendMode {
         return switch (value) {
             case "normal": BlendMode.normal;
             case "additive": BlendMode.additive;
