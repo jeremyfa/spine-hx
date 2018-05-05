@@ -76,7 +76,7 @@ class IkConstraint implements Constraint {
         update();
     }
 
-    inline public function update():Void {
+    #if !spine_no_inline inline #end public function update():Void {
         var target:Bone = this.target;
         var bones:Array<Bone> = this.bones;
         var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (bones.size); {
@@ -89,48 +89,48 @@ class IkConstraint implements Constraint {
         } } break; }
     }
 
-    inline public function getOrder():Int {
+    #if !spine_no_inline inline #end public function getOrder():Int {
         return data.order;
     }
 
     /** The bones that will be modified by this IK constraint. */
-    inline public function getBones():Array<Bone> {
+    #if !spine_no_inline inline #end public function getBones():Array<Bone> {
         return bones;
     }
 
     /** The bone that is the IK target. */
-    inline public function getTarget():Bone {
+    #if !spine_no_inline inline #end public function getTarget():Bone {
         return target;
     }
 
-    inline public function setTarget(target:Bone):Void {
+    #if !spine_no_inline inline #end public function setTarget(target:Bone):Void {
         this.target = target;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    inline public function getMix():Float {
+    #if !spine_no_inline inline #end public function getMix():Float {
         return mix;
     }
 
-    inline public function setMix(mix:Float):Void {
+    #if !spine_no_inline inline #end public function setMix(mix:Float):Void {
         this.mix = mix;
     }
 
     /** Controls the bend direction of the IK bones, either 1 or -1. */
-    inline public function getBendDirection():Int {
+    #if !spine_no_inline inline #end public function getBendDirection():Int {
         return bendDirection;
     }
 
-    inline public function setBendDirection(bendDirection:Int):Void {
+    #if !spine_no_inline inline #end public function setBendDirection(bendDirection:Int):Void {
         this.bendDirection = bendDirection;
     }
 
     /** The IK constraint's setup pose data. */
-    inline public function getData():IkConstraintData {
+    #if !spine_no_inline inline #end public function getData():IkConstraintData {
         return data;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return data.name;
     }
 

@@ -49,53 +49,53 @@ class IkConstraintData {
     }
 
     /** The IK constraint's name, which is unique within the skeleton. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
     /** See {@link Constraint#getOrder()}. */
-    inline public function getOrder():Int {
+    #if !spine_no_inline inline #end public function getOrder():Int {
         return order;
     }
 
-    inline public function setOrder(order:Int):Void {
+    #if !spine_no_inline inline #end public function setOrder(order:Int):Void {
         this.order = order;
     }
 
     /** The bones that are constrained by this IK constraint. */
-    inline public function getBones():Array<BoneData> {
+    #if !spine_no_inline inline #end public function getBones():Array<BoneData> {
         return bones;
     }
 
     /** The bone that is the IK target. */
-    inline public function getTarget():BoneData {
+    #if !spine_no_inline inline #end public function getTarget():BoneData {
         return target;
     }
 
-    inline public function setTarget(target:BoneData):Void {
+    #if !spine_no_inline inline #end public function setTarget(target:BoneData):Void {
         if (target == null) throw new IllegalArgumentException("target cannot be null.");
         this.target = target;
     }
 
     /** Controls the bend direction of the IK bones, either 1 or -1. */
-    inline public function getBendDirection():Int {
+    #if !spine_no_inline inline #end public function getBendDirection():Int {
         return bendDirection;
     }
 
-    inline public function setBendDirection(bendDirection:Int):Void {
+    #if !spine_no_inline inline #end public function setBendDirection(bendDirection:Int):Void {
         this.bendDirection = bendDirection;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    inline public function getMix():Float {
+    #if !spine_no_inline inline #end public function getMix():Float {
         return mix;
     }
 
-    inline public function setMix(mix:Float):Void {
+    #if !spine_no_inline inline #end public function setMix(mix:Float):Void {
         this.mix = mix;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return name;
     }
 }

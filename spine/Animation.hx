@@ -128,7 +128,7 @@ class Animation {
         }
     }
 
-    inline static public function linearSearch(values:FloatArray, target:Float, step:Int):Int {
+    #if !spine_no_inline inline #end static public function linearSearch(values:FloatArray, target:Float, step:Int):Int {
         var i:Int = 0; var last:Int = values.length - step; while (i <= last) {
             if (values[i] > target) return i; i += step; }
         return -1;
@@ -207,23 +207,23 @@ class CurveTimeline implements Timeline {
     }
 
     /** The number of key frames for this timeline. */
-    inline public function getFrameCount():Int {
+    #if !spine_no_inline inline #end public function getFrameCount():Int {
         return Std.int(curves.length / BEZIER_SIZE + 1);
     }
 
     /** Sets the specified key frame to linear interpolation. */
-    inline public function setLinear(frameIndex:Int):Void {
+    #if !spine_no_inline inline #end public function setLinear(frameIndex:Int):Void {
         curves[frameIndex * BEZIER_SIZE] = LINEAR;
     }
 
     /** Sets the specified key frame to stepped interpolation. */
-    inline public function setStepped(frameIndex:Int):Void {
+    #if !spine_no_inline inline #end public function setStepped(frameIndex:Int):Void {
         curves[frameIndex * BEZIER_SIZE] = STEPPED;
     }
 
     /** Returns the interpolation type for the specified key frame.
      * @return Linear is 0, stepped is 1, Bezier is 2. */
-    inline public function getCurveType(frameIndex:Int):Float {
+    #if !spine_no_inline inline #end public function getCurveType(frameIndex:Int):Float {
         var index:Int = frameIndex * BEZIER_SIZE;
         if (index == curves.length) return LINEAR;
         var type:Float = curves[index];
@@ -299,23 +299,23 @@ class RotateTimeline extends CurveTimeline {
         return (TimelineType.rotate << 24) + boneIndex;
     }
 
-    inline public function setBoneIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setBoneIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.boneIndex = index;
     }
 
     /** The index of the bone in {@link Skeleton#getBones()} that will be changed. */
-    inline public function getBoneIndex():Int {
+    #if !spine_no_inline inline #end public function getBoneIndex():Int {
         return boneIndex;
     }
 
     /** The time in seconds and rotation in degrees for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** Sets the time in seconds and the rotation in degrees for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, degrees:Float):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, degrees:Float):Void {
         frameIndex <<= 1;
         frames[frameIndex] = time;
         frames[frameIndex + ROTATION] = degrees;
@@ -395,23 +395,23 @@ class TranslateTimeline extends CurveTimeline {
         return (TimelineType.translate << 24) + boneIndex;
     }
 
-    inline public function setBoneIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setBoneIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.boneIndex = index;
     }
 
     /** The index of the bone in {@link Skeleton#getBones()} that will be changed. */
-    inline public function getBoneIndex():Int {
+    #if !spine_no_inline inline #end public function getBoneIndex():Int {
         return boneIndex;
     }
 
     /** The time in seconds, x, and y values for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** Sets the time in seconds, x, and y values for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, x:Float, y:Float):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, x:Float, y:Float):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + X] = x;
@@ -649,23 +649,23 @@ class ColorTimeline extends CurveTimeline {
         return (TimelineType.color << 24) + slotIndex;
     }
 
-    inline public function setSlotIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setSlotIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.slotIndex = index;
     }
 
     /** The index of the slot in {@link Skeleton#getSlots()} that will be changed. */
-    inline public function getSlotIndex():Int {
+    #if !spine_no_inline inline #end public function getSlotIndex():Int {
         return slotIndex;
     }
 
     /** The time in seconds, red, green, blue, and alpha values for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** Sets the time in seconds, red, green, blue, and alpha for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, r:Float, g:Float, b:Float, a:Float):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, r:Float, g:Float, b:Float, a:Float):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + R] = r;
@@ -751,23 +751,23 @@ class TwoColorTimeline extends CurveTimeline {
         return (TimelineType.twoColor << 24) + slotIndex;
     }
 
-    inline public function setSlotIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setSlotIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.slotIndex = index;
     }
 
     /** The index of the slot in {@link Skeleton#getSlots()} that will be changed. */
-    inline public function getSlotIndex():Int {
+    #if !spine_no_inline inline #end public function getSlotIndex():Int {
         return slotIndex;
     }
 
     /** The time in seconds, red, green, blue, and alpha values for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** Sets the time in seconds, light, and dark colors for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, r:Float, g:Float, b:Float, a:Float, r2:Float, g2:Float, b2:Float):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, r:Float, g:Float, b:Float, a:Float, r2:Float, g2:Float, b2:Float):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + R] = r;
@@ -869,32 +869,32 @@ class AttachmentTimeline implements Timeline {
     }
 
     /** The number of key frames for this timeline. */
-    inline public function getFrameCount():Int {
+    #if !spine_no_inline inline #end public function getFrameCount():Int {
         return frames.length;
     }
 
-    inline public function setSlotIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setSlotIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.slotIndex = index;
     }
 
     /** The index of the slot in {@link Skeleton#getSlots()} that will be changed. */
-    inline public function getSlotIndex():Int {
+    #if !spine_no_inline inline #end public function getSlotIndex():Int {
         return slotIndex;
     }
 
     /** The time in seconds for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** The attachment name for each key frame. May contain null values to clear the attachment. */
-    inline public function getAttachmentNames():StringArray {
+    #if !spine_no_inline inline #end public function getAttachmentNames():StringArray {
         return attachmentNames;
     }
 
     /** Sets the time in seconds and the attachment name for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, attachmentName:String):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, attachmentName:String):Void {
         frames[frameIndex] = time;
         attachmentNames[frameIndex] = attachmentName;
     }
@@ -945,38 +945,38 @@ class DeformTimeline extends CurveTimeline {
         return (TimelineType.deform << 27) + attachment.getId() + slotIndex;
     }
 
-    inline public function setSlotIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setSlotIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.slotIndex = index;
     }
 
     /** The index of the slot in {@link Skeleton#getSlots()} that will be changed. */
-    inline public function getSlotIndex():Int {
+    #if !spine_no_inline inline #end public function getSlotIndex():Int {
         return slotIndex;
     }
 
-    inline public function setAttachment(attachment:VertexAttachment):Void {
+    #if !spine_no_inline inline #end public function setAttachment(attachment:VertexAttachment):Void {
         this.attachment = attachment;
     }
 
     /** The attachment that will be deformed. */
-    inline public function getAttachment():VertexAttachment {
+    #if !spine_no_inline inline #end public function getAttachment():VertexAttachment {
         return attachment;
     }
 
     /** The time in seconds for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** The vertices for each key frame. */
-    inline public function getVertices():FloatArray2D {
+    #if !spine_no_inline inline #end public function getVertices():FloatArray2D {
         return frameVertices;
     }
 
     /** Sets the time in seconds and the vertices for the specified key frame.
      * @param vertices Vertex positions for an unweighted VertexAttachment, or deform offsets if it has weights. */
-    inline public function setFrame(frameIndex:Int, time:Float, vertices:FloatArray):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, vertices:FloatArray):Void {
         frames[frameIndex] = time;
         frameVertices[frameIndex] = vertices;
     }
@@ -1112,22 +1112,22 @@ class EventTimeline implements Timeline {
     }
 
     /** The number of key frames for this timeline. */
-    inline public function getFrameCount():Int {
+    #if !spine_no_inline inline #end public function getFrameCount():Int {
         return frames.length;
     }
 
     /** The time in seconds for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** The event for each key frame. */
-    inline public function getEvents():Array<Event> {
+    #if !spine_no_inline inline #end public function getEvents():Array<Event> {
         return events;
     }
 
     /** Sets the time in seconds and the event for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, event:Event):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, event:Event):Void {
         frames[frameIndex] = event.time;
         events[frameIndex] = event;
     }
@@ -1177,24 +1177,24 @@ class DrawOrderTimeline implements Timeline {
     }
 
     /** The number of key frames for this timeline. */
-    inline public function getFrameCount():Int {
+    #if !spine_no_inline inline #end public function getFrameCount():Int {
         return frames.length;
     }
 
     /** The time in seconds for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** The draw order for each key frame. See {@link #setFrame(int, float, int[])}. */
-    inline public function getDrawOrders():IntArray2D {
+    #if !spine_no_inline inline #end public function getDrawOrders():IntArray2D {
         return drawOrders;
     }
 
     /** Sets the time in seconds and the draw order for the specified key frame.
      * @param drawOrder For each slot in {@link Skeleton#slots}, the index of the new draw order. May be null to use setup pose
      *           draw order. */
-    inline public function setFrame(frameIndex:Int, time:Float, drawOrder:IntArray):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, drawOrder:IntArray):Void {
         frames[frameIndex] = time;
         drawOrders[frameIndex] = drawOrder;
     }
@@ -1248,23 +1248,23 @@ class IkConstraintTimeline extends CurveTimeline {
         return (TimelineType.ikConstraint << 24) + ikConstraintIndex;
     }
 
-    inline public function setIkConstraintIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setIkConstraintIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.ikConstraintIndex = index;
     }
 
     /** The index of the IK constraint slot in {@link Skeleton#getIkConstraints()} that will be changed. */
-    inline public function getIkConstraintIndex():Int {
+    #if !spine_no_inline inline #end public function getIkConstraintIndex():Int {
         return ikConstraintIndex;
     }
 
     /** The time in seconds, mix, and bend direction for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** Sets the time in seconds, mix, and bend direction for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, mix:Float, bendDirection:Int):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, mix:Float, bendDirection:Int):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + MIX] = mix;
@@ -1343,23 +1343,23 @@ class TransformConstraintTimeline extends CurveTimeline {
         return (TimelineType.transformConstraint << 24) + transformConstraintIndex;
     }
 
-    inline public function setTransformConstraintIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setTransformConstraintIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.transformConstraintIndex = index;
     }
 
     /** The index of the transform constraint slot in {@link Skeleton#getTransformConstraints()} that will be changed. */
-    inline public function getTransformConstraintIndex():Int {
+    #if !spine_no_inline inline #end public function getTransformConstraintIndex():Int {
         return transformConstraintIndex;
     }
 
     /** The time in seconds, rotate mix, translate mix, scale mix, and shear mix for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** The time in seconds, rotate mix, translate mix, scale mix, and shear mix for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, rotateMix:Float, translateMix:Float, scaleMix:Float, shearMix:Float):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, rotateMix:Float, translateMix:Float, scaleMix:Float, shearMix:Float):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + ROTATE] = rotateMix;
@@ -1455,23 +1455,23 @@ class PathConstraintPositionTimeline extends CurveTimeline {
         return (TimelineType.pathConstraintPosition << 24) + pathConstraintIndex;
     }
 
-    inline public function setPathConstraintIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setPathConstraintIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.pathConstraintIndex = index;
     }
 
     /** The index of the path constraint slot in {@link Skeleton#getPathConstraints()} that will be changed. */
-    inline public function getPathConstraintIndex():Int {
+    #if !spine_no_inline inline #end public function getPathConstraintIndex():Int {
         return pathConstraintIndex;
     }
 
     /** The time in seconds and path constraint position for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** Sets the time in seconds and path constraint position for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, position:Float):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, position:Float):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + VALUE] = position;
@@ -1601,23 +1601,23 @@ class PathConstraintMixTimeline extends CurveTimeline {
         return (TimelineType.pathConstraintMix << 24) + pathConstraintIndex;
     }
 
-    inline public function setPathConstraintIndex(index:Int):Void {
+    #if !spine_no_inline inline #end public function setPathConstraintIndex(index:Int):Void {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         this.pathConstraintIndex = index;
     }
 
     /** The index of the path constraint slot in {@link Skeleton#getPathConstraints()} that will be changed. */
-    inline public function getPathConstraintIndex():Int {
+    #if !spine_no_inline inline #end public function getPathConstraintIndex():Int {
         return pathConstraintIndex;
     }
 
     /** The time in seconds, rotate mix, and translate mix for each key frame. */
-    inline public function getFrames():FloatArray {
+    #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
     /** The time in seconds, rotate mix, and translate mix for the specified key frame. */
-    inline public function setFrame(frameIndex:Int, time:Float, rotateMix:Float, translateMix:Float):Void {
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, rotateMix:Float, translateMix:Float):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + ROTATE] = rotateMix;

@@ -40,11 +40,11 @@ class Attachment {
     }
 
     /** The attachment's name. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return getName();
     }
 }

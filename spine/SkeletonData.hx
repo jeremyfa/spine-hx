@@ -164,7 +164,7 @@ class SkeletonData {
     // --- IK constraints
 
     /** The skeleton's IK constraints. */
-    inline public function getIkConstraints():Array<IkConstraintData> {
+    #if !spine_no_inline inline #end public function getIkConstraints():Array<IkConstraintData> {
         return ikConstraints;
     }
 
@@ -184,7 +184,7 @@ class SkeletonData {
     // --- Transform constraints
 
     /** The skeleton's transform constraints. */
-    inline public function getTransformConstraints():Array<TransformConstraintData> {
+    #if !spine_no_inline inline #end public function getTransformConstraints():Array<TransformConstraintData> {
         return transformConstraints;
     }
 
@@ -204,7 +204,7 @@ class SkeletonData {
     // --- Path constraints
 
     /** The skeleton's path constraints. */
-    inline public function getPathConstraints():Array<PathConstraintData> {
+    #if !spine_no_inline inline #end public function getPathConstraints():Array<PathConstraintData> {
         return pathConstraints;
     }
 
@@ -225,75 +225,75 @@ class SkeletonData {
 
     /** The skeleton's name, which by default is the name of the skeleton data file, if possible.
      * @return May be null. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
     /** @param name May be null. */
-    inline public function setName(name:String):Void {
+    #if !spine_no_inline inline #end public function setName(name:String):Void {
         this.name = name;
     }
 
     /** The width of the skeleton's axis aligned bounding box in the setup pose. */
-    inline public function getWidth():Float {
+    #if !spine_no_inline inline #end public function getWidth():Float {
         return width;
     }
 
-    inline public function setWidth(width:Float):Void {
+    #if !spine_no_inline inline #end public function setWidth(width:Float):Void {
         this.width = width;
     }
 
     /** The height of the skeleton's axis aligned bounding box in the setup pose. */
-    inline public function getHeight():Float {
+    #if !spine_no_inline inline #end public function getHeight():Float {
         return height;
     }
 
-    inline public function setHeight(height:Float):Void {
+    #if !spine_no_inline inline #end public function setHeight(height:Float):Void {
         this.height = height;
     }
 
     /** The Spine version used to export the skeleton data, or null. */
-    inline public function getVersion():String {
+    #if !spine_no_inline inline #end public function getVersion():String {
         return version;
     }
 
     /** @param version May be null. */
-    inline public function setVersion(version:String):Void {
+    #if !spine_no_inline inline #end public function setVersion(version:String):Void {
         this.version = version;
     }
 
     /** The skeleton data hash. This value will change if any of the skeleton data has changed.
      * @return May be null. */
-    inline public function getHash():String {
+    #if !spine_no_inline inline #end public function getHash():String {
         return hash;
     }
 
     /** @param hash May be null. */
-    inline public function setHash(hash:String):Void {
+    #if !spine_no_inline inline #end public function setHash(hash:String):Void {
         this.hash = hash;
     }
 
     /** The path to the image directory as defined in Spine. Available only when nonessential data was exported.
      * @return May be null. */
-    inline public function getImagesPath():String {
+    #if !spine_no_inline inline #end public function getImagesPath():String {
         return imagesPath;
     }
 
     /** @param imagesPath May be null. */
-    inline public function setImagesPath(imagesPath:String):Void {
+    #if !spine_no_inline inline #end public function setImagesPath(imagesPath:String):Void {
         this.imagesPath = imagesPath;
     }
 
     /** The dopesheet FPS in Spine. Available only when nonessential data was exported. */
-    inline public function getFps():Float {
+    #if !spine_no_inline inline #end public function getFps():Float {
         return fps;
     }
 
-    inline public function setFps(fps:Float):Void {
+    #if !spine_no_inline inline #end public function setFps(fps:Float):Void {
         this.fps = fps;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return name != null ? name : Type.getClassName(Type.getClass(this));
     }
 

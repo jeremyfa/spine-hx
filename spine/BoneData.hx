@@ -71,118 +71,118 @@ class BoneData {
     }*/
 
     /** The index of the bone in {@link Skeleton#getBones()}. */
-    inline public function getIndex():Int {
+    #if !spine_no_inline inline #end public function getIndex():Int {
         return index;
     }
 
     /** The name of the bone, which is unique within the skeleton. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
     /** @return May be null. */
-    inline public function getParent():BoneData {
+    #if !spine_no_inline inline #end public function getParent():BoneData {
         return parent;
     }
 
     /** The bone's length. */
-    inline public function getLength():Float {
+    #if !spine_no_inline inline #end public function getLength():Float {
         return length;
     }
 
-    inline public function setLength(length:Float):Void {
+    #if !spine_no_inline inline #end public function setLength(length:Float):Void {
         this.length = length;
     }
 
     /** The local x translation. */
-    inline public function getX():Float {
+    #if !spine_no_inline inline #end public function getX():Float {
         return x;
     }
 
-    inline public function setX(x:Float):Void {
+    #if !spine_no_inline inline #end public function setX(x:Float):Void {
         this.x = x;
     }
 
     /** The local y translation. */
-    inline public function getY():Float {
+    #if !spine_no_inline inline #end public function getY():Float {
         return y;
     }
 
-    inline public function setY(y:Float):Void {
+    #if !spine_no_inline inline #end public function setY(y:Float):Void {
         this.y = y;
     }
 
-    inline public function setPosition(x:Float, y:Float):Void {
+    #if !spine_no_inline inline #end public function setPosition(x:Float, y:Float):Void {
         this.x = x;
         this.y = y;
     }
 
     /** The local rotation. */
-    inline public function getRotation():Float {
+    #if !spine_no_inline inline #end public function getRotation():Float {
         return rotation;
     }
 
-    inline public function setRotation(rotation:Float):Void {
+    #if !spine_no_inline inline #end public function setRotation(rotation:Float):Void {
         this.rotation = rotation;
     }
 
     /** The local scaleX. */
-    inline public function getScaleX():Float {
+    #if !spine_no_inline inline #end public function getScaleX():Float {
         return scaleX;
     }
 
-    inline public function setScaleX(scaleX:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleX(scaleX:Float):Void {
         this.scaleX = scaleX;
     }
 
     /** The local scaleY. */
-    inline public function getScaleY():Float {
+    #if !spine_no_inline inline #end public function getScaleY():Float {
         return scaleY;
     }
 
-    inline public function setScaleY(scaleY:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleY(scaleY:Float):Void {
         this.scaleY = scaleY;
     }
 
-    inline public function setScale(scaleX:Float, scaleY:Float):Void {
+    #if !spine_no_inline inline #end public function setScale(scaleX:Float, scaleY:Float):Void {
         this.scaleX = scaleX;
         this.scaleY = scaleY;
     }
 
     /** The local shearX. */
-    inline public function getShearX():Float {
+    #if !spine_no_inline inline #end public function getShearX():Float {
         return shearX;
     }
 
-    inline public function setShearX(shearX:Float):Void {
+    #if !spine_no_inline inline #end public function setShearX(shearX:Float):Void {
         this.shearX = shearX;
     }
 
     /** The local shearX. */
-    inline public function getShearY():Float {
+    #if !spine_no_inline inline #end public function getShearY():Float {
         return shearY;
     }
 
-    inline public function setShearY(shearY:Float):Void {
+    #if !spine_no_inline inline #end public function setShearY(shearY:Float):Void {
         this.shearY = shearY;
     }
 
     /** The transform mode for how parent world transforms affect this bone. */
-    inline public function getTransformMode():TransformMode {
+    #if !spine_no_inline inline #end public function getTransformMode():TransformMode {
         return transformMode;
     }
 
-    inline public function setTransformMode(transformMode:TransformMode):Void {
+    #if !spine_no_inline inline #end public function setTransformMode(transformMode:TransformMode):Void {
         this.transformMode = transformMode;
     }
 
     /** The color of the bone as it was in Spine. Available only when nonessential data was exported. Bones are not usually
      * rendered at runtime. */
-    inline public function getColor():Color {
+    #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return name;
     }
 }

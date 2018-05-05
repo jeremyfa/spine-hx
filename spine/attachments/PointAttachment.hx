@@ -51,43 +51,43 @@ class PointAttachment extends Attachment {
         super(name);
     }
 
-    inline public function getX():Float {
+    #if !spine_no_inline inline #end public function getX():Float {
         return x;
     }
 
-    inline public function setX(x:Float):Void {
+    #if !spine_no_inline inline #end public function setX(x:Float):Void {
         this.x = x;
     }
 
-    inline public function getY():Float {
+    #if !spine_no_inline inline #end public function getY():Float {
         return y;
     }
 
-    inline public function setY(y:Float):Void {
+    #if !spine_no_inline inline #end public function setY(y:Float):Void {
         this.y = y;
     }
 
-    inline public function getRotation():Float {
+    #if !spine_no_inline inline #end public function getRotation():Float {
         return rotation;
     }
 
-    inline public function setRotation(rotation:Float):Void {
+    #if !spine_no_inline inline #end public function setRotation(rotation:Float):Void {
         this.rotation = rotation;
     }
 
     /** The color of the point attachment as it was in Spine. Available only when nonessential data was exported. Point attachments
      * are not usually rendered at runtime. */
-    inline public function getColor():Color {
+    #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
 
-    inline public function computeWorldPosition(bone:Bone, point:Vector2):Vector2 {
+    #if !spine_no_inline inline #end public function computeWorldPosition(bone:Bone, point:Vector2):Vector2 {
         point.x = x * bone.getA() + y * bone.getB() + bone.getWorldX();
         point.y = x * bone.getC() + y * bone.getD() + bone.getWorldY();
         return point;
     }
 
-    inline public function computeWorldRotation(bone:Bone):Float {
+    #if !spine_no_inline inline #end public function computeWorldRotation(bone:Bone):Float {
         var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
         var x:Float = cos * bone.getA() + sin * bone.getB();
         var y:Float = cos * bone.getC() + sin * bone.getD();

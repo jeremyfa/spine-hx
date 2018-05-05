@@ -47,7 +47,7 @@ class SkeletonClipping {
     private var clipAttachment:ClippingAttachment;
     private var clippingPolygons:FloatArray2D;
 
-    inline public function clipStart(slot:Slot, clip:ClippingAttachment):Int {
+    #if !spine_no_inline inline #end public function clipStart(slot:Slot, clip:ClippingAttachment):Int {
         if (clipAttachment != null) return 0;
         var n:Int = clip.getWorldVerticesLength();
         if (n < 6) return 0;
@@ -66,11 +66,11 @@ class SkeletonClipping {
         return clippingPolygons.size;
     }
 
-    inline public function clipEndWithSlot(slot:Slot):Void {
+    #if !spine_no_inline inline #end public function clipEndWithSlot(slot:Slot):Void {
         if (clipAttachment != null && clipAttachment.getEndSlot() == slot.getData()) clipEnd();
     }
 
-    inline public function clipEnd():Void {
+    #if !spine_no_inline inline #end public function clipEnd():Void {
         if (clipAttachment == null) return;
         clipAttachment = null;
         clippingPolygons = null;
@@ -79,11 +79,11 @@ class SkeletonClipping {
         clippingPolygon.clear();
     }
 
-    inline public function isClipping():Bool {
+    #if !spine_no_inline inline #end public function isClipping():Bool {
         return clipAttachment != null;
     }
 
-    inline public function clipTriangles(vertices:FloatArray, verticesLength:Int, triangles:ShortArray, trianglesLength:Int, uvs:FloatArray, light:Float, dark:Float, twoColor:Bool):Void {
+    #if !spine_no_inline inline #end public function clipTriangles(vertices:FloatArray, verticesLength:Int, triangles:ShortArray, trianglesLength:Int, uvs:FloatArray, light:Float, dark:Float, twoColor:Bool):Void {
 
         var clipOutput:FloatArray = this.clipOutput; var clippedVertices:FloatArray = this.clippedVertices;
         var clippedTriangles:ShortArray = this.clippedTriangles;
@@ -285,15 +285,15 @@ class SkeletonClipping {
         return clipped;
     }
 
-    inline public function getClippedVertices():FloatArray {
+    #if !spine_no_inline inline #end public function getClippedVertices():FloatArray {
         return clippedVertices;
     }
 
-    inline public function getClippedTriangles():ShortArray {
+    #if !spine_no_inline inline #end public function getClippedTriangles():ShortArray {
         return clippedTriangles;
     }
 
-    inline static public function makeClockwise(polygon:FloatArray):Void {
+    #if !spine_no_inline inline #end static public function makeClockwise(polygon:FloatArray):Void {
         var vertices:FloatArray = polygon.items;
         var verticeslength:Int = polygon.size;
 

@@ -48,7 +48,7 @@ class SkeletonBounds {
      * box's polygon.
      * @param updateAabb If true, the axis aligned bounding box containing all the polygons is computed. If false, the
      *           SkeletonBounds AABB methods will always return true. */
-    inline public function update(skeleton:Skeleton, updateAabb:Bool):Void {
+    #if !spine_no_inline inline #end public function update(skeleton:Skeleton, updateAabb:Bool):Void {
         if (skeleton == null) throw new IllegalArgumentException("skeleton cannot be null.");
         var boundingBoxes:Array<BoundingBoxAttachment> = this.boundingBoxes;
         var polygons:FloatArray2D = this.polygons;
@@ -83,7 +83,7 @@ class SkeletonBounds {
         }
     }
 
-    inline private function aabbCompute():Void {
+    #if !spine_no_inline inline #end private function aabbCompute():Void {
         var minX:Float = 999999999; var minY:Float = 999999999; var maxX:Float = -999999999; var maxY:Float = -999999999;
         var polygons:FloatArray2D = this.polygons;
         var i:Int = 0; var n:Int = polygons.size; while (i < n) {
@@ -105,12 +105,12 @@ class SkeletonBounds {
     }
 
     /** Returns true if the axis aligned bounding box contains the point. */
-    inline public function aabbContainsPoint(x:Float, y:Float):Bool {
+    #if !spine_no_inline inline #end public function aabbContainsPoint(x:Float, y:Float):Bool {
         return x >= minX && x <= maxX && y >= minY && y <= maxY;
     }
 
     /** Returns true if the axis aligned bounding box intersects the line segment. */
-    inline public function aabbIntersectsSegment(x1:Float, y1:Float, x2:Float, y2:Float):Bool {
+    #if !spine_no_inline inline #end public function aabbIntersectsSegment(x1:Float, y1:Float, x2:Float, y2:Float):Bool {
         var minX:Float = this.minX;
         var minY:Float = this.minY;
         var maxX:Float = this.maxX;
@@ -130,13 +130,13 @@ class SkeletonBounds {
     }
 
     /** Returns true if the axis aligned bounding box intersects the axis aligned bounding box of the specified bounds. */
-    inline public function aabbIntersectsSkeleton(bounds:SkeletonBounds):Bool {
+    #if !spine_no_inline inline #end public function aabbIntersectsSkeleton(bounds:SkeletonBounds):Bool {
         return minX < bounds.maxX && maxX > bounds.minX && minY < bounds.maxY && maxY > bounds.minY;
     }
 
     /** Returns the first bounding box attachment that contains the point, or null. When doing many checks, it is usually more
      * efficient to only call this method if {@link #aabbContainsPoint(float, float)} returns true. */
-    inline public function containsPoint(x:Float, y:Float):BoundingBoxAttachment {
+    #if !spine_no_inline inline #end public function containsPoint(x:Float, y:Float):BoundingBoxAttachment {
         var polygons:FloatArray2D = this.polygons;
         var i:Int = 0; var n:Int = polygons.size; while (i < n) {
             if (polygonContainsPoint(polygons.get(i), x, y)) return boundingBoxes.get(i); i++; }
@@ -144,7 +144,7 @@ class SkeletonBounds {
     }
 
     /** Returns true if the polygon contains the point. */
-    inline public function polygonContainsPoint(polygon:FloatArray, x:Float, y:Float):Bool {
+    #if !spine_no_inline inline #end public function polygonContainsPoint(polygon:FloatArray, x:Float, y:Float):Bool {
         var vertices:FloatArray = polygon.items;
         var nn:Int = polygon.size;
 
@@ -165,7 +165,7 @@ class SkeletonBounds {
     /** Returns the first bounding box attachment that contains any part of the line segment, or null. When doing many checks, it
      * is usually more efficient to only call this method if {@link #aabbIntersectsSegment(float, float, float, float)} returns
      * true. */
-    inline public function intersectsSegment(x1:Float, y1:Float, x2:Float, y2:Float):BoundingBoxAttachment {
+    #if !spine_no_inline inline #end public function intersectsSegment(x1:Float, y1:Float, x2:Float, y2:Float):BoundingBoxAttachment {
         var polygons:FloatArray2D = this.polygons;
         var i:Int = 0; var n:Int = polygons.size; while (i < n) {
             if (polygonIntersectsSegment(polygons.get(i), x1, y1, x2, y2)) return boundingBoxes.get(i); i++; }
@@ -197,47 +197,47 @@ class SkeletonBounds {
     }
 
     /** The left edge of the axis aligned bounding box. */
-    inline public function getMinX():Float {
+    #if !spine_no_inline inline #end public function getMinX():Float {
         return minX;
     }
 
     /** The bottom edge of the axis aligned bounding box. */
-    inline public function getMinY():Float {
+    #if !spine_no_inline inline #end public function getMinY():Float {
         return minY;
     }
 
     /** The right edge of the axis aligned bounding box. */
-    inline public function getMaxX():Float {
+    #if !spine_no_inline inline #end public function getMaxX():Float {
         return maxX;
     }
 
     /** The top edge of the axis aligned bounding box. */
-    inline public function getMaxY():Float {
+    #if !spine_no_inline inline #end public function getMaxY():Float {
         return maxY;
     }
 
     /** The width of the axis aligned bounding box. */
-    inline public function getWidth():Float {
+    #if !spine_no_inline inline #end public function getWidth():Float {
         return maxX - minX;
     }
 
     /** The height of the axis aligned bounding box. */
-    inline public function getHeight():Float {
+    #if !spine_no_inline inline #end public function getHeight():Float {
         return maxY - minY;
     }
 
     /** The visible bounding boxes. */
-    inline public function getBoundingBoxes():Array<BoundingBoxAttachment> {
+    #if !spine_no_inline inline #end public function getBoundingBoxes():Array<BoundingBoxAttachment> {
         return boundingBoxes;
     }
 
     /** The world vertices for the bounding box polygons. */
-    inline public function getPolygons():FloatArray2D {
+    #if !spine_no_inline inline #end public function getPolygons():FloatArray2D {
         return polygons;
     }
 
     /** Returns the polygon for the specified bounding box, or null. */
-    inline public function getPolygon(boundingBox:BoundingBoxAttachment):FloatArray {
+    #if !spine_no_inline inline #end public function getPolygon(boundingBox:BoundingBoxAttachment):FloatArray {
         if (boundingBox == null) throw new IllegalArgumentException("boundingBox cannot be null.");
         var index:Int = boundingBoxes.indexOf(boundingBox, true);
         return index == -1 ? null : polygons.get(index);

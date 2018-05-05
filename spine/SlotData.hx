@@ -52,56 +52,56 @@ class SlotData {
     }
 
     /** The index of the slot in {@link Skeleton#getSlots()}. */
-    inline public function getIndex():Int {
+    #if !spine_no_inline inline #end public function getIndex():Int {
         return index;
     }
 
     /** The name of the slot, which is unique within the skeleton. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
     /** The bone this slot belongs to. */
-    inline public function getBoneData():BoneData {
+    #if !spine_no_inline inline #end public function getBoneData():BoneData {
         return boneData;
     }
 
     /** The color used to tint the slot's attachment. If {@link #getDarkColor()} is set, this is used as the light color for two
      * color tinting. */
-    inline public function getColor():Color {
+    #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
 
     /** The dark color used to tint the slot's attachment for two color tinting, or null if two color tinting is not used. The dark
      * color's alpha is not used. */
-    inline public function getDarkColor():Color {
+    #if !spine_no_inline inline #end public function getDarkColor():Color {
         return darkColor;
     }
 
-    inline public function setDarkColor(darkColor:Color):Void {
+    #if !spine_no_inline inline #end public function setDarkColor(darkColor:Color):Void {
         this.darkColor = darkColor;
     }
 
     /** @param attachmentName May be null. */
-    inline public function setAttachmentName(attachmentName:String):Void {
+    #if !spine_no_inline inline #end public function setAttachmentName(attachmentName:String):Void {
         this.attachmentName = attachmentName;
     }
 
     /** The name of the attachment that is visible for this slot in the setup pose, or null if no attachment is visible. */
-    inline public function getAttachmentName():String {
+    #if !spine_no_inline inline #end public function getAttachmentName():String {
         return attachmentName;
     }
 
     /** The blend mode for drawing the slot's attachment. */
-    inline public function getBlendMode():BlendMode {
+    #if !spine_no_inline inline #end public function getBlendMode():BlendMode {
         return blendMode;
     }
 
-    inline public function setBlendMode(blendMode:BlendMode):Void {
+    #if !spine_no_inline inline #end public function setBlendMode(blendMode:BlendMode):Void {
         this.blendMode = blendMode;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return name;
     }
 }

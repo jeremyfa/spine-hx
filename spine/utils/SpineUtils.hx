@@ -38,23 +38,23 @@ class SpineUtils {
     public static var degreesToRadians:Float = PI / 180;
     public static var degRad:Float = degreesToRadians;
 
-    inline public static function cosDeg(angle:Float):Float {
+    #if !spine_no_inline inline #end public static function cosDeg(angle:Float):Float {
         return cast(Math.cos(angle * degRad), Float);
     }
 
-    inline public static function sinDeg(angle:Float):Float {
+    #if !spine_no_inline inline #end public static function sinDeg(angle:Float):Float {
         return cast(Math.sin(angle * degRad), Float);
     }
 
-    inline public static function cos(angle:Float):Float {
+    #if !spine_no_inline inline #end public static function cos(angle:Float):Float {
         return cast(Math.cos(angle), Float);
     }
 
-    inline public static function sin(angle:Float):Float {
+    #if !spine_no_inline inline #end public static function sin(angle:Float):Float {
         return cast(Math.sin(angle), Float);
     }
 
-    inline public static function atan2(y:Float, x:Float):Float {
+    #if !spine_no_inline inline #end public static function atan2(y:Float, x:Float):Float {
         return cast(Math.atan2(y, x), Float);
     }
 

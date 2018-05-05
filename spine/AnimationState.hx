@@ -105,7 +105,7 @@ class AnimationState {
     }
 
     /** Increments each track entry {@link TrackEntry#getTrackTime()}, setting queued animations as current if needed. */
-    inline public function update(delta:Float):Void {
+    #if !spine_no_inline inline #end public function update(delta:Float):Void {
         delta *= timeScale;
         var i:Int = 0; var n:Int = tracks.size; while (i < n) {
             var current:TrackEntry = tracks.get(i);
@@ -162,7 +162,7 @@ class AnimationState {
     }
 
     /** Returns true when all mixing from entries are complete. */
-    inline private function updateMixingFrom(to:TrackEntry, delta:Float):Bool {
+    #if !spine_no_inline inline #end private function updateMixingFrom(to:TrackEntry, delta:Float):Bool {
         var from:TrackEntry = to.mixingFrom;
         if (from == null) return true;
 
@@ -306,7 +306,7 @@ class AnimationState {
         return mix;
     }
 
-    inline private function applyRotateTimeline(timeline:Timeline, skeleton:Skeleton, time:Float, alpha:Float, pose:MixPose, timelinesRotation:FloatArray, i:Int, firstFrame:Bool):Void {
+    #if !spine_no_inline inline #end private function applyRotateTimeline(timeline:Timeline, skeleton:Skeleton, time:Float, alpha:Float, pose:MixPose, timelinesRotation:FloatArray, i:Int, firstFrame:Bool):Void {
 
         if (firstFrame) timelinesRotation[i] = 0;
 
@@ -371,7 +371,7 @@ class AnimationState {
         bone.rotation = r1 - (16384 - Std.int((16384.499999999996 - r1 / 360))) * 360;
     }
 
-    inline private function queueEvents(entry:TrackEntry, animationTime:Float):Void {
+    #if !spine_no_inline inline #end private function queueEvents(entry:TrackEntry, animationTime:Float):Void {
         var animationStart:Float = entry.animationStart; var animationEnd:Float = entry.animationEnd;
         var duration:Float = animationEnd - animationStart;
         var trackLastWrapped:Float = entry.trackLast % duration;
@@ -404,7 +404,7 @@ class AnimationState {
      * <p>
      * It may be desired to use {@link AnimationState#setEmptyAnimations(float)} to mix the skeletons back to the setup pose,
      * rather than leaving them in their previous pose. */
-    inline public function clearTracks():Void {
+    #if !spine_no_inline inline #end public function clearTracks():Void {
         var oldDrainDisabled:Bool = queue.drainDisabled;
         queue.drainDisabled = true;
         var i:Int = 0; var n:Int = tracks.size; while (i < n) {
@@ -418,7 +418,7 @@ class AnimationState {
      * <p>
      * It may be desired to use {@link AnimationState#setEmptyAnimation(int, float)} to mix the skeletons back to the setup pose,
      * rather than leaving them in their previous pose. */
-    inline public function clearTrack(trackIndex:Int):Void {
+    #if !spine_no_inline inline #end public function clearTrack(trackIndex:Int):Void {
         if (trackIndex >= tracks.size) return;
         var current:TrackEntry = tracks.get(trackIndex);
         if (current == null) return;
@@ -441,7 +441,7 @@ class AnimationState {
         queue.drain();
     }
 
-    inline private function setCurrent(index:Int, current:TrackEntry, interrupt:Bool):Void {
+    #if !spine_no_inline inline #end private function setCurrent(index:Int, current:TrackEntry, interrupt:Bool):Void {
         var from:TrackEntry = expandToIndex(index);
         tracks.set(index, current);
 
@@ -463,7 +463,7 @@ class AnimationState {
     /** Sets an animation by name.
      * <p>
      * {@link #setAnimation(int, Animation, boolean)}. */
-    inline public function setAnimationByName(trackIndex:Int, animationName:String, loop:Bool):TrackEntry {
+    #if !spine_no_inline inline #end public function setAnimationByName(trackIndex:Int, animationName:String, loop:Bool):TrackEntry {
         var animation:Animation = data.skeletonData.findAnimation(animationName);
         if (animation == null) throw new IllegalArgumentException("Animation not found: " + animationName);
         return setAnimation(trackIndex, animation, loop);
@@ -474,7 +474,7 @@ class AnimationState {
      *           duration. In either case {@link TrackEntry#getTrackEnd()} determines when the track is cleared.
      * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
      *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
-    inline public function setAnimation(trackIndex:Int, animation:Animation, loop:Bool):TrackEntry {
+    #if !spine_no_inline inline #end public function setAnimation(trackIndex:Int, animation:Animation, loop:Bool):TrackEntry {
         if (animation == null) throw new IllegalArgumentException("animation cannot be null.");
         var interrupt:Bool = true;
         var current:TrackEntry = expandToIndex(trackIndex);
@@ -499,7 +499,7 @@ class AnimationState {
     /** Queues an animation by name.
      * <p>
      * See {@link #addAnimation(int, Animation, boolean, float)}. */
-    inline public function addAnimationByName(trackIndex:Int, animationName:String, loop:Bool, delay:Float):TrackEntry {
+    #if !spine_no_inline inline #end public function addAnimationByName(trackIndex:Int, animationName:String, loop:Bool, delay:Float):TrackEntry {
         var animation:Animation = data.skeletonData.findAnimation(animationName);
         if (animation == null) throw new IllegalArgumentException("Animation not found: " + animationName);
         return addAnimation(trackIndex, animation, loop, delay);
@@ -511,7 +511,7 @@ class AnimationState {
      *           duration of the previous track minus any mix duration plus the <code>delay</code>.
      * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
      *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
-    inline public function addAnimation(trackIndex:Int, animation:Animation, loop:Bool, delay:Float):TrackEntry {
+    #if !spine_no_inline inline #end public function addAnimation(trackIndex:Int, animation:Animation, loop:Bool, delay:Float):TrackEntry {
         if (animation == null) throw new IllegalArgumentException("animation cannot be null.");
 
         var last:TrackEntry = expandToIndex(trackIndex);
@@ -558,7 +558,7 @@ class AnimationState {
      * {@link TrackEntry#setMixDuration(float)}. Mixing from an empty animation causes the new animation to be applied more and
      * more over the mix duration. Properties keyed in the new animation transition from the value from lower tracks or from the
      * setup pose value if no lower tracks key the property to the value keyed in the new animation. */
-    inline public function setEmptyAnimation(trackIndex:Int, mixDuration:Float):TrackEntry {
+    #if !spine_no_inline inline #end public function setEmptyAnimation(trackIndex:Int, mixDuration:Float):TrackEntry {
         var entry:TrackEntry = setAnimation(trackIndex, emptyAnimation, false);
         entry.mixDuration = mixDuration;
         entry.trackEnd = mixDuration;
@@ -574,7 +574,7 @@ class AnimationState {
      *           duration of the previous track minus any mix duration plus <code>delay</code>.
      * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
      *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
-    inline public function addEmptyAnimation(trackIndex:Int, mixDuration:Float, delay:Float):TrackEntry {
+    #if !spine_no_inline inline #end public function addEmptyAnimation(trackIndex:Int, mixDuration:Float, delay:Float):TrackEntry {
         if (delay <= 0) delay -= mixDuration;
         var entry:TrackEntry = addAnimation(trackIndex, emptyAnimation, false, delay);
         entry.mixDuration = mixDuration;
@@ -584,7 +584,7 @@ class AnimationState {
 
     /** Sets an empty animation for every track, discarding any queued animations, and mixes to it over the specified mix
      * duration. */
-    inline public function setEmptyAnimations(mixDuration:Float):Void {
+    #if !spine_no_inline inline #end public function setEmptyAnimations(mixDuration:Float):Void {
         var oldDrainDisabled:Bool = queue.drainDisabled;
         queue.drainDisabled = true;
         var i:Int = 0; var n:Int = tracks.size; while (i < n) {
@@ -595,7 +595,7 @@ class AnimationState {
         queue.drain();
     }
 
-    inline private function expandToIndex(index:Int):TrackEntry {
+    #if !spine_no_inline inline #end private function expandToIndex(index:Int):TrackEntry {
         if (index < tracks.size) return tracks.get(index);
         tracks.ensureCapacity(index - tracks.size + 1);
         tracks.size = index + 1;
@@ -603,7 +603,7 @@ class AnimationState {
     }
 
     /** @param last May be null. */
-    inline private function trackEntry(trackIndex:Int, animation:Animation, loop:Bool, last:TrackEntry):TrackEntry {
+    #if !spine_no_inline inline #end private function trackEntry(trackIndex:Int, animation:Animation, loop:Bool, last:TrackEntry):TrackEntry {
         var entry:TrackEntry = trackEntryPool.obtain();
         entry.trackIndex = trackIndex;
         entry.animation = animation;
@@ -632,7 +632,7 @@ class AnimationState {
         return entry;
     }
 
-    inline private function disposeNext(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end private function disposeNext(entry:TrackEntry):Void {
         var next:TrackEntry = entry.next;
         while (next != null) {
             queue.dispose(next);
@@ -641,7 +641,7 @@ class AnimationState {
         entry.next = null;
     }
 
-    inline private function handleAnimationsChanged():Void {
+    #if !spine_no_inline inline #end private function handleAnimationsChanged():Void {
         animationsChanged = false;
 
         var propertyIDs:IntSet = this.propertyIDs;
@@ -655,31 +655,31 @@ class AnimationState {
     }
 
     /** Returns the track entry for the animation currently playing on the track, or null if no animation is currently playing. */
-    inline public function getCurrent(trackIndex:Int):TrackEntry {
+    #if !spine_no_inline inline #end public function getCurrent(trackIndex:Int):TrackEntry {
         if (trackIndex >= tracks.size) return null;
         return tracks.get(trackIndex);
     }
 
     /** Adds a listener to receive events for all track entries. */
-    inline public function addListener(listener:AnimationStateListener):Void {
+    #if !spine_no_inline inline #end public function addListener(listener:AnimationStateListener):Void {
         if (listener == null) throw new IllegalArgumentException("listener cannot be null.");
         listeners.add(listener);
     }
 
     /** Removes the listener added with {@link #addListener(AnimationStateListener)}. */
-    inline public function removeListener(listener:AnimationStateListener):Void {
+    #if !spine_no_inline inline #end public function removeListener(listener:AnimationStateListener):Void {
         listeners.removeValue(listener, true);
     }
 
     /** Removes all listeners added with {@link #addListener(AnimationStateListener)}. */
-    inline public function clearListeners():Void {
+    #if !spine_no_inline inline #end public function clearListeners():Void {
         listeners.clear();
     }
 
     /** Discards all listener notifications that have not yet been delivered. This can be useful to call from an
      * {@link AnimationStateListener} when it is known that further notifications that may have been already queued for delivery
      * are not wanted because new animations are being set. */
-    inline public function clearListenerNotifications():Void {
+    #if !spine_no_inline inline #end public function clearListenerNotifications():Void {
         queue.clear();
     }
 
@@ -687,30 +687,30 @@ class AnimationState {
      * faster. Defaults to 1.
      * <p>
      * See TrackEntry {@link TrackEntry#getTimeScale()} for affecting a single animation. */
-    inline public function getTimeScale():Float {
+    #if !spine_no_inline inline #end public function getTimeScale():Float {
         return timeScale;
     }
 
-    inline public function setTimeScale(timeScale:Float):Void {
+    #if !spine_no_inline inline #end public function setTimeScale(timeScale:Float):Void {
         this.timeScale = timeScale;
     }
 
     /** The AnimationStateData to look up mix durations. */
-    inline public function getData():AnimationStateData {
+    #if !spine_no_inline inline #end public function getData():AnimationStateData {
         return data;
     }
 
-    inline public function setData(data:AnimationStateData):Void {
+    #if !spine_no_inline inline #end public function setData(data:AnimationStateData):Void {
         if (data == null) throw new IllegalArgumentException("data cannot be null.");
         this.data = data;
     }
 
     /** The list of tracks that currently have animations, which may contain null entries. */
-    inline public function getTracks():Array<TrackEntry> {
+    #if !spine_no_inline inline #end public function getTracks():Array<TrackEntry> {
         return tracks;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         var buffer:StringBuilder = new StringBuilder(64);
         var i:Int = 0; var n:Int = tracks.size; while (i < n) {
             var entry:TrackEntry = tracks.get(i);
@@ -740,7 +740,7 @@ class TrackEntry implements Poolable {
     public var timelineDipMix:Array<TrackEntry> = new Array();
     public var timelinesRotation:FloatArray = new FloatArray();
 
-    inline public function reset():Void {
+    #if !spine_no_inline inline #end public function reset():Void {
         next = null;
         mixingFrom = null;
         animation = null;
@@ -751,7 +751,7 @@ class TrackEntry implements Poolable {
     }
 
     /** @param to May be null. */
-    inline public function setTimelineData(to:TrackEntry, mixingToArray:Array<TrackEntry>, propertyIDs:IntSet):TrackEntry {
+    #if !spine_no_inline inline #end public function setTimelineData(to:TrackEntry, mixingToArray:Array<TrackEntry>, propertyIDs:IntSet):TrackEntry {
         if (to != null) mixingToArray.add(to);
         var lastEntry:TrackEntry = mixingFrom != null ? mixingFrom.setTimelineData(this, mixingToArray, propertyIDs) : this;
         if (to != null) mixingToArray.pop();
@@ -798,48 +798,48 @@ class TrackEntry implements Poolable {
     /** The index of the track where this track entry is either current or queued.
      * <p>
      * See {@link AnimationState#getCurrent(int)}. */
-    inline public function getTrackIndex():Int {
+    #if !spine_no_inline inline #end public function getTrackIndex():Int {
         return trackIndex;
     }
 
     /** The animation to apply for this track entry. */
-    inline public function getAnimation():Animation {
+    #if !spine_no_inline inline #end public function getAnimation():Animation {
         return animation;
     }
 
-    inline public function setAnimation(animation:Animation):Void {
+    #if !spine_no_inline inline #end public function setAnimation(animation:Animation):Void {
         this.animation = animation;
     }
 
     /** If true, the animation will repeat. If false it will not, instead its last frame is applied if played beyond its
      * duration. */
-    inline public function getLoop():Bool {
+    #if !spine_no_inline inline #end public function getLoop():Bool {
         return loop;
     }
 
-    inline public function setLoop(loop:Bool):Void {
+    #if !spine_no_inline inline #end public function setLoop(loop:Bool):Void {
         this.loop = loop;
     }
 
     /** Seconds to postpone playing the animation. When a track entry is the current track entry, <code>delay</code> postpones
      * incrementing the {@link #getTrackTime()}. When a track entry is queued, <code>delay</code> is the time from the start of
      * the previous animation to when the track entry will become the current track entry. */
-    inline public function getDelay():Float {
+    #if !spine_no_inline inline #end public function getDelay():Float {
         return delay;
     }
 
-    inline public function setDelay(delay:Float):Void {
+    #if !spine_no_inline inline #end public function setDelay(delay:Float):Void {
         this.delay = delay;
     }
 
     /** Current time in seconds this track entry has been the current track entry. The track time determines
      * {@link #getAnimationTime()}. The track time can be set to start the animation at a time other than 0, without affecting
      * looping. */
-    inline public function getTrackTime():Float {
+    #if !spine_no_inline inline #end public function getTrackTime():Float {
         return trackTime;
     }
 
-    inline public function setTrackTime(trackTime:Float):Void {
+    #if !spine_no_inline inline #end public function setTrackTime(trackTime:Float):Void {
         this.trackTime = trackTime;
     }
 
@@ -850,11 +850,11 @@ class TrackEntry implements Poolable {
      * <p>
      * It may be desired to use {@link AnimationState#addEmptyAnimation(int, float, float)} rather than have the animation
      * abruptly cease being applied. */
-    inline public function getTrackEnd():Float {
+    #if !spine_no_inline inline #end public function getTrackEnd():Float {
         return trackEnd;
     }
 
-    inline public function setTrackEnd(trackEnd:Float):Void {
+    #if !spine_no_inline inline #end public function setTrackEnd(trackEnd:Float):Void {
         this.trackEnd = trackEnd;
     }
 
@@ -862,21 +862,21 @@ class TrackEntry implements Poolable {
      * <p>
      * When changing the <code>animationStart</code> time, it often makes sense to set {@link #getAnimationLast()} to the same
      * value to prevent timeline keys before the start time from triggering. */
-    inline public function getAnimationStart():Float {
+    #if !spine_no_inline inline #end public function getAnimationStart():Float {
         return animationStart;
     }
 
-    inline public function setAnimationStart(animationStart:Float):Void {
+    #if !spine_no_inline inline #end public function setAnimationStart(animationStart:Float):Void {
         this.animationStart = animationStart;
     }
 
     /** Seconds for the last frame of this animation. Non-looping animations won't play past this time. Looping animations will
      * loop back to {@link #getAnimationStart()} at this time. Defaults to the animation {@link Animation#duration}. */
-    inline public function getAnimationEnd():Float {
+    #if !spine_no_inline inline #end public function getAnimationEnd():Float {
         return animationEnd;
     }
 
-    inline public function setAnimationEnd(animationEnd:Float):Void {
+    #if !spine_no_inline inline #end public function setAnimationEnd(animationEnd:Float):Void {
         this.animationEnd = animationEnd;
     }
 
@@ -884,11 +884,11 @@ class TrackEntry implements Poolable {
      * animation is applied, event timelines will fire all events between the <code>animationLast</code> time (exclusive) and
      * <code>animationTime</code> (inclusive). Defaults to -1 to ensure triggers on frame 0 happen the first time this animation
      * is applied. */
-    inline public function getAnimationLast():Float {
+    #if !spine_no_inline inline #end public function getAnimationLast():Float {
         return animationLast;
     }
 
-    inline public function setAnimationLast(animationLast:Float):Void {
+    #if !spine_no_inline inline #end public function setAnimationLast(animationLast:Float):Void {
         this.animationLast = animationLast;
         nextAnimationLast = animationLast;
     }
@@ -896,7 +896,7 @@ class TrackEntry implements Poolable {
     /** Uses {@link #getTrackTime()} to compute the <code>animationTime</code>, which is between {@link #getAnimationStart()}
      * and {@link #getAnimationEnd()}. When the <code>trackTime</code> is 0, the <code>animationTime</code> is equal to the
      * <code>animationStart</code> time. */
-    inline public function getAnimationTime():Float {
+    #if !spine_no_inline inline #end public function getAnimationTime():Float {
         if (loop) {
             var duration:Float = animationEnd - animationStart;
             if (duration == 0) return animationStart;
@@ -911,11 +911,11 @@ class TrackEntry implements Poolable {
      * If <code>timeScale</code> is 0, any {@link #getMixDuration()} will be ignored.
      * <p>
      * See AnimationState {@link AnimationState#getTimeScale()} for affecting all animations. */
-    inline public function getTimeScale():Float {
+    #if !spine_no_inline inline #end public function getTimeScale():Float {
         return timeScale;
     }
 
-    inline public function setTimeScale(timeScale:Float):Void {
+    #if !spine_no_inline inline #end public function setTimeScale(timeScale:Float):Void {
         this.timeScale = timeScale;
     }
 
@@ -923,12 +923,12 @@ class TrackEntry implements Poolable {
      * <p>
      * A track entry returned from {@link AnimationState#setAnimation(int, Animation, boolean)} is already the current animation
      * for the track, so the track entry listener {@link AnimationStateListener#start(TrackEntry)} will not be called. */
-    inline public function getListener():AnimationStateListener {
+    #if !spine_no_inline inline #end public function getListener():AnimationStateListener {
         return listener;
     }
 
     /** @param listener May be null. */
-    inline public function setListener(listener:AnimationStateListener):Void {
+    #if !spine_no_inline inline #end public function setListener(listener:AnimationStateListener):Void {
         this.listener = listener;
     }
 
@@ -937,66 +937,66 @@ class TrackEntry implements Poolable {
      * <p>
      * Typically track 0 is used to completely pose the skeleton, then alpha can be used on higher tracks. It doesn't make sense
      * to use alpha on track 0 if the skeleton pose is from the last frame render. */
-    inline public function getAlpha():Float {
+    #if !spine_no_inline inline #end public function getAlpha():Float {
         return alpha;
     }
 
-    inline public function setAlpha(alpha:Float):Void {
+    #if !spine_no_inline inline #end public function setAlpha(alpha:Float):Void {
         this.alpha = alpha;
     }
 
     /** When the mix percentage ({@link #getMixTime()} / {@link #getMixDuration()}) is less than the
      * <code>eventThreshold</code>, event timelines for the animation being mixed out will be applied. Defaults to 0, so event
      * timelines are not applied for an animation being mixed out. */
-    inline public function getEventThreshold():Float {
+    #if !spine_no_inline inline #end public function getEventThreshold():Float {
         return eventThreshold;
     }
 
-    inline public function setEventThreshold(eventThreshold:Float):Void {
+    #if !spine_no_inline inline #end public function setEventThreshold(eventThreshold:Float):Void {
         this.eventThreshold = eventThreshold;
     }
 
     /** When the mix percentage ({@link #getMixTime()} / {@link #getMixDuration()}) is less than the
      * <code>attachmentThreshold</code>, attachment timelines for the animation being mixed out will be applied. Defaults to 0,
      * so attachment timelines are not applied for an animation being mixed out. */
-    inline public function getAttachmentThreshold():Float {
+    #if !spine_no_inline inline #end public function getAttachmentThreshold():Float {
         return attachmentThreshold;
     }
 
-    inline public function setAttachmentThreshold(attachmentThreshold:Float):Void {
+    #if !spine_no_inline inline #end public function setAttachmentThreshold(attachmentThreshold:Float):Void {
         this.attachmentThreshold = attachmentThreshold;
     }
 
     /** When the mix percentage ({@link #getMixTime()} / {@link #getMixDuration()}) is less than the
      * <code>drawOrderThreshold</code>, draw order timelines for the animation being mixed out will be applied. Defaults to 0,
      * so draw order timelines are not applied for an animation being mixed out. */
-    inline public function getDrawOrderThreshold():Float {
+    #if !spine_no_inline inline #end public function getDrawOrderThreshold():Float {
         return drawOrderThreshold;
     }
 
-    inline public function setDrawOrderThreshold(drawOrderThreshold:Float):Void {
+    #if !spine_no_inline inline #end public function setDrawOrderThreshold(drawOrderThreshold:Float):Void {
         this.drawOrderThreshold = drawOrderThreshold;
     }
 
     /** The animation queued to start after this animation, or null. <code>next</code> makes up a linked list. */
-    inline public function getNext():TrackEntry {
+    #if !spine_no_inline inline #end public function getNext():TrackEntry {
         return next;
     }
 
     /** Returns true if at least one loop has been completed.
      * <p>
      * See {@link AnimationStateListener#complete(TrackEntry)}. */
-    inline public function isComplete():Bool {
+    #if !spine_no_inline inline #end public function isComplete():Bool {
         return trackTime >= animationEnd - animationStart;
     }
 
     /** Seconds from 0 to the {@link #getMixDuration()} when mixing from the previous animation to this animation. May be
      * slightly more than <code>mixDuration</code> when the mix is complete. */
-    inline public function getMixTime():Float {
+    #if !spine_no_inline inline #end public function getMixTime():Float {
         return mixTime;
     }
 
-    inline public function setMixTime(mixTime:Float):Void {
+    #if !spine_no_inline inline #end public function setMixTime(mixTime:Float):Void {
         this.mixTime = mixTime;
     }
 
@@ -1009,17 +1009,17 @@ class TrackEntry implements Poolable {
      * <p>
      * When using {@link AnimationState#addAnimation(int, Animation, boolean, float)} with a <code>delay</code> <= 0, note the
      * {@link #getDelay()} is set using the mix duration from the {@link AnimationStateData}. */
-    inline public function getMixDuration():Float {
+    #if !spine_no_inline inline #end public function getMixDuration():Float {
         return mixDuration;
     }
 
-    inline public function setMixDuration(mixDuration:Float):Void {
+    #if !spine_no_inline inline #end public function setMixDuration(mixDuration:Float):Void {
         this.mixDuration = mixDuration;
     }
 
     /** The track entry for the previous animation when mixing from the previous animation to this animation, or null if no
      * mixing is currently occuring. When mixing from multiple animations, <code>mixingFrom</code> makes up a linked list. */
-    inline public function getMixingFrom():TrackEntry {
+    #if !spine_no_inline inline #end public function getMixingFrom():TrackEntry {
         return mixingFrom;
     }
 
@@ -1030,11 +1030,11 @@ class TrackEntry implements Poolable {
      * around. The two rotations likely change over time, so which direction is the short or long way also changes. If the short
      * way was always chosen, bones would flip to the other side when that direction became the long way. TrackEntry chooses the
      * short way the first time it is applied and remembers that direction. */
-    inline public function resetRotationDirections():Void {
+    #if !spine_no_inline inline #end public function resetRotationDirections():Void {
         timelinesRotation.clear();
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return animation == null ? "<none>" : animation.name;
     }
 
@@ -1046,40 +1046,40 @@ class EventQueue {
     private var objects:Array<Dynamic> = new Array();
     public var drainDisabled:Bool = false;
 
-    inline public function start(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function start(entry:TrackEntry):Void {
         objects.add(EventType.start);
         objects.add(entry);
         AnimationState_this.animationsChanged = true;
     }
 
-    inline public function interrupt(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function interrupt(entry:TrackEntry):Void {
         objects.add(EventType.interrupt);
         objects.add(entry);
     }
 
-    inline public function end(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function end(entry:TrackEntry):Void {
         objects.add(EventType.end);
         objects.add(entry);
         AnimationState_this.animationsChanged = true;
     }
 
-    inline public function dispose(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function dispose(entry:TrackEntry):Void {
         objects.add(EventType.dispose);
         objects.add(entry);
     }
 
-    inline public function complete(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function complete(entry:TrackEntry):Void {
         objects.add(EventType.complete);
         objects.add(entry);
     }
 
-    inline public function event(entry:TrackEntry, event:Event):Void {
+    #if !spine_no_inline inline #end public function event(entry:TrackEntry, event:Event):Void {
         objects.add(EventType.event);
         objects.add(entry);
         objects.add(event);
     }
 
-    inline public function drain():Void {
+    #if !spine_no_inline inline #end public function drain():Void {
         if (drainDisabled) return; // Not reentrant.
         drainDisabled = true;
 
@@ -1133,7 +1133,7 @@ class EventQueue {
         drainDisabled = false;
     }
 
-    inline public function clear():Void {
+    #if !spine_no_inline inline #end public function clear():Void {
         objects.clear();
     }
 
@@ -1171,22 +1171,22 @@ interface AnimationStateListener {
 }
 
 class AnimationStateAdapter implements AnimationStateListener {
-    inline public function start(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function start(entry:TrackEntry):Void {
     }
 
-    inline public function interrupt(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function interrupt(entry:TrackEntry):Void {
     }
 
-    inline public function end(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function end(entry:TrackEntry):Void {
     }
 
-    inline public function dispose(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function dispose(entry:TrackEntry):Void {
     }
 
-    inline public function complete(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end public function complete(entry:TrackEntry):Void {
     }
 
-    inline public function event(entry:TrackEntry, event:Event):Void {
+    #if !spine_no_inline inline #end public function event(entry:TrackEntry, event:Event):Void {
     }
 
     public function new() {}

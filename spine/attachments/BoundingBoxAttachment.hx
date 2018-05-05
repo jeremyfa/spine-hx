@@ -48,7 +48,7 @@ class BoundingBoxAttachment extends VertexAttachment {
 
     /** The color of the bounding box as it was in Spine. Available only when nonessential data was exported. Bounding boxes are
      * not usually rendered at runtime. */
-    inline public function getColor():Color {
+    #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
 }

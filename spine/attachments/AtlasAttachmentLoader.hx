@@ -48,7 +48,7 @@ class AtlasAttachmentLoader implements AttachmentLoader {
         this.atlas = atlas;
     }
 
-    inline public function newRegionAttachment(skin:Skin, name:String, path:String):RegionAttachment {
+    #if !spine_no_inline inline #end public function newRegionAttachment(skin:Skin, name:String, path:String):RegionAttachment {
         var region:AtlasRegion = atlas.findRegion(path);
         if (region == null) throw new RuntimeException("Region not found in atlas: " + path + " (region attachment: " + name + ")");
         var attachment:RegionAttachment = new RegionAttachment(name);
@@ -56,7 +56,7 @@ class AtlasAttachmentLoader implements AttachmentLoader {
         return attachment;
     }
 
-    inline public function newMeshAttachment(skin:Skin, name:String, path:String):MeshAttachment {
+    #if !spine_no_inline inline #end public function newMeshAttachment(skin:Skin, name:String, path:String):MeshAttachment {
         var region:AtlasRegion = atlas.findRegion(path);
         if (region == null) throw new RuntimeException("Region not found in atlas: " + path + " (mesh attachment: " + name + ")");
         var attachment:MeshAttachment = new MeshAttachment(name);
@@ -64,19 +64,19 @@ class AtlasAttachmentLoader implements AttachmentLoader {
         return attachment;
     }
 
-    inline public function newBoundingBoxAttachment(skin:Skin, name:String):BoundingBoxAttachment {
+    #if !spine_no_inline inline #end public function newBoundingBoxAttachment(skin:Skin, name:String):BoundingBoxAttachment {
         return new BoundingBoxAttachment(name);
     }
 
-    inline public function newClippingAttachment(skin:Skin, name:String):ClippingAttachment {
+    #if !spine_no_inline inline #end public function newClippingAttachment(skin:Skin, name:String):ClippingAttachment {
         return new ClippingAttachment(name);
     }
 
-    inline public function newPathAttachment(skin:Skin, name:String):PathAttachment {
+    #if !spine_no_inline inline #end public function newPathAttachment(skin:Skin, name:String):PathAttachment {
         return new PathAttachment(name);
     }
 
-    inline public function newPointAttachment(skin:Skin, name:String):PointAttachment {
+    #if !spine_no_inline inline #end public function newPointAttachment(skin:Skin, name:String):PointAttachment {
         return new PointAttachment(name);
     }
 }

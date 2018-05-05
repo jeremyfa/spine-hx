@@ -57,19 +57,19 @@ class MeshAttachment extends VertexAttachment {
         super(name);
     }
 
-    inline public function setRegion(region:TextureRegion):Void {
+    #if !spine_no_inline inline #end public function setRegion(region:TextureRegion):Void {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         this.region = region;
     }
 
-    inline public function getRegion():TextureRegion {
+    #if !spine_no_inline inline #end public function getRegion():TextureRegion {
         if (region == null) throw new IllegalStateException("Region has not been set: " + this);
         return region;
     }
 
     /** Calculates {@link #uvs} using {@link #regionUVs} and the {@link #region}. Must be called after changing the region UVs or
      * region. */
-    inline public function updateUVs():Void {
+    #if !spine_no_inline inline #end public function updateUVs():Void {
         var u:Float = 0; var v:Float = 0; var width:Float = 0; var height:Float = 0;
         if (region == null) {
             u = v = 0;
@@ -103,95 +103,95 @@ class MeshAttachment extends VertexAttachment {
     }
 
     /** Triplets of vertex indices which describe the mesh's triangulation. */
-    inline public function getTriangles():ShortArray {
+    #if !spine_no_inline inline #end public function getTriangles():ShortArray {
         return triangles;
     }
 
-    inline public function setTriangles(triangles:ShortArray):Void {
+    #if !spine_no_inline inline #end public function setTriangles(triangles:ShortArray):Void {
         this.triangles = triangles;
     }
 
     /** The UV pair for each vertex, normalized within the texture region. */
-    inline public function getRegionUVs():FloatArray {
+    #if !spine_no_inline inline #end public function getRegionUVs():FloatArray {
         return regionUVs;
     }
 
     /** Sets the texture coordinates for the region. The values are u,v pairs for each vertex. */
-    inline public function setRegionUVs(regionUVs:FloatArray):Void {
+    #if !spine_no_inline inline #end public function setRegionUVs(regionUVs:FloatArray):Void {
         this.regionUVs = regionUVs;
     }
 
     /** The UV pair for each vertex, normalized within the entire texture.
      * <p>
      * See {@link #updateUVs}. */
-    inline public function getUVs():FloatArray {
+    #if !spine_no_inline inline #end public function getUVs():FloatArray {
         return uvs;
     }
 
-    inline public function setUVs(uvs:FloatArray):Void {
+    #if !spine_no_inline inline #end public function setUVs(uvs:FloatArray):Void {
         this.uvs = uvs;
     }
 
     /** The color to tint the mesh. */
-    inline public function getColor():Color {
+    #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
 
     /** The name of the texture region for this attachment. */
-    inline public function getPath():String {
+    #if !spine_no_inline inline #end public function getPath():String {
         return path;
     }
 
-    inline public function setPath(path:String):Void {
+    #if !spine_no_inline inline #end public function setPath(path:String):Void {
         this.path = path;
     }
 
     /** The number of entries at the beginning of {@link #vertices} that make up the mesh hull. */
-    inline public function getHullLength():Int {
+    #if !spine_no_inline inline #end public function getHullLength():Int {
         return hullLength;
     }
 
-    inline public function setHullLength(hullLength:Int):Void {
+    #if !spine_no_inline inline #end public function setHullLength(hullLength:Int):Void {
         this.hullLength = hullLength;
     }
 
-    inline public function setEdges(edges:ShortArray):Void {
+    #if !spine_no_inline inline #end public function setEdges(edges:ShortArray):Void {
         this.edges = edges;
     }
 
     /** Vertex index pairs describing edges for controling triangulation. Mesh triangles will never cross edges. Only available if
      * nonessential data was exported. Triangulation is not performed at runtime. */
-    inline public function getEdges():ShortArray {
+    #if !spine_no_inline inline #end public function getEdges():ShortArray {
         return edges;
     }
 
     /** The width of the mesh's image. Available only when nonessential data was exported. */
-    inline public function getWidth():Float {
+    #if !spine_no_inline inline #end public function getWidth():Float {
         return width;
     }
 
-    inline public function setWidth(width:Float):Void {
+    #if !spine_no_inline inline #end public function setWidth(width:Float):Void {
         this.width = width;
     }
 
     /** The height of the mesh's image. Available only when nonessential data was exported. */
-    inline public function getHeight():Float {
+    #if !spine_no_inline inline #end public function getHeight():Float {
         return height;
     }
 
-    inline public function setHeight(height:Float):Void {
+    #if !spine_no_inline inline #end public function setHeight(height:Float):Void {
         this.height = height;
     }
 
     /** The parent mesh if this is a linked mesh, else null. A linked mesh shares the {@link #bones}, {@link #vertices},
      * {@link #regionUVs}, {@link #triangles}, {@link #hullLength}, {@link #edges}, {@link #width}, and {@link #height} with the
      * parent mesh, but may have a different {@link #name} or {@link #path} (and therefore a different texture). */
-    inline public function getParentMesh():MeshAttachment {
+    #if !spine_no_inline inline #end public function getParentMesh():MeshAttachment {
         return parentMesh;
     }
 
     /** @param parentMesh May be null. */
-    inline public function setParentMesh(parentMesh:MeshAttachment):Void {
+    #if !spine_no_inline inline #end public function setParentMesh(parentMesh:MeshAttachment):Void {
         this.parentMesh = parentMesh;
         if (parentMesh != null) {
             bones = parentMesh.bones;
@@ -210,11 +210,11 @@ class MeshAttachment extends VertexAttachment {
      * also applied to this mesh. If false, this linked mesh may have its own deform timelines.
      * <p>
      * See {@link #applyDeform(VertexAttachment)}. */
-    inline public function getInheritDeform():Bool {
+    #if !spine_no_inline inline #end public function getInheritDeform():Bool {
         return inheritDeform;
     }
 
-    inline public function setInheritDeform(inheritDeform:Bool):Void {
+    #if !spine_no_inline inline #end public function setInheritDeform(inheritDeform:Bool):Void {
         this.inheritDeform = inheritDeform;
     }
 }

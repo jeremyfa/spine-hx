@@ -44,36 +44,36 @@ class EventData {
         this.name = name;
     }
 
-    inline public function getInt():Int {
+    #if !spine_no_inline inline #end public function getInt():Int {
         return intValue;
     }
 
-    inline public function setInt(intValue:Int):Void {
+    #if !spine_no_inline inline #end public function setInt(intValue:Int):Void {
         this.intValue = intValue;
     }
 
-    inline public function getFloat():Float {
+    #if !spine_no_inline inline #end public function getFloat():Float {
         return floatValue;
     }
 
-    inline public function setFloat(floatValue:Float):Void {
+    #if !spine_no_inline inline #end public function setFloat(floatValue:Float):Void {
         this.floatValue = floatValue;
     }
 
-    inline public function getString():String {
+    #if !spine_no_inline inline #end public function getString():String {
         return stringValue;
     }
 
-    inline public function setString(stringValue:String):Void {
+    #if !spine_no_inline inline #end public function setString(stringValue:String):Void {
         this.stringValue = stringValue;
     }
 
     /** The name of the event, which is unique within the skeleton. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return name;
     }
 }

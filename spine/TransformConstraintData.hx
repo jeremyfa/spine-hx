@@ -50,141 +50,141 @@ class TransformConstraintData {
     }
 
     /** The transform constraint's name, which is unique within the skeleton. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
     /** See {@link Constraint#getOrder()}. */
-    inline public function getOrder():Int {
+    #if !spine_no_inline inline #end public function getOrder():Int {
         return order;
     }
 
-    inline public function setOrder(order:Int):Void {
+    #if !spine_no_inline inline #end public function setOrder(order:Int):Void {
         this.order = order;
     }
 
     /** The bones that will be modified by this transform constraint. */
-    inline public function getBones():Array<BoneData> {
+    #if !spine_no_inline inline #end public function getBones():Array<BoneData> {
         return bones;
     }
 
     /** The target bone whose world transform will be copied to the constrained bones. */
-    inline public function getTarget():BoneData {
+    #if !spine_no_inline inline #end public function getTarget():BoneData {
         return target;
     }
 
-    inline public function setTarget(target:BoneData):Void {
+    #if !spine_no_inline inline #end public function setTarget(target:BoneData):Void {
         if (target == null) throw new IllegalArgumentException("target cannot be null.");
         this.target = target;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    inline public function getRotateMix():Float {
+    #if !spine_no_inline inline #end public function getRotateMix():Float {
         return rotateMix;
     }
 
-    inline public function setRotateMix(rotateMix:Float):Void {
+    #if !spine_no_inline inline #end public function setRotateMix(rotateMix:Float):Void {
         this.rotateMix = rotateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    inline public function getTranslateMix():Float {
+    #if !spine_no_inline inline #end public function getTranslateMix():Float {
         return translateMix;
     }
 
-    inline public function setTranslateMix(translateMix:Float):Void {
+    #if !spine_no_inline inline #end public function setTranslateMix(translateMix:Float):Void {
         this.translateMix = translateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained scales. */
-    inline public function getScaleMix():Float {
+    #if !spine_no_inline inline #end public function getScaleMix():Float {
         return scaleMix;
     }
 
-    inline public function setScaleMix(scaleMix:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleMix(scaleMix:Float):Void {
         this.scaleMix = scaleMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained shears. */
-    inline public function getShearMix():Float {
+    #if !spine_no_inline inline #end public function getShearMix():Float {
         return shearMix;
     }
 
-    inline public function setShearMix(shearMix:Float):Void {
+    #if !spine_no_inline inline #end public function setShearMix(shearMix:Float):Void {
         this.shearMix = shearMix;
     }
 
     /** An offset added to the constrained bone rotation. */
-    inline public function getOffsetRotation():Float {
+    #if !spine_no_inline inline #end public function getOffsetRotation():Float {
         return offsetRotation;
     }
 
-    inline public function setOffsetRotation(offsetRotation:Float):Void {
+    #if !spine_no_inline inline #end public function setOffsetRotation(offsetRotation:Float):Void {
         this.offsetRotation = offsetRotation;
     }
 
     /** An offset added to the constrained bone X translation. */
-    inline public function getOffsetX():Float {
+    #if !spine_no_inline inline #end public function getOffsetX():Float {
         return offsetX;
     }
 
-    inline public function setOffsetX(offsetX:Float):Void {
+    #if !spine_no_inline inline #end public function setOffsetX(offsetX:Float):Void {
         this.offsetX = offsetX;
     }
 
     /** An offset added to the constrained bone Y translation. */
-    inline public function getOffsetY():Float {
+    #if !spine_no_inline inline #end public function getOffsetY():Float {
         return offsetY;
     }
 
-    inline public function setOffsetY(offsetY:Float):Void {
+    #if !spine_no_inline inline #end public function setOffsetY(offsetY:Float):Void {
         this.offsetY = offsetY;
     }
 
     /** An offset added to the constrained bone scaleX. */
-    inline public function getOffsetScaleX():Float {
+    #if !spine_no_inline inline #end public function getOffsetScaleX():Float {
         return offsetScaleX;
     }
 
-    inline public function setOffsetScaleX(offsetScaleX:Float):Void {
+    #if !spine_no_inline inline #end public function setOffsetScaleX(offsetScaleX:Float):Void {
         this.offsetScaleX = offsetScaleX;
     }
 
     /** An offset added to the constrained bone scaleY. */
-    inline public function getOffsetScaleY():Float {
+    #if !spine_no_inline inline #end public function getOffsetScaleY():Float {
         return offsetScaleY;
     }
 
-    inline public function setOffsetScaleY(offsetScaleY:Float):Void {
+    #if !spine_no_inline inline #end public function setOffsetScaleY(offsetScaleY:Float):Void {
         this.offsetScaleY = offsetScaleY;
     }
 
     /** An offset added to the constrained bone shearY. */
-    inline public function getOffsetShearY():Float {
+    #if !spine_no_inline inline #end public function getOffsetShearY():Float {
         return offsetShearY;
     }
 
-    inline public function setOffsetShearY(offsetShearY:Float):Void {
+    #if !spine_no_inline inline #end public function setOffsetShearY(offsetShearY:Float):Void {
         this.offsetShearY = offsetShearY;
     }
 
-    inline public function getRelative():Bool {
+    #if !spine_no_inline inline #end public function getRelative():Bool {
         return relative;
     }
 
-    inline public function setRelative(relative:Bool):Void {
+    #if !spine_no_inline inline #end public function setRelative(relative:Bool):Void {
         this.relative = relative;
     }
 
-    inline public function getLocal():Bool {
+    #if !spine_no_inline inline #end public function getLocal():Bool {
         return local;
     }
 
-    inline public function setLocal(local:Bool):Void {
+    #if !spine_no_inline inline #end public function setLocal(local:Bool):Void {
         this.local = local;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return name;
     }
 }

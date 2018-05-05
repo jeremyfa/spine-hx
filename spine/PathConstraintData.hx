@@ -52,106 +52,106 @@ class PathConstraintData {
     }
 
     /** The path constraint's name, which is unique within the skeleton. */
-    inline public function getName():String {
+    #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
     /** See {@link Constraint#getOrder()}. */
-    inline public function getOrder():Int {
+    #if !spine_no_inline inline #end public function getOrder():Int {
         return order;
     }
 
-    inline public function setOrder(order:Int):Void {
+    #if !spine_no_inline inline #end public function setOrder(order:Int):Void {
         this.order = order;
     }
 
     /** The bones that will be modified by this path constraint. */
-    inline public function getBones():Array<BoneData> {
+    #if !spine_no_inline inline #end public function getBones():Array<BoneData> {
         return bones;
     }
 
     /** The slot whose path attachment will be used to constrained the bones. */
-    inline public function getTarget():SlotData {
+    #if !spine_no_inline inline #end public function getTarget():SlotData {
         return target;
     }
 
-    inline public function setTarget(target:SlotData):Void {
+    #if !spine_no_inline inline #end public function setTarget(target:SlotData):Void {
         this.target = target;
     }
 
     /** The mode for positioning the first bone on the path. */
-    inline public function getPositionMode():PositionMode {
+    #if !spine_no_inline inline #end public function getPositionMode():PositionMode {
         return positionMode;
     }
 
-    inline public function setPositionMode(positionMode:PositionMode):Void {
+    #if !spine_no_inline inline #end public function setPositionMode(positionMode:PositionMode):Void {
         this.positionMode = positionMode;
     }
 
     /** The mode for positioning the bones after the first bone on the path. */
-    inline public function getSpacingMode():SpacingMode {
+    #if !spine_no_inline inline #end public function getSpacingMode():SpacingMode {
         return spacingMode;
     }
 
-    inline public function setSpacingMode(spacingMode:SpacingMode):Void {
+    #if !spine_no_inline inline #end public function setSpacingMode(spacingMode:SpacingMode):Void {
         this.spacingMode = spacingMode;
     }
 
     /** The mode for adjusting the rotation of the bones. */
-    inline public function getRotateMode():RotateMode {
+    #if !spine_no_inline inline #end public function getRotateMode():RotateMode {
         return rotateMode;
     }
 
-    inline public function setRotateMode(rotateMode:RotateMode):Void {
+    #if !spine_no_inline inline #end public function setRotateMode(rotateMode:RotateMode):Void {
         this.rotateMode = rotateMode;
     }
 
     /** An offset added to the constrained bone rotation. */
-    inline public function getOffsetRotation():Float {
+    #if !spine_no_inline inline #end public function getOffsetRotation():Float {
         return offsetRotation;
     }
 
-    inline public function setOffsetRotation(offsetRotation:Float):Void {
+    #if !spine_no_inline inline #end public function setOffsetRotation(offsetRotation:Float):Void {
         this.offsetRotation = offsetRotation;
     }
 
     /** The position along the path. */
-    inline public function getPosition():Float {
+    #if !spine_no_inline inline #end public function getPosition():Float {
         return position;
     }
 
-    inline public function setPosition(position:Float):Void {
+    #if !spine_no_inline inline #end public function setPosition(position:Float):Void {
         this.position = position;
     }
 
     /** The spacing between bones. */
-    inline public function getSpacing():Float {
+    #if !spine_no_inline inline #end public function getSpacing():Float {
         return spacing;
     }
 
-    inline public function setSpacing(spacing:Float):Void {
+    #if !spine_no_inline inline #end public function setSpacing(spacing:Float):Void {
         this.spacing = spacing;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    inline public function getRotateMix():Float {
+    #if !spine_no_inline inline #end public function getRotateMix():Float {
         return rotateMix;
     }
 
-    inline public function setRotateMix(rotateMix:Float):Void {
+    #if !spine_no_inline inline #end public function setRotateMix(rotateMix:Float):Void {
         this.rotateMix = rotateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    inline public function getTranslateMix():Float {
+    #if !spine_no_inline inline #end public function getTranslateMix():Float {
         return translateMix;
     }
 
-    inline public function setTranslateMix(translateMix:Float):Void {
+    #if !spine_no_inline inline #end public function setTranslateMix(translateMix:Float):Void {
         this.translateMix = translateMix;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return name;
     }
 }

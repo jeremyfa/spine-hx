@@ -52,41 +52,41 @@ class Event {
         this.data = data;
     }
 
-    inline public function getInt():Int {
+    #if !spine_no_inline inline #end public function getInt():Int {
         return intValue;
     }
 
-    inline public function setInt(intValue:Int):Void {
+    #if !spine_no_inline inline #end public function setInt(intValue:Int):Void {
         this.intValue = intValue;
     }
 
-    inline public function getFloat():Float {
+    #if !spine_no_inline inline #end public function getFloat():Float {
         return floatValue;
     }
 
-    inline public function setFloat(floatValue:Float):Void {
+    #if !spine_no_inline inline #end public function setFloat(floatValue:Float):Void {
         this.floatValue = floatValue;
     }
 
-    inline public function getString():String {
+    #if !spine_no_inline inline #end public function getString():String {
         return stringValue;
     }
 
-    inline public function setString(stringValue:String):Void {
+    #if !spine_no_inline inline #end public function setString(stringValue:String):Void {
         this.stringValue = stringValue;
     }
 
     /** The animation time this event was keyed. */
-    inline public function getTime():Float {
+    #if !spine_no_inline inline #end public function getTime():Float {
         return time;
     }
 
     /** The events's setup pose data. */
-    inline public function getData():EventData {
+    #if !spine_no_inline inline #end public function getData():EventData {
         return data;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return data.name;
     }
 }

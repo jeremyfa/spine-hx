@@ -80,7 +80,7 @@ class TransformConstraint implements Constraint {
         update();
     }
 
-    inline public function update():Void {
+    #if !spine_no_inline inline #end public function update():Void {
         if (data.local) {
             if (data.relative)
                 applyRelativeLocal();
@@ -94,7 +94,7 @@ class TransformConstraint implements Constraint {
         }
     }
 
-    inline private function applyAbsoluteWorld():Void {
+    #if !spine_no_inline inline #end private function applyAbsoluteWorld():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         var ta:Float = target.a; var tb:Float = target.b; var tc:Float = target.c; var td:Float = target.d;
@@ -158,7 +158,7 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    inline private function applyRelativeWorld():Void {
+    #if !spine_no_inline inline #end private function applyRelativeWorld():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         var ta:Float = target.a; var tb:Float = target.b; var tc:Float = target.c; var td:Float = target.d;
@@ -219,7 +219,7 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    inline private function applyAbsoluteLocal():Void {
+    #if !spine_no_inline inline #end private function applyAbsoluteLocal():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         if (!target.appliedValid) target.updateAppliedTransform();
@@ -258,7 +258,7 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    inline private function applyRelativeLocal():Void {
+    #if !spine_no_inline inline #end private function applyRelativeLocal():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         if (!target.appliedValid) target.updateAppliedTransform();
@@ -289,66 +289,66 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    inline public function getOrder():Int {
+    #if !spine_no_inline inline #end public function getOrder():Int {
         return data.order;
     }
 
     /** The bones that will be modified by this transform constraint. */
-    inline public function getBones():Array<Bone> {
+    #if !spine_no_inline inline #end public function getBones():Array<Bone> {
         return bones;
     }
 
     /** The target bone whose world transform will be copied to the constrained bones. */
-    inline public function getTarget():Bone {
+    #if !spine_no_inline inline #end public function getTarget():Bone {
         return target;
     }
 
-    inline public function setTarget(target:Bone):Void {
+    #if !spine_no_inline inline #end public function setTarget(target:Bone):Void {
         this.target = target;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    inline public function getRotateMix():Float {
+    #if !spine_no_inline inline #end public function getRotateMix():Float {
         return rotateMix;
     }
 
-    inline public function setRotateMix(rotateMix:Float):Void {
+    #if !spine_no_inline inline #end public function setRotateMix(rotateMix:Float):Void {
         this.rotateMix = rotateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    inline public function getTranslateMix():Float {
+    #if !spine_no_inline inline #end public function getTranslateMix():Float {
         return translateMix;
     }
 
-    inline public function setTranslateMix(translateMix:Float):Void {
+    #if !spine_no_inline inline #end public function setTranslateMix(translateMix:Float):Void {
         this.translateMix = translateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained scales. */
-    inline public function getScaleMix():Float {
+    #if !spine_no_inline inline #end public function getScaleMix():Float {
         return scaleMix;
     }
 
-    inline public function setScaleMix(scaleMix:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleMix(scaleMix:Float):Void {
         this.scaleMix = scaleMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained scales. */
-    inline public function getShearMix():Float {
+    #if !spine_no_inline inline #end public function getShearMix():Float {
         return shearMix;
     }
 
-    inline public function setShearMix(shearMix:Float):Void {
+    #if !spine_no_inline inline #end public function setShearMix(shearMix:Float):Void {
         this.shearMix = shearMix;
     }
 
     /** The transform constraint's setup pose data. */
-    inline public function getData():TransformConstraintData {
+    #if !spine_no_inline inline #end public function getData():TransformConstraintData {
         return data;
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return data.name;
     }
 }

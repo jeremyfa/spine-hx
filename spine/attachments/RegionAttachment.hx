@@ -61,7 +61,7 @@ class RegionAttachment extends Attachment {
     }
 
     /** Calculates the {@link #offset} using the region settings. Must be called after changing region settings. */
-    inline public function updateOffset():Void {
+    #if !spine_no_inline inline #end public function updateOffset():Void {
         var width:Float = getWidth();
         var height:Float = getHeight();
         var localX2:Float = width / 2;
@@ -112,7 +112,7 @@ class RegionAttachment extends Attachment {
         offset[BRY] = localYCos + localX2Sin;
     }
 
-    inline public function setRegion(region:TextureRegion):Void {
+    #if !spine_no_inline inline #end public function setRegion(region:TextureRegion):Void {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         this.region = region;
         var uvs:FloatArray = this.uvs;
@@ -137,7 +137,7 @@ class RegionAttachment extends Attachment {
         }
     }
 
-    inline public function getRegion():TextureRegion {
+    #if !spine_no_inline inline #end public function getRegion():TextureRegion {
         if (region == null) throw new IllegalStateException("Region has not been set: " + this);
         return region;
     }
@@ -149,7 +149,7 @@ class RegionAttachment extends Attachment {
      * @param worldVertices The output world vertices. Must have a length >= <code>offset</code> + 8.
      * @param offset The <code>worldVertices</code> index to begin writing values.
      * @param stride The number of <code>worldVertices</code> entries between the value pairs written. */
-    inline public function computeWorldVertices(bone:Bone, worldVertices:FloatArray, offset:Int, stride:Int):Void {
+    #if !spine_no_inline inline #end public function computeWorldVertices(bone:Bone, worldVertices:FloatArray, offset:Int, stride:Int):Void {
         var vertexOffset:FloatArray = this.offset;
         var x:Float = bone.getWorldX(); var y:Float = bone.getWorldY();
         var a:Float = bone.getA(); var b:Float = bone.getB(); var c:Float = bone.getC(); var d:Float = bone.getD();
@@ -182,88 +182,88 @@ class RegionAttachment extends Attachment {
     /** For each of the 4 vertices, a pair of <code>x,y</code> values that is the local position of the vertex.
      * <p>
      * See {@link #updateOffset()}. */
-    inline public function getOffset():FloatArray {
+    #if !spine_no_inline inline #end public function getOffset():FloatArray {
         return offset;
     }
 
-    inline public function getUVs():FloatArray {
+    #if !spine_no_inline inline #end public function getUVs():FloatArray {
         return uvs;
     }
 
     /** The local x translation. */
-    inline public function getX():Float {
+    #if !spine_no_inline inline #end public function getX():Float {
         return x;
     }
 
-    inline public function setX(x:Float):Void {
+    #if !spine_no_inline inline #end public function setX(x:Float):Void {
         this.x = x;
     }
 
     /** The local y translation. */
-    inline public function getY():Float {
+    #if !spine_no_inline inline #end public function getY():Float {
         return y;
     }
 
-    inline public function setY(y:Float):Void {
+    #if !spine_no_inline inline #end public function setY(y:Float):Void {
         this.y = y;
     }
 
     /** The local scaleX. */
-    inline public function getScaleX():Float {
+    #if !spine_no_inline inline #end public function getScaleX():Float {
         return scaleX;
     }
 
-    inline public function setScaleX(scaleX:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleX(scaleX:Float):Void {
         this.scaleX = scaleX;
     }
 
     /** The local scaleY. */
-    inline public function getScaleY():Float {
+    #if !spine_no_inline inline #end public function getScaleY():Float {
         return scaleY;
     }
 
-    inline public function setScaleY(scaleY:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleY(scaleY:Float):Void {
         this.scaleY = scaleY;
     }
 
     /** The local rotation. */
-    inline public function getRotation():Float {
+    #if !spine_no_inline inline #end public function getRotation():Float {
         return rotation;
     }
 
-    inline public function setRotation(rotation:Float):Void {
+    #if !spine_no_inline inline #end public function setRotation(rotation:Float):Void {
         this.rotation = rotation;
     }
 
     /** The width of the region attachment in Spine. */
-    inline public function getWidth():Float {
+    #if !spine_no_inline inline #end public function getWidth():Float {
         return width;
     }
 
-    inline public function setWidth(width:Float):Void {
+    #if !spine_no_inline inline #end public function setWidth(width:Float):Void {
         this.width = width;
     }
 
     /** The height of the region attachment in Spine. */
-    inline public function getHeight():Float {
+    #if !spine_no_inline inline #end public function getHeight():Float {
         return height;
     }
 
-    inline public function setHeight(height:Float):Void {
+    #if !spine_no_inline inline #end public function setHeight(height:Float):Void {
         this.height = height;
     }
 
     /** The color to tint the region attachment. */
-    inline public function getColor():Color {
+    #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
 
     /** The name of the texture region for this attachment. */
-    inline public function getPath():String {
+    #if !spine_no_inline inline #end public function getPath():String {
         return path;
     }
 
-    inline public function setPath(path:String):Void {
+    #if !spine_no_inline inline #end public function setPath(path:String):Void {
         this.path = path;
     }
 }

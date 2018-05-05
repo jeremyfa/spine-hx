@@ -2057,7 +2057,7 @@ using StringTools;
                         }
 
                         if (!inInterface && !noInlineNames.exists(name)) {
-                            haxe += 'inline ';
+                            haxe += '#if !spine_no_inline inline #end ';
                         }
                         
                         var hasAccessModifier = false;
@@ -2668,14 +2668,14 @@ using StringTools;
 
                         var lines = file.split("\n");
                         var lineNumber = item.line - 1;
-                        while (lineNumber > 0 && lines[lineNumber].indexOf(' inline ') == -1) {
+                        while (lineNumber > 0 && lines[lineNumber].indexOf(' #if !spine_no_inline inline #end ') == -1) {
                             lineNumber--;
                         }
                         var line = lines[lineNumber];
                         if (line != null) {
                             numFixed++;
 
-                            var newLine = line.replace(' inline ', ' ');
+                            var newLine = line.replace(' #if !spine_no_inline inline #end ', ' ');
 
                             // Add new change
                             //lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
@@ -2807,8 +2807,7 @@ using StringTools;
                         var lines = file.split("\n");
                         var line = lines[item.start - 1];
 
-                        trace('LINE: ' + line);
-                        line = line.replace(' inline ', ' ');
+                        line = line.replace(' #if !spine_no_inline inline #end ', ' ');
 
                         // Edit line
                         lines[item.start - 1] = line;

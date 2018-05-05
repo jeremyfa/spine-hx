@@ -99,15 +99,15 @@ class SkeletonJson {
      * runtime than were used in Spine.
      * <p>
      * See <a href="http://esotericsoftware.com/spine-loading-skeleton-data#Scaling">Scaling</a> in the Spine Runtimes Guide. */
-    inline public function getScale():Float {
+    #if !spine_no_inline inline #end public function getScale():Float {
         return scale;
     }
 
-    inline public function setScale(scale:Float):Void {
+    #if !spine_no_inline inline #end public function setScale(scale:Float):Void {
         this.scale = scale;
     }
 
-    inline public function readSkeletonData(file:FileHandle):SkeletonData {
+    #if !spine_no_inline inline #end public function readSkeletonData(file:FileHandle):SkeletonData {
         if (file == null) throw new IllegalArgumentException("file cannot be null.");
 
         var scale:Float = this.scale;
@@ -461,7 +461,7 @@ class SkeletonJson {
         return null;
     }
 
-    inline private function readVertices(map:JsonValue, attachment:VertexAttachment, verticesLength:Int):Void {
+    #if !spine_no_inline inline #end private function readVertices(map:JsonValue, attachment:VertexAttachment, verticesLength:Int):Void {
         attachment.setWorldVerticesLength(verticesLength);
         var vertices:FloatArray = map.require("vertices").asFloatArray();
         if (verticesLength == vertices.length) {
@@ -488,7 +488,7 @@ class SkeletonJson {
         attachment.setVertices(weights.toArray());
     }
 
-    inline private function readAnimation(map:JsonValue, name:String, skeletonData:SkeletonData):Void {
+    #if !spine_no_inline inline #end private function readAnimation(map:JsonValue, name:String, skeletonData:SkeletonData):Void {
         var scale:Float = this.scale;
         var timelines:Array<Timeline> = new Array();
         var duration:Float = 0;
@@ -776,7 +776,7 @@ class SkeletonJson {
         skeletonData.animations.add(new Animation(name, timelines, duration));
     }
 
-    inline public function readCurve(map:JsonValue, timeline:CurveTimeline, frameIndex:Int):Void {
+    #if !spine_no_inline inline #end public function readCurve(map:JsonValue, timeline:CurveTimeline, frameIndex:Int):Void {
         var curve:JsonValue = map.get("curve");
         if (curve == null) return;
         if (curve.isString() && curve.asString().equals("stepped"))

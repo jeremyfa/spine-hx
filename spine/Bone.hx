@@ -251,7 +251,7 @@ class Bone implements Updatable {
     }
 
     /** Sets this bone's local transform to the setup pose. */
-    inline public function setToSetupPose():Void {
+    #if !spine_no_inline inline #end public function setToSetupPose():Void {
         var data:BoneData = this.data;
         x = data.x;
         y = data.y;
@@ -263,177 +263,177 @@ class Bone implements Updatable {
     }
 
     /** The bone's setup pose data. */
-    inline public function getData():BoneData {
+    #if !spine_no_inline inline #end public function getData():BoneData {
         return data;
     }
 
     /** The skeleton this bone belongs to. */
-    inline public function getSkeleton():Skeleton {
+    #if !spine_no_inline inline #end public function getSkeleton():Skeleton {
         return skeleton;
     }
 
     /** The parent bone, or null if this is the root bone. */
-    inline public function getParent():Bone {
+    #if !spine_no_inline inline #end public function getParent():Bone {
         return parent;
     }
 
     /** The immediate children of this bone. */
-    inline public function getChildren():Array<Bone> {
+    #if !spine_no_inline inline #end public function getChildren():Array<Bone> {
         return children;
     }
 
     // -- Local transform
 
     /** The local x translation. */
-    inline public function getX():Float {
+    #if !spine_no_inline inline #end public function getX():Float {
         return x;
     }
 
-    inline public function setX(x:Float):Void {
+    #if !spine_no_inline inline #end public function setX(x:Float):Void {
         this.x = x;
     }
 
     /** The local y translation. */
-    inline public function getY():Float {
+    #if !spine_no_inline inline #end public function getY():Float {
         return y;
     }
 
-    inline public function setY(y:Float):Void {
+    #if !spine_no_inline inline #end public function setY(y:Float):Void {
         this.y = y;
     }
 
-    inline public function setPosition(x:Float, y:Float):Void {
+    #if !spine_no_inline inline #end public function setPosition(x:Float, y:Float):Void {
         this.x = x;
         this.y = y;
     }
 
     /** The local rotation. */
-    inline public function getRotation():Float {
+    #if !spine_no_inline inline #end public function getRotation():Float {
         return rotation;
     }
 
-    inline public function setRotation(rotation:Float):Void {
+    #if !spine_no_inline inline #end public function setRotation(rotation:Float):Void {
         this.rotation = rotation;
     }
 
     /** The local scaleX. */
-    inline public function getScaleX():Float {
+    #if !spine_no_inline inline #end public function getScaleX():Float {
         return scaleX;
     }
 
-    inline public function setScaleX(scaleX:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleX(scaleX:Float):Void {
         this.scaleX = scaleX;
     }
 
     /** The local scaleY. */
-    inline public function getScaleY():Float {
+    #if !spine_no_inline inline #end public function getScaleY():Float {
         return scaleY;
     }
 
-    inline public function setScaleY(scaleY:Float):Void {
+    #if !spine_no_inline inline #end public function setScaleY(scaleY:Float):Void {
         this.scaleY = scaleY;
     }
 
-    inline public function setScale(scaleX:Float, scaleY:Float):Void {
+    #if !spine_no_inline inline #end public function setScale(scaleX:Float, scaleY:Float):Void {
         this.scaleX = scaleX;
         this.scaleY = scaleY;
     }
 
-    inline public function setScale2(scale:Float):Void {
+    #if !spine_no_inline inline #end public function setScale2(scale:Float):Void {
         scaleX = scale;
         scaleY = scale;
     }
 
     /** The local shearX. */
-    inline public function getShearX():Float {
+    #if !spine_no_inline inline #end public function getShearX():Float {
         return shearX;
     }
 
-    inline public function setShearX(shearX:Float):Void {
+    #if !spine_no_inline inline #end public function setShearX(shearX:Float):Void {
         this.shearX = shearX;
     }
 
     /** The local shearY. */
-    inline public function getShearY():Float {
+    #if !spine_no_inline inline #end public function getShearY():Float {
         return shearY;
     }
 
-    inline public function setShearY(shearY:Float):Void {
+    #if !spine_no_inline inline #end public function setShearY(shearY:Float):Void {
         this.shearY = shearY;
     }
 
     // -- Applied transform
 
     /** The applied local x translation. */
-    inline public function getAX():Float {
+    #if !spine_no_inline inline #end public function getAX():Float {
         return ax;
     }
 
-    inline public function setAX(ax:Float):Void {
+    #if !spine_no_inline inline #end public function setAX(ax:Float):Void {
         this.ax = ax;
     }
 
     /** The applied local y translation. */
-    inline public function getAY():Float {
+    #if !spine_no_inline inline #end public function getAY():Float {
         return ay;
     }
 
-    inline public function setAY(ay:Float):Void {
+    #if !spine_no_inline inline #end public function setAY(ay:Float):Void {
         this.ay = ay;
     }
 
     /** The applied local rotation. */
-    inline public function getARotation():Float {
+    #if !spine_no_inline inline #end public function getARotation():Float {
         return arotation;
     }
 
-    inline public function setARotation(arotation:Float):Void {
+    #if !spine_no_inline inline #end public function setARotation(arotation:Float):Void {
         this.arotation = arotation;
     }
 
     /** The applied local scaleX. */
-    inline public function getAScaleX():Float {
+    #if !spine_no_inline inline #end public function getAScaleX():Float {
         return ascaleX;
     }
 
-    inline public function setAScaleX(ascaleX:Float):Void {
+    #if !spine_no_inline inline #end public function setAScaleX(ascaleX:Float):Void {
         this.ascaleX = ascaleX;
     }
 
     /** The applied local scaleY. */
-    inline public function getAScaleY():Float {
+    #if !spine_no_inline inline #end public function getAScaleY():Float {
         return ascaleY;
     }
 
-    inline public function setAScaleY(ascaleY:Float):Void {
+    #if !spine_no_inline inline #end public function setAScaleY(ascaleY:Float):Void {
         this.ascaleY = ascaleY;
     }
 
     /** The applied local shearX. */
-    inline public function getAShearX():Float {
+    #if !spine_no_inline inline #end public function getAShearX():Float {
         return ashearX;
     }
 
-    inline public function setAShearX(ashearX:Float):Void {
+    #if !spine_no_inline inline #end public function setAShearX(ashearX:Float):Void {
         this.ashearX = ashearX;
     }
 
     /** The applied local shearY. */
-    inline public function getAShearY():Float {
+    #if !spine_no_inline inline #end public function getAShearY():Float {
         return ashearY;
     }
 
-    inline public function setAShearY(ashearY:Float):Void {
+    #if !spine_no_inline inline #end public function setAShearY(ashearY:Float):Void {
         this.ashearY = ashearY;
     }
 
     /** If true, the applied transform matches the world transform. If false, the world transform has been modified since it was
      * computed and {@link #updateAppliedTransform()} must be called before accessing the applied transform. */
-    inline public function isAppliedValid():Bool {
+    #if !spine_no_inline inline #end public function isAppliedValid():Bool {
         return appliedValid;
     }
 
-    inline public function setAppliedValid(appliedValid:Bool):Void {
+    #if !spine_no_inline inline #end public function setAppliedValid(appliedValid:Bool):Void {
         this.appliedValid = appliedValid;
     }
 
@@ -445,7 +445,7 @@ class Bone implements Updatable {
      * <p>
      * Some information is ambiguous in the world transform, such as -1,-1 scale versus 180 rotation. The applied transform after
      * calling this method is equivalent to the local tranform used to compute the world transform, but may not be identical. */
-    inline public function updateAppliedTransform():Void {
+    #if !spine_no_inline inline #end public function updateAppliedTransform():Void {
         appliedValid = true;
         var parent:Bone = this.parent;
         if (parent == null) {
@@ -489,80 +489,80 @@ class Bone implements Updatable {
     // -- World transform
 
     /** Part of the world transform matrix for the X axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
-    inline public function getA():Float {
+    #if !spine_no_inline inline #end public function getA():Float {
         return a;
     }
 
-    inline public function setA(a:Float):Void {
+    #if !spine_no_inline inline #end public function setA(a:Float):Void {
         this.a = a;
     }
 
     /** Part of the world transform matrix for the Y axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
-    inline public function getB():Float {
+    #if !spine_no_inline inline #end public function getB():Float {
         return b;
     }
 
-    inline public function setB(b:Float):Void {
+    #if !spine_no_inline inline #end public function setB(b:Float):Void {
         this.b = b;
     }
 
     /** Part of the world transform matrix for the X axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
-    inline public function getC():Float {
+    #if !spine_no_inline inline #end public function getC():Float {
         return c;
     }
 
-    inline public function setC(c:Float):Void {
+    #if !spine_no_inline inline #end public function setC(c:Float):Void {
         this.c = c;
     }
 
     /** Part of the world transform matrix for the Y axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
-    inline public function getD():Float {
+    #if !spine_no_inline inline #end public function getD():Float {
         return d;
     }
 
-    inline public function setD(d:Float):Void {
+    #if !spine_no_inline inline #end public function setD(d:Float):Void {
         this.d = d;
     }
 
     /** The world X position. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
-    inline public function getWorldX():Float {
+    #if !spine_no_inline inline #end public function getWorldX():Float {
         return worldX;
     }
 
-    inline public function setWorldX(worldX:Float):Void {
+    #if !spine_no_inline inline #end public function setWorldX(worldX:Float):Void {
         this.worldX = worldX;
     }
 
     /** The world Y position. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
-    inline public function getWorldY():Float {
+    #if !spine_no_inline inline #end public function getWorldY():Float {
         return worldY;
     }
 
-    inline public function setWorldY(worldY:Float):Void {
+    #if !spine_no_inline inline #end public function setWorldY(worldY:Float):Void {
         this.worldY = worldY;
     }
 
     /** The world rotation for the X axis, calculated using {@link #a} and {@link #c}. */
-    inline public function getWorldRotationX():Float {
+    #if !spine_no_inline inline #end public function getWorldRotationX():Float {
         return atan2(c, a) * radDeg;
     }
 
     /** The world rotation for the Y axis, calculated using {@link #b} and {@link #d}. */
-    inline public function getWorldRotationY():Float {
+    #if !spine_no_inline inline #end public function getWorldRotationY():Float {
         return atan2(d, b) * radDeg;
     }
 
     /** The magnitude (always positive) of the world scale X, calculated using {@link #a} and {@link #c}. */
-    inline public function getWorldScaleX():Float {
+    #if !spine_no_inline inline #end public function getWorldScaleX():Float {
         return cast(Math.sqrt(a * a + c * c), Float);
     }
 
     /** The magnitude (always positive) of the world scale Y, calculated using {@link #b} and {@link #d}. */
-    inline public function getWorldScaleY():Float {
+    #if !spine_no_inline inline #end public function getWorldScaleY():Float {
         return cast(Math.sqrt(b * b + d * d), Float);
     }
 
-    inline public function getWorldTransform(worldTransform:Matrix3):Matrix3 {
+    #if !spine_no_inline inline #end public function getWorldTransform(worldTransform:Matrix3):Matrix3 {
         if (worldTransform == null) throw new IllegalArgumentException("worldTransform cannot be null.");
         var val:FloatArray = worldTransform.val;
         val[M00] = a;
@@ -578,7 +578,7 @@ class Bone implements Updatable {
     }
 
     /** Transforms a point from world coordinates to the bone's local coordinates. */
-    inline public function worldToLocal(world:Vector2):Vector2 {
+    #if !spine_no_inline inline #end public function worldToLocal(world:Vector2):Vector2 {
         var invDet:Float = 1 / (a * d - b * c);
         var x:Float = world.x - worldX; var y:Float = world.y - worldY;
         world.x = x * d * invDet - y * b * invDet;
@@ -587,7 +587,7 @@ class Bone implements Updatable {
     }
 
     /** Transforms a point from the bone's local coordinates to world coordinates. */
-    inline public function localToWorld(local:Vector2):Vector2 {
+    #if !spine_no_inline inline #end public function localToWorld(local:Vector2):Vector2 {
         var x:Float = local.x; var y:Float = local.y;
         local.x = x * a + y * b + worldX;
         local.y = x * c + y * d + worldY;
@@ -595,20 +595,20 @@ class Bone implements Updatable {
     }
 
     /** Transforms a world rotation to a local rotation. */
-    inline public function worldToLocalRotation(worldRotation:Float):Float {
+    #if !spine_no_inline inline #end public function worldToLocalRotation(worldRotation:Float):Float {
         var sin:Float = sinDeg(worldRotation); var cos:Float = cosDeg(worldRotation);
         return atan2(a * sin - c * cos, d * cos - b * sin) * radDeg;
     }
 
     /** Transforms a local rotation to a world rotation. */
-    inline public function localToWorldRotation(localRotation:Float):Float {
+    #if !spine_no_inline inline #end public function localToWorldRotation(localRotation:Float):Float {
         var sin:Float = sinDeg(localRotation); var cos:Float = cosDeg(localRotation);
         return atan2(cos * c + sin * d, cos * a + sin * b) * radDeg;
     }
 
     /** Rotates the world transform the specified amount and sets {@link #isAppliedValid()} to false.
      * {@link #updateWorldTransform()} will need to be called on any child bones, recursively, and any constraints reapplied. */
-    inline public function rotateWorld(degrees:Float):Void {
+    #if !spine_no_inline inline #end public function rotateWorld(degrees:Float):Void {
         var cos:Float = cosDeg(degrees); var sin:Float = sinDeg(degrees);
         a = cos * a - sin * c;
         b = cos * b - sin * d;
@@ -619,7 +619,7 @@ class Bone implements Updatable {
 
     // ---
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return data.name;
     }
 }

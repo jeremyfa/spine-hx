@@ -69,41 +69,41 @@ class Slot {
     }*/
 
     /** The slot's setup pose data. */
-    inline public function getData():SlotData {
+    #if !spine_no_inline inline #end public function getData():SlotData {
         return data;
     }
 
     /** The bone this slot belongs to. */
-    inline public function getBone():Bone {
+    #if !spine_no_inline inline #end public function getBone():Bone {
         return bone;
     }
 
     /** The skeleton this slot belongs to. */
-    inline public function getSkeleton():Skeleton {
+    #if !spine_no_inline inline #end public function getSkeleton():Skeleton {
         return bone.skeleton;
     }
 
     /** The color used to tint the slot's attachment. If {@link #getDarkColor()} is set, this is used as the light color for two
      * color tinting. */
-    inline public function getColor():Color {
+    #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
 
     /** The dark color used to tint the slot's attachment for two color tinting, or null if two color tinting is not used. The dark
      * color's alpha is not used. */
-    inline public function getDarkColor():Color {
+    #if !spine_no_inline inline #end public function getDarkColor():Color {
         return darkColor;
     }
 
     /** The current attachment for the slot, or null if the slot has no attachment. */
-    inline public function getAttachment():Attachment {
+    #if !spine_no_inline inline #end public function getAttachment():Attachment {
         return attachment;
     }
 
     /** Sets the slot's attachment and, if the attachment changed, resets {@link #attachmentTime} and clears
      * {@link #attachmentVertices}.
      * @param attachment May be null. */
-    inline public function setAttachment(attachment:Attachment):Void {
+    #if !spine_no_inline inline #end public function setAttachment(attachment:Attachment):Void {
         if (this.attachment == attachment) return;
         this.attachment = attachment;
         attachmentTime = bone.skeleton.time;
@@ -112,11 +112,11 @@ class Slot {
 
     /** The time that has elapsed since the last time the attachment was set or cleared. Relies on Skeleton
      * {@link Skeleton#time}. */
-    inline public function getAttachmentTime():Float {
+    #if !spine_no_inline inline #end public function getAttachmentTime():Float {
         return bone.skeleton.time - attachmentTime;
     }
 
-    inline public function setAttachmentTime(time:Float):Void {
+    #if !spine_no_inline inline #end public function setAttachmentTime(time:Float):Void {
         attachmentTime = bone.skeleton.time - time;
     }
 
@@ -124,17 +124,17 @@ class Slot {
      * weighted mesh, the entries are an offset for each vertex which will be added to the mesh's local vertex positions.
      * <p>
      * See {@link VertexAttachment#computeWorldVertices(Slot, int, int, float[], int, int)} and {@link DeformTimeline}. */
-    inline public function getAttachmentVertices():FloatArray {
+    #if !spine_no_inline inline #end public function getAttachmentVertices():FloatArray {
         return attachmentVertices;
     }
 
-    inline public function setAttachmentVertices(attachmentVertices:FloatArray):Void {
+    #if !spine_no_inline inline #end public function setAttachmentVertices(attachmentVertices:FloatArray):Void {
         if (attachmentVertices == null) throw new IllegalArgumentException("attachmentVertices cannot be null.");
         this.attachmentVertices = attachmentVertices;
     }
 
     /** Sets this slot to the setup pose. */
-    inline public function setToSetupPose():Void {
+    #if !spine_no_inline inline #end public function setToSetupPose():Void {
         color.set(data.color);
         if (darkColor != null) darkColor.set(data.darkColor);
         if (data.attachmentName == null)
@@ -145,7 +145,7 @@ class Slot {
         }
     }
 
-    inline public function toString():String {
+    #if !spine_no_inline inline #end public function toString():String {
         return data.name;
     }
 }
