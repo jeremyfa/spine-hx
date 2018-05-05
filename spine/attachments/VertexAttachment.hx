@@ -62,7 +62,7 @@ class VertexAttachment extends Attachment {
      *           <code>stride</code> / 2.
      * @param offset The <code>worldVertices</code> index to begin writing values.
      * @param stride The number of <code>worldVertices</code> entries between the value pairs written. */
-    public function computeWorldVertices(slot:Slot, start:Int, count:Int, worldVertices:FloatArray, offset:Int, stride:Int):Void {
+    inline public function computeWorldVertices(slot:Slot, start:Int, count:Int, worldVertices:FloatArray, offset:Int, stride:Int):Void {
         count = offset + (count >> 1) * stride;
         var skeleton:Skeleton = slot.getSkeleton();
         var deformArray:FloatArray = slot.getAttachmentVertices();
@@ -128,38 +128,38 @@ class VertexAttachment extends Attachment {
     /** The bones which affect the {@link #getVertices()}. The array entries are, for each vertex, the number of bones affecting
      * the vertex followed by that many bone indices, which is the index of the bone in {@link Skeleton#getBones()}. Will be null
      * if this attachment has no weights. */
-    public function getBones():IntArray {
+    inline public function getBones():IntArray {
         return bones;
     }
 
     /** @param bones May be null if this attachment has no weights. */
-    public function setBones(bones:IntArray):Void {
+    inline public function setBones(bones:IntArray):Void {
         this.bones = bones;
     }
 
     /** The vertex positions in the bone's coordinate system. For a non-weighted attachment, the values are <code>x,y</code>
      * entries for each vertex. For a weighted attachment, the values are <code>x,y,weight</code> entries for each bone affecting
      * each vertex. */
-    public function getVertices():FloatArray {
+    inline public function getVertices():FloatArray {
         return vertices;
     }
 
-    public function setVertices(vertices:FloatArray):Void {
+    inline public function setVertices(vertices:FloatArray):Void {
         this.vertices = vertices;
     }
 
     /** The maximum number of world vertex values that can be output by
      * {@link #computeWorldVertices(Slot, int, int, float[], int, int)} using the <code>count</code> parameter. */
-    public function getWorldVerticesLength():Int {
+    inline public function getWorldVerticesLength():Int {
         return worldVerticesLength;
     }
 
-    public function setWorldVerticesLength(worldVerticesLength:Int):Void {
+    inline public function setWorldVerticesLength(worldVerticesLength:Int):Void {
         this.worldVerticesLength = worldVerticesLength;
     }
 
     /** Returns a unique ID for this attachment. */
-    public function getId():Int {
+    inline public function getId():Int {
         return id;
     }
 }

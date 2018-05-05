@@ -48,36 +48,36 @@ class PathAttachment extends VertexAttachment {
     }
 
     /** If true, the start and end knots are connected. */
-    public function getClosed():Bool {
+    inline public function getClosed():Bool {
         return closed;
     }
 
-    public function setClosed(closed:Bool):Void {
+    inline public function setClosed(closed:Bool):Void {
         this.closed = closed;
     }
 
     /** If true, additional calculations are performed to make calculating positions along the path more accurate. If false, fewer
      * calculations are performed but calculating positions along the path is less accurate. */
-    public function getConstantSpeed():Bool {
+    inline public function getConstantSpeed():Bool {
         return constantSpeed;
     }
 
-    public function setConstantSpeed(constantSpeed:Bool):Void {
+    inline public function setConstantSpeed(constantSpeed:Bool):Void {
         this.constantSpeed = constantSpeed;
     }
 
     /** The lengths along the path in the setup pose from the start of the path to the end of each Bezier curve. */
-    public function getLengths():FloatArray {
+    inline public function getLengths():FloatArray {
         return lengths;
     }
 
-    public function setLengths(lengths:FloatArray):Void {
+    inline public function setLengths(lengths:FloatArray):Void {
         this.lengths = lengths;
     }
 
     /** The color of the path as it was in Spine. Available only when nonessential data was exported. Paths are not usually
      * rendered at runtime. */
-    public function getColor():Color {
+    inline public function getColor():Color {
         return color;
     }
 }

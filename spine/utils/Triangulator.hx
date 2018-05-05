@@ -48,7 +48,7 @@ class Triangulator {
 
     private var polygonIndicesPool:Pool<ShortArray> = new IndicesPool();
 
-    public function triangulate(verticesArray:FloatArray):ShortArray {
+    inline public function triangulate(verticesArray:FloatArray):ShortArray {
         var vertices:FloatArray = verticesArray.items;
         var vertexCount:Int = verticesArray.size >> 1;
 
@@ -126,7 +126,7 @@ class Triangulator {
         return triangles;
     }
 
-    public function decompose(verticesArray:FloatArray, triangles:ShortArray):FloatArray2D {
+    inline public function decompose(verticesArray:FloatArray, triangles:ShortArray):FloatArray2D {
         var vertices:FloatArray = verticesArray.items;
 
         var convexPolygons:FloatArray2D = this.convexPolygons;
@@ -258,7 +258,7 @@ class Triangulator {
         return convexPolygons;
     }
 
-    private static function isGeometryConcave(index:Int, vertexCount:Int, vertices:FloatArray, indices:ShortArray):Bool {
+    inline private static function isGeometryConcave(index:Int, vertexCount:Int, vertices:FloatArray, indices:ShortArray):Bool {
         var previous:Int = indices[(vertexCount + index - 1) % vertexCount] << 1;
         var current:Int = indices[index] << 1;
         var next:Int = indices[(index + 1) % vertexCount] << 1;
@@ -266,11 +266,11 @@ class Triangulator {
             vertices[next + 1]);
     }
 
-    private static function positiveArea(p1x:Float, p1y:Float, p2x:Float, p2y:Float, p3x:Float, p3y:Float):Bool {
+    inline private static function positiveArea(p1x:Float, p1y:Float, p2x:Float, p2y:Float, p3x:Float, p3y:Float):Bool {
         return p1x * (p3y - p2y) + p2x * (p1y - p3y) + p3x * (p2y - p1y) >= 0;
     }
 
-    private static function computeWinding(p1x:Float, p1y:Float, p2x:Float, p2y:Float, p3x:Float, p3y:Float):Int {
+    inline private static function computeWinding(p1x:Float, p1y:Float, p2x:Float, p2y:Float, p3x:Float, p3y:Float):Int {
         var px:Float = p2x - p1x; var py:Float = p2y - p1y;
         return p3x * py - p3y * px + px * p1y - p1x * py >= 0 ? 1 : -1;
     }

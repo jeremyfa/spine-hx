@@ -44,36 +44,36 @@ class EventData {
         this.name = name;
     }
 
-    public function getInt():Int {
+    inline public function getInt():Int {
         return intValue;
     }
 
-    public function setInt(intValue:Int):Void {
+    inline public function setInt(intValue:Int):Void {
         this.intValue = intValue;
     }
 
-    public function getFloat():Float {
+    inline public function getFloat():Float {
         return floatValue;
     }
 
-    public function setFloat(floatValue:Float):Void {
+    inline public function setFloat(floatValue:Float):Void {
         this.floatValue = floatValue;
     }
 
-    public function getString():String {
+    inline public function getString():String {
         return stringValue;
     }
 
-    public function setString(stringValue:String):Void {
+    inline public function setString(stringValue:String):Void {
         this.stringValue = stringValue;
     }
 
     /** The name of the event, which is unique within the skeleton. */
-    public function getName():String {
+    inline public function getName():String {
         return name;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return name;
     }
 }

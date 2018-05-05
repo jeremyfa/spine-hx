@@ -57,19 +57,19 @@ class MeshAttachment extends VertexAttachment {
         super(name);
     }
 
-    public function setRegion(region:TextureRegion):Void {
+    inline public function setRegion(region:TextureRegion):Void {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         this.region = region;
     }
 
-    public function getRegion():TextureRegion {
+    inline public function getRegion():TextureRegion {
         if (region == null) throw new IllegalStateException("Region has not been set: " + this);
         return region;
     }
 
     /** Calculates {@link #uvs} using {@link #regionUVs} and the {@link #region}. Must be called after changing the region UVs or
      * region. */
-    public function updateUVs():Void {
+    inline public function updateUVs():Void {
         var u:Float = 0; var v:Float = 0; var width:Float = 0; var height:Float = 0;
         if (region == null) {
             u = v = 0;
@@ -103,95 +103,95 @@ class MeshAttachment extends VertexAttachment {
     }
 
     /** Triplets of vertex indices which describe the mesh's triangulation. */
-    public function getTriangles():ShortArray {
+    inline public function getTriangles():ShortArray {
         return triangles;
     }
 
-    public function setTriangles(triangles:ShortArray):Void {
+    inline public function setTriangles(triangles:ShortArray):Void {
         this.triangles = triangles;
     }
 
     /** The UV pair for each vertex, normalized within the texture region. */
-    public function getRegionUVs():FloatArray {
+    inline public function getRegionUVs():FloatArray {
         return regionUVs;
     }
 
     /** Sets the texture coordinates for the region. The values are u,v pairs for each vertex. */
-    public function setRegionUVs(regionUVs:FloatArray):Void {
+    inline public function setRegionUVs(regionUVs:FloatArray):Void {
         this.regionUVs = regionUVs;
     }
 
     /** The UV pair for each vertex, normalized within the entire texture.
      * <p>
      * See {@link #updateUVs}. */
-    public function getUVs():FloatArray {
+    inline public function getUVs():FloatArray {
         return uvs;
     }
 
-    public function setUVs(uvs:FloatArray):Void {
+    inline public function setUVs(uvs:FloatArray):Void {
         this.uvs = uvs;
     }
 
     /** The color to tint the mesh. */
-    public function getColor():Color {
+    inline public function getColor():Color {
         return color;
     }
 
     /** The name of the texture region for this attachment. */
-    public function getPath():String {
+    inline public function getPath():String {
         return path;
     }
 
-    public function setPath(path:String):Void {
+    inline public function setPath(path:String):Void {
         this.path = path;
     }
 
     /** The number of entries at the beginning of {@link #vertices} that make up the mesh hull. */
-    public function getHullLength():Int {
+    inline public function getHullLength():Int {
         return hullLength;
     }
 
-    public function setHullLength(hullLength:Int):Void {
+    inline public function setHullLength(hullLength:Int):Void {
         this.hullLength = hullLength;
     }
 
-    public function setEdges(edges:ShortArray):Void {
+    inline public function setEdges(edges:ShortArray):Void {
         this.edges = edges;
     }
 
     /** Vertex index pairs describing edges for controling triangulation. Mesh triangles will never cross edges. Only available if
      * nonessential data was exported. Triangulation is not performed at runtime. */
-    public function getEdges():ShortArray {
+    inline public function getEdges():ShortArray {
         return edges;
     }
 
     /** The width of the mesh's image. Available only when nonessential data was exported. */
-    public function getWidth():Float {
+    inline public function getWidth():Float {
         return width;
     }
 
-    public function setWidth(width:Float):Void {
+    inline public function setWidth(width:Float):Void {
         this.width = width;
     }
 
     /** The height of the mesh's image. Available only when nonessential data was exported. */
-    public function getHeight():Float {
+    inline public function getHeight():Float {
         return height;
     }
 
-    public function setHeight(height:Float):Void {
+    inline public function setHeight(height:Float):Void {
         this.height = height;
     }
 
     /** The parent mesh if this is a linked mesh, else null. A linked mesh shares the {@link #bones}, {@link #vertices},
      * {@link #regionUVs}, {@link #triangles}, {@link #hullLength}, {@link #edges}, {@link #width}, and {@link #height} with the
      * parent mesh, but may have a different {@link #name} or {@link #path} (and therefore a different texture). */
-    public function getParentMesh():MeshAttachment {
+    inline public function getParentMesh():MeshAttachment {
         return parentMesh;
     }
 
     /** @param parentMesh May be null. */
-    public function setParentMesh(parentMesh:MeshAttachment):Void {
+    inline public function setParentMesh(parentMesh:MeshAttachment):Void {
         this.parentMesh = parentMesh;
         if (parentMesh != null) {
             bones = parentMesh.bones;
@@ -210,11 +210,11 @@ class MeshAttachment extends VertexAttachment {
      * also applied to this mesh. If false, this linked mesh may have its own deform timelines.
      * <p>
      * See {@link #applyDeform(VertexAttachment)}. */
-    public function getInheritDeform():Bool {
+    inline public function getInheritDeform():Bool {
         return inheritDeform;
     }
 
-    public function setInheritDeform(inheritDeform:Bool):Void {
+    inline public function setInheritDeform(inheritDeform:Bool):Void {
         this.inheritDeform = inheritDeform;
     }
 }

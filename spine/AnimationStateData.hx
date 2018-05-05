@@ -46,14 +46,14 @@ class AnimationStateData {
     }
 
     /** The SkeletonData to look up animations when they are specified by name. */
-    public function getSkeletonData():SkeletonData {
+    inline public function getSkeletonData():SkeletonData {
         return skeletonData;
     }
 
     /** Sets a mix duration by animation name.
      * <p>
      * See {@link #setMix(Animation, Animation, float)}. */
-    public function setMixByName(fromName:String, toName:String, duration:Float):Void {
+    inline public function setMixByName(fromName:String, toName:String, duration:Float):Void {
         var from:Animation = skeletonData.findAnimation(fromName);
         if (from == null) throw new IllegalArgumentException("Animation not found: " + fromName);
         var to:Animation = skeletonData.findAnimation(toName);
@@ -64,7 +64,7 @@ class AnimationStateData {
     /** Sets the mix duration when changing from the specified animation to the other.
      * <p>
      * See {@link TrackEntry#mixDuration}. */
-    public function setMix(from:Animation, to:Animation, duration:Float):Void {
+    inline public function setMix(from:Animation, to:Animation, duration:Float):Void {
         if (from == null) throw new IllegalArgumentException("from cannot be null.");
         if (to == null) throw new IllegalArgumentException("to cannot be null.");
         var key:Key = new Key();
@@ -75,7 +75,7 @@ class AnimationStateData {
 
     /** Returns the mix duration to use when changing from the specified animation to the other, or the {@link #getDefaultMix()} if
      * no mix duration has been set. */
-    public function getMix(from:Animation, to:Animation):Float {
+    inline public function getMix(from:Animation, to:Animation):Float {
         if (from == null) throw new IllegalArgumentException("from cannot be null.");
         if (to == null) throw new IllegalArgumentException("to cannot be null.");
         tempKey.a1 = from;
@@ -84,11 +84,11 @@ class AnimationStateData {
     }
 
     /** The mix duration to use when no mix duration has been defined between two animations. */
-    public function getDefaultMix():Float {
+    inline public function getDefaultMix():Float {
         return defaultMix;
     }
 
-    public function setDefaultMix(defaultMix:Float):Void {
+    inline public function setDefaultMix(defaultMix:Float):Void {
         this.defaultMix = defaultMix;
     }
 }
@@ -96,11 +96,11 @@ class AnimationStateData {
 private class Key {
     public var a1:Animation; public var a2:Animation = null;
 
-    public function getHashCode():Int {
+    inline public function getHashCode():Int {
         return 31 * (31 + a1.getHashCode()) + a2.getHashCode();
     }
 
-    public function equals(obj:Dynamic):Bool {
+    inline public function equals(obj:Dynamic):Bool {
         if (this == obj) return true;
         if (obj == null) return false;
         var other:Key = cast(obj, Key);
@@ -113,7 +113,7 @@ private class Key {
         return true;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return a1.name + "->" + a2.name;
     }
 

@@ -99,15 +99,15 @@ class SkeletonJson {
      * runtime than were used in Spine.
      * <p>
      * See <a href="http://esotericsoftware.com/spine-loading-skeleton-data#Scaling">Scaling</a> in the Spine Runtimes Guide. */
-    public function getScale():Float {
+    inline public function getScale():Float {
         return scale;
     }
 
-    public function setScale(scale:Float):Void {
+    inline public function setScale(scale:Float):Void {
         this.scale = scale;
     }
 
-    public function readSkeletonData(file:FileHandle):SkeletonData {
+    inline public function readSkeletonData(file:FileHandle):SkeletonData {
         if (file == null) throw new IllegalArgumentException("file cannot be null.");
 
         var scale:Float = this.scale;
@@ -461,7 +461,7 @@ class SkeletonJson {
         return null;
     }
 
-    private function readVertices(map:JsonValue, attachment:VertexAttachment, verticesLength:Int):Void {
+    inline private function readVertices(map:JsonValue, attachment:VertexAttachment, verticesLength:Int):Void {
         attachment.setWorldVerticesLength(verticesLength);
         var vertices:FloatArray = map.require("vertices").asFloatArray();
         if (verticesLength == vertices.length) {
@@ -488,7 +488,7 @@ class SkeletonJson {
         attachment.setVertices(weights.toArray());
     }
 
-    private function readAnimation(map:JsonValue, name:String, skeletonData:SkeletonData):Void {
+    inline private function readAnimation(map:JsonValue, name:String, skeletonData:SkeletonData):Void {
         var scale:Float = this.scale;
         var timelines:Array<Timeline> = new Array();
         var duration:Float = 0;
@@ -776,7 +776,7 @@ class SkeletonJson {
         skeletonData.animations.add(new Animation(name, timelines, duration));
     }
 
-    public function readCurve(map:JsonValue, timeline:CurveTimeline, frameIndex:Int):Void {
+    inline public function readCurve(map:JsonValue, timeline:CurveTimeline, frameIndex:Int):Void {
         var curve:JsonValue = map.get("curve");
         if (curve == null) return;
         if (curve.isString() && curve.asString().equals("stepped"))

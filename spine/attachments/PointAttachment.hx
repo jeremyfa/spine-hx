@@ -51,43 +51,43 @@ class PointAttachment extends Attachment {
         super(name);
     }
 
-    public function getX():Float {
+    inline public function getX():Float {
         return x;
     }
 
-    public function setX(x:Float):Void {
+    inline public function setX(x:Float):Void {
         this.x = x;
     }
 
-    public function getY():Float {
+    inline public function getY():Float {
         return y;
     }
 
-    public function setY(y:Float):Void {
+    inline public function setY(y:Float):Void {
         this.y = y;
     }
 
-    public function getRotation():Float {
+    inline public function getRotation():Float {
         return rotation;
     }
 
-    public function setRotation(rotation:Float):Void {
+    inline public function setRotation(rotation:Float):Void {
         this.rotation = rotation;
     }
 
     /** The color of the point attachment as it was in Spine. Available only when nonessential data was exported. Point attachments
      * are not usually rendered at runtime. */
-    public function getColor():Color {
+    inline public function getColor():Color {
         return color;
     }
 
-    public function computeWorldPosition(bone:Bone, point:Vector2):Vector2 {
+    inline public function computeWorldPosition(bone:Bone, point:Vector2):Vector2 {
         point.x = x * bone.getA() + y * bone.getB() + bone.getWorldX();
         point.y = x * bone.getC() + y * bone.getD() + bone.getWorldY();
         return point;
     }
 
-    public function computeWorldRotation(bone:Bone):Float {
+    inline public function computeWorldRotation(bone:Bone):Float {
         var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
         var x:Float = cos * bone.getA() + sin * bone.getB();
         var y:Float = cos * bone.getC() + sin * bone.getD();

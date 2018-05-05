@@ -2055,6 +2055,10 @@ using StringTools;
                                 });
                             }
                         }
+
+                        if (!inInterface && !noInlineNames.exists(name)) {
+                            haxe += 'inline ';
+                        }
                         
                         var hasAccessModifier = false;
                         if (!inInterface && modifiers.exists('public')) {
@@ -2457,6 +2461,8 @@ using StringTools;
                 'build-static.hxml'
             ]).stderr);
 
+            //trace(diagnostics);
+
             for (item in diagnostics) {
 
                 if (item.location == 'characters') {
@@ -2656,6 +2662,31 @@ using StringTools;
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
                     }
+                    else if (item.message.startsWith('Cannot inline a not final return')) {
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var lineNumber = item.line - 1;
+                        while (lineNumber > 0 && lines[lineNumber].indexOf(' inline ') == -1) {
+                            lineNumber--;
+                        }
+                        var line = lines[lineNumber];
+                        if (line != null) {
+                            numFixed++;
+
+                            var newLine = line.replace(' inline ', ' ');
+
+                            // Add new change
+                            //lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                            // Edit line
+                            lines[lineNumber] = newLine;
+
+                            // Save modified file
+                            saveFile(item.filePath, lines.join("\n"));
+                        }
+                    }
                     else if (RE_ERROR_IDENTIFIER_NOT_PART.match(item.message)) {
                         numFixed++;
                         var identifier = RE_ERROR_IDENTIFIER_NOT_PART.matched(1);
@@ -2761,6 +2792,23 @@ using StringTools;
                         var line = lines[item.start - 1];
 
                         line = line.substring(0, line.length - line.ltrim().length) + 'override ' + line.ltrim();
+
+                        // Edit line
+                        lines[item.start - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.endsWith('is inlined and cannot be overridden')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.start - 1];
+
+                        trace('LINE: ' + line);
+                        line = line.replace(' inline ', ' ');
 
                         // Edit line
                         lines[item.start - 1] = line;
@@ -3174,6 +3222,13 @@ using StringTools;
         'spine.SkeletonJson' => 'TextureAtlas atlas', // Can use new(new AtlasAttachmentLoader(atlas)) instead
         'spine.utils.SkeletonPool' => 'SkeletonData skeletonData', // Optional constructor
         'spine.utils.SkeletonPool#2' => 'SkeletonData skeletonData,int initialCapacity' // Optional constructor
+    ];
+
+    static var noInlineNames:Map<String,Bool> = [
+        'apply' => true,
+        'getPropertyId' => true,
+        'applyDeform' => true,
+        'applyMixingFrom' => true
     ];
 
 /// Regular expressions

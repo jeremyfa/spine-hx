@@ -52,56 +52,56 @@ class SlotData {
     }
 
     /** The index of the slot in {@link Skeleton#getSlots()}. */
-    public function getIndex():Int {
+    inline public function getIndex():Int {
         return index;
     }
 
     /** The name of the slot, which is unique within the skeleton. */
-    public function getName():String {
+    inline public function getName():String {
         return name;
     }
 
     /** The bone this slot belongs to. */
-    public function getBoneData():BoneData {
+    inline public function getBoneData():BoneData {
         return boneData;
     }
 
     /** The color used to tint the slot's attachment. If {@link #getDarkColor()} is set, this is used as the light color for two
      * color tinting. */
-    public function getColor():Color {
+    inline public function getColor():Color {
         return color;
     }
 
     /** The dark color used to tint the slot's attachment for two color tinting, or null if two color tinting is not used. The dark
      * color's alpha is not used. */
-    public function getDarkColor():Color {
+    inline public function getDarkColor():Color {
         return darkColor;
     }
 
-    public function setDarkColor(darkColor:Color):Void {
+    inline public function setDarkColor(darkColor:Color):Void {
         this.darkColor = darkColor;
     }
 
     /** @param attachmentName May be null. */
-    public function setAttachmentName(attachmentName:String):Void {
+    inline public function setAttachmentName(attachmentName:String):Void {
         this.attachmentName = attachmentName;
     }
 
     /** The name of the attachment that is visible for this slot in the setup pose, or null if no attachment is visible. */
-    public function getAttachmentName():String {
+    inline public function getAttachmentName():String {
         return attachmentName;
     }
 
     /** The blend mode for drawing the slot's attachment. */
-    public function getBlendMode():BlendMode {
+    inline public function getBlendMode():BlendMode {
         return blendMode;
     }
 
-    public function setBlendMode(blendMode:BlendMode):Void {
+    inline public function setBlendMode(blendMode:BlendMode):Void {
         this.blendMode = blendMode;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return name;
     }
 }

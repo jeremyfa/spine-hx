@@ -94,7 +94,7 @@ class PathConstraint implements Constraint {
     }
 
     @SuppressWarnings("null")
-    public function update():Void {
+    inline public function update():Void {
         var attachment:Attachment = target.attachment;
         if (!(Std.is(attachment, PathAttachment))) return;
 
@@ -190,7 +190,7 @@ class PathConstraint implements Constraint {
         i++; p += 3; }
     }
 
-    public function computeWorldPositions(path:PathAttachment, spacesCount:Int, tangents:Bool, percentPosition:Bool, percentSpacing:Bool):FloatArray {
+    inline public function computeWorldPositions(path:PathAttachment, spacesCount:Int, tangents:Bool, percentPosition:Bool, percentSpacing:Bool):FloatArray {
         var target:Slot = this.target;
         var position:Float = this.position;
         var spaces:FloatArray = this.spaces.items; var out:FloatArray = this.positions.setSize(spacesCount * 3 + 2); var world:FloatArray = null;
@@ -406,21 +406,21 @@ class PathConstraint implements Constraint {
         return out;
     }
 
-    private function addBeforePosition(p:Float, temp:FloatArray, i:Int, out:FloatArray, o:Int):Void {
+    inline private function addBeforePosition(p:Float, temp:FloatArray, i:Int, out:FloatArray, o:Int):Void {
         var x1:Float = temp[i]; var y1:Float = temp[i + 1]; var dx:Float = temp[i + 2] - x1; var dy:Float = temp[i + 3] - y1; var r:Float = cast(Math.atan2(dy, dx), Float);
         out[o] = x1 + p * cast(Math.cos(r), Float);
         out[o + 1] = y1 + p * cast(Math.sin(r), Float);
         out[o + 2] = r;
     }
 
-    private function addAfterPosition(p:Float, temp:FloatArray, i:Int, out:FloatArray, o:Int):Void {
+    inline private function addAfterPosition(p:Float, temp:FloatArray, i:Int, out:FloatArray, o:Int):Void {
         var x1:Float = temp[i + 2]; var y1:Float = temp[i + 3]; var dx:Float = x1 - temp[i]; var dy:Float = y1 - temp[i + 1]; var r:Float = cast(Math.atan2(dy, dx), Float);
         out[o] = x1 + p * cast(Math.cos(r), Float);
         out[o + 1] = y1 + p * cast(Math.sin(r), Float);
         out[o + 2] = r;
     }
 
-    private function addCurvePosition(p:Float, x1:Float, y1:Float, cx1:Float, cy1:Float, cx2:Float, cy2:Float, x2:Float, y2:Float, out:FloatArray, o:Int, tangents:Bool):Void {
+    inline private function addCurvePosition(p:Float, x1:Float, y1:Float, cx1:Float, cy1:Float, cx2:Float, cy2:Float, x2:Float, y2:Float, out:FloatArray, o:Int, tangents:Bool):Void {
         if (p < epsilon || Math.isNaN(p)) p = epsilon;
         var tt:Float = p * p; var ttt:Float = tt * p; var u:Float = 1 - p; var uu:Float = u * u; var uuu:Float = uu * u;
         var ut:Float = u * p; var ut3:Float = ut * 3; var uut3:Float = u * ut3; var utt3:Float = ut3 * p;
@@ -431,66 +431,66 @@ class PathConstraint implements Constraint {
             out[o + 2] = cast(Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt)), Float);
     }
 
-    public function getOrder():Int {
+    inline public function getOrder():Int {
         return data.order;
     }
 
     /** The position along the path. */
-    public function getPosition():Float {
+    inline public function getPosition():Float {
         return position;
     }
 
-    public function setPosition(position:Float):Void {
+    inline public function setPosition(position:Float):Void {
         this.position = position;
     }
 
     /** The spacing between bones. */
-    public function getSpacing():Float {
+    inline public function getSpacing():Float {
         return spacing;
     }
 
-    public function setSpacing(spacing:Float):Void {
+    inline public function setSpacing(spacing:Float):Void {
         this.spacing = spacing;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    public function getRotateMix():Float {
+    inline public function getRotateMix():Float {
         return rotateMix;
     }
 
-    public function setRotateMix(rotateMix:Float):Void {
+    inline public function setRotateMix(rotateMix:Float):Void {
         this.rotateMix = rotateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    public function getTranslateMix():Float {
+    inline public function getTranslateMix():Float {
         return translateMix;
     }
 
-    public function setTranslateMix(translateMix:Float):Void {
+    inline public function setTranslateMix(translateMix:Float):Void {
         this.translateMix = translateMix;
     }
 
     /** The bones that will be modified by this path constraint. */
-    public function getBones():Array<Bone> {
+    inline public function getBones():Array<Bone> {
         return bones;
     }
 
     /** The slot whose path attachment will be used to constrained the bones. */
-    public function getTarget():Slot {
+    inline public function getTarget():Slot {
         return target;
     }
 
-    public function setTarget(target:Slot):Void {
+    inline public function setTarget(target:Slot):Void {
         this.target = target;
     }
 
     /** The path constraint's setup pose data. */
-    public function getData():PathConstraintData {
+    inline public function getData():PathConstraintData {
         return data;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return data.name;
     }
 }
