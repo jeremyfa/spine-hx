@@ -27,7 +27,7 @@ class Convert {
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            command('git', ['clone', '--depth', '1', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['clone', '-b', '3.6', '--depth', '1', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
