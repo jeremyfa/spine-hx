@@ -46,17 +46,17 @@ class ClippingAttachment extends VertexAttachment {
 
     /** Clipping is performed between the clipping polygon's slot and the end slot. Returns -1 if clipping is done until the end of
      * the skeleton's rendering. */
-    public function getEndSlot():SlotData {
+    inline public function getEndSlot():SlotData {
         return endSlot;
     }
 
-    public function setEndSlot(endSlot:SlotData):Void {
+    inline public function setEndSlot(endSlot:SlotData):Void {
         this.endSlot = endSlot;
     }
 
     /** The color of the clipping polygon as it was in Spine. Available only when nonessential data was exported. Clipping polygons
      * are not usually rendered at runtime. */
-    public function getColor():Color {
+    inline public function getColor():Color {
         return color;
     }
 }

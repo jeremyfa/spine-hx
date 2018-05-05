@@ -164,7 +164,7 @@ class SkeletonData {
     // --- IK constraints
 
     /** The skeleton's IK constraints. */
-    public function getIkConstraints():Array<IkConstraintData> {
+    inline public function getIkConstraints():Array<IkConstraintData> {
         return ikConstraints;
     }
 
@@ -184,7 +184,7 @@ class SkeletonData {
     // --- Transform constraints
 
     /** The skeleton's transform constraints. */
-    public function getTransformConstraints():Array<TransformConstraintData> {
+    inline public function getTransformConstraints():Array<TransformConstraintData> {
         return transformConstraints;
     }
 
@@ -204,7 +204,7 @@ class SkeletonData {
     // --- Path constraints
 
     /** The skeleton's path constraints. */
-    public function getPathConstraints():Array<PathConstraintData> {
+    inline public function getPathConstraints():Array<PathConstraintData> {
         return pathConstraints;
     }
 
@@ -225,75 +225,75 @@ class SkeletonData {
 
     /** The skeleton's name, which by default is the name of the skeleton data file, if possible.
      * @return May be null. */
-    public function getName():String {
+    inline public function getName():String {
         return name;
     }
 
     /** @param name May be null. */
-    public function setName(name:String):Void {
+    inline public function setName(name:String):Void {
         this.name = name;
     }
 
     /** The width of the skeleton's axis aligned bounding box in the setup pose. */
-    public function getWidth():Float {
+    inline public function getWidth():Float {
         return width;
     }
 
-    public function setWidth(width:Float):Void {
+    inline public function setWidth(width:Float):Void {
         this.width = width;
     }
 
     /** The height of the skeleton's axis aligned bounding box in the setup pose. */
-    public function getHeight():Float {
+    inline public function getHeight():Float {
         return height;
     }
 
-    public function setHeight(height:Float):Void {
+    inline public function setHeight(height:Float):Void {
         this.height = height;
     }
 
     /** The Spine version used to export the skeleton data, or null. */
-    public function getVersion():String {
+    inline public function getVersion():String {
         return version;
     }
 
     /** @param version May be null. */
-    public function setVersion(version:String):Void {
+    inline public function setVersion(version:String):Void {
         this.version = version;
     }
 
     /** The skeleton data hash. This value will change if any of the skeleton data has changed.
      * @return May be null. */
-    public function getHash():String {
+    inline public function getHash():String {
         return hash;
     }
 
     /** @param hash May be null. */
-    public function setHash(hash:String):Void {
+    inline public function setHash(hash:String):Void {
         this.hash = hash;
     }
 
     /** The path to the image directory as defined in Spine. Available only when nonessential data was exported.
      * @return May be null. */
-    public function getImagesPath():String {
+    inline public function getImagesPath():String {
         return imagesPath;
     }
 
     /** @param imagesPath May be null. */
-    public function setImagesPath(imagesPath:String):Void {
+    inline public function setImagesPath(imagesPath:String):Void {
         this.imagesPath = imagesPath;
     }
 
     /** The dopesheet FPS in Spine. Available only when nonessential data was exported. */
-    public function getFps():Float {
+    inline public function getFps():Float {
         return fps;
     }
 
-    public function setFps(fps:Float):Void {
+    inline public function setFps(fps:Float):Void {
         this.fps = fps;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return name != null ? name : Type.getClassName(Type.getClass(this));
     }
 

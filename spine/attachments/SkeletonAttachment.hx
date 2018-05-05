@@ -41,12 +41,12 @@ class SkeletonAttachment extends Attachment {
     }
 
     /** @return May return null. */
-    public function getSkeleton():Skeleton {
+    inline public function getSkeleton():Skeleton {
         return skeleton;
     }
 
     /** @param skeleton May be null. */
-    public function setSkeleton(skeleton:Skeleton):Void {
+    inline public function setSkeleton(skeleton:Skeleton):Void {
         this.skeleton = skeleton;
     }
 }

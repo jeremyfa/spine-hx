@@ -71,118 +71,118 @@ class BoneData {
     }*/
 
     /** The index of the bone in {@link Skeleton#getBones()}. */
-    public function getIndex():Int {
+    inline public function getIndex():Int {
         return index;
     }
 
     /** The name of the bone, which is unique within the skeleton. */
-    public function getName():String {
+    inline public function getName():String {
         return name;
     }
 
     /** @return May be null. */
-    public function getParent():BoneData {
+    inline public function getParent():BoneData {
         return parent;
     }
 
     /** The bone's length. */
-    public function getLength():Float {
+    inline public function getLength():Float {
         return length;
     }
 
-    public function setLength(length:Float):Void {
+    inline public function setLength(length:Float):Void {
         this.length = length;
     }
 
     /** The local x translation. */
-    public function getX():Float {
+    inline public function getX():Float {
         return x;
     }
 
-    public function setX(x:Float):Void {
+    inline public function setX(x:Float):Void {
         this.x = x;
     }
 
     /** The local y translation. */
-    public function getY():Float {
+    inline public function getY():Float {
         return y;
     }
 
-    public function setY(y:Float):Void {
+    inline public function setY(y:Float):Void {
         this.y = y;
     }
 
-    public function setPosition(x:Float, y:Float):Void {
+    inline public function setPosition(x:Float, y:Float):Void {
         this.x = x;
         this.y = y;
     }
 
     /** The local rotation. */
-    public function getRotation():Float {
+    inline public function getRotation():Float {
         return rotation;
     }
 
-    public function setRotation(rotation:Float):Void {
+    inline public function setRotation(rotation:Float):Void {
         this.rotation = rotation;
     }
 
     /** The local scaleX. */
-    public function getScaleX():Float {
+    inline public function getScaleX():Float {
         return scaleX;
     }
 
-    public function setScaleX(scaleX:Float):Void {
+    inline public function setScaleX(scaleX:Float):Void {
         this.scaleX = scaleX;
     }
 
     /** The local scaleY. */
-    public function getScaleY():Float {
+    inline public function getScaleY():Float {
         return scaleY;
     }
 
-    public function setScaleY(scaleY:Float):Void {
+    inline public function setScaleY(scaleY:Float):Void {
         this.scaleY = scaleY;
     }
 
-    public function setScale(scaleX:Float, scaleY:Float):Void {
+    inline public function setScale(scaleX:Float, scaleY:Float):Void {
         this.scaleX = scaleX;
         this.scaleY = scaleY;
     }
 
     /** The local shearX. */
-    public function getShearX():Float {
+    inline public function getShearX():Float {
         return shearX;
     }
 
-    public function setShearX(shearX:Float):Void {
+    inline public function setShearX(shearX:Float):Void {
         this.shearX = shearX;
     }
 
     /** The local shearX. */
-    public function getShearY():Float {
+    inline public function getShearY():Float {
         return shearY;
     }
 
-    public function setShearY(shearY:Float):Void {
+    inline public function setShearY(shearY:Float):Void {
         this.shearY = shearY;
     }
 
     /** The transform mode for how parent world transforms affect this bone. */
-    public function getTransformMode():TransformMode {
+    inline public function getTransformMode():TransformMode {
         return transformMode;
     }
 
-    public function setTransformMode(transformMode:TransformMode):Void {
+    inline public function setTransformMode(transformMode:TransformMode):Void {
         this.transformMode = transformMode;
     }
 
     /** The color of the bone as it was in Spine. Available only when nonessential data was exported. Bones are not usually
      * rendered at runtime. */
-    public function getColor():Color {
+    inline public function getColor():Color {
         return color;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return name;
     }
 }

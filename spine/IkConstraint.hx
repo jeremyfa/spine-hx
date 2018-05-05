@@ -76,7 +76,7 @@ class IkConstraint implements Constraint {
         update();
     }
 
-    public function update():Void {
+    inline public function update():Void {
         var target:Bone = this.target;
         var bones:Array<Bone> = this.bones;
         var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (bones.size); {
@@ -89,48 +89,48 @@ class IkConstraint implements Constraint {
         } } break; }
     }
 
-    public function getOrder():Int {
+    inline public function getOrder():Int {
         return data.order;
     }
 
     /** The bones that will be modified by this IK constraint. */
-    public function getBones():Array<Bone> {
+    inline public function getBones():Array<Bone> {
         return bones;
     }
 
     /** The bone that is the IK target. */
-    public function getTarget():Bone {
+    inline public function getTarget():Bone {
         return target;
     }
 
-    public function setTarget(target:Bone):Void {
+    inline public function setTarget(target:Bone):Void {
         this.target = target;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    public function getMix():Float {
+    inline public function getMix():Float {
         return mix;
     }
 
-    public function setMix(mix:Float):Void {
+    inline public function setMix(mix:Float):Void {
         this.mix = mix;
     }
 
     /** Controls the bend direction of the IK bones, either 1 or -1. */
-    public function getBendDirection():Int {
+    inline public function getBendDirection():Int {
         return bendDirection;
     }
 
-    public function setBendDirection(bendDirection:Int):Void {
+    inline public function setBendDirection(bendDirection:Int):Void {
         this.bendDirection = bendDirection;
     }
 
     /** The IK constraint's setup pose data. */
-    public function getData():IkConstraintData {
+    inline public function getData():IkConstraintData {
         return data;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return data.name;
     }
 

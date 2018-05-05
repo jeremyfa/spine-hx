@@ -52,41 +52,41 @@ class Event {
         this.data = data;
     }
 
-    public function getInt():Int {
+    inline public function getInt():Int {
         return intValue;
     }
 
-    public function setInt(intValue:Int):Void {
+    inline public function setInt(intValue:Int):Void {
         this.intValue = intValue;
     }
 
-    public function getFloat():Float {
+    inline public function getFloat():Float {
         return floatValue;
     }
 
-    public function setFloat(floatValue:Float):Void {
+    inline public function setFloat(floatValue:Float):Void {
         this.floatValue = floatValue;
     }
 
-    public function getString():String {
+    inline public function getString():String {
         return stringValue;
     }
 
-    public function setString(stringValue:String):Void {
+    inline public function setString(stringValue:String):Void {
         this.stringValue = stringValue;
     }
 
     /** The animation time this event was keyed. */
-    public function getTime():Float {
+    inline public function getTime():Float {
         return time;
     }
 
     /** The events's setup pose data. */
-    public function getData():EventData {
+    inline public function getData():EventData {
         return data;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return data.name;
     }
 }

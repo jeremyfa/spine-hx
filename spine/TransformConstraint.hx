@@ -80,7 +80,7 @@ class TransformConstraint implements Constraint {
         update();
     }
 
-    public function update():Void {
+    inline public function update():Void {
         if (data.local) {
             if (data.relative)
                 applyRelativeLocal();
@@ -94,7 +94,7 @@ class TransformConstraint implements Constraint {
         }
     }
 
-    private function applyAbsoluteWorld():Void {
+    inline private function applyAbsoluteWorld():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         var ta:Float = target.a; var tb:Float = target.b; var tc:Float = target.c; var td:Float = target.d;
@@ -158,7 +158,7 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    private function applyRelativeWorld():Void {
+    inline private function applyRelativeWorld():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         var ta:Float = target.a; var tb:Float = target.b; var tc:Float = target.c; var td:Float = target.d;
@@ -219,7 +219,7 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    private function applyAbsoluteLocal():Void {
+    inline private function applyAbsoluteLocal():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         if (!target.appliedValid) target.updateAppliedTransform();
@@ -258,7 +258,7 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    private function applyRelativeLocal():Void {
+    inline private function applyRelativeLocal():Void {
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix; var scaleMix:Float = this.scaleMix; var shearMix:Float = this.shearMix;
         var target:Bone = this.target;
         if (!target.appliedValid) target.updateAppliedTransform();
@@ -289,66 +289,66 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    public function getOrder():Int {
+    inline public function getOrder():Int {
         return data.order;
     }
 
     /** The bones that will be modified by this transform constraint. */
-    public function getBones():Array<Bone> {
+    inline public function getBones():Array<Bone> {
         return bones;
     }
 
     /** The target bone whose world transform will be copied to the constrained bones. */
-    public function getTarget():Bone {
+    inline public function getTarget():Bone {
         return target;
     }
 
-    public function setTarget(target:Bone):Void {
+    inline public function setTarget(target:Bone):Void {
         this.target = target;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    public function getRotateMix():Float {
+    inline public function getRotateMix():Float {
         return rotateMix;
     }
 
-    public function setRotateMix(rotateMix:Float):Void {
+    inline public function setRotateMix(rotateMix:Float):Void {
         this.rotateMix = rotateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    public function getTranslateMix():Float {
+    inline public function getTranslateMix():Float {
         return translateMix;
     }
 
-    public function setTranslateMix(translateMix:Float):Void {
+    inline public function setTranslateMix(translateMix:Float):Void {
         this.translateMix = translateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained scales. */
-    public function getScaleMix():Float {
+    inline public function getScaleMix():Float {
         return scaleMix;
     }
 
-    public function setScaleMix(scaleMix:Float):Void {
+    inline public function setScaleMix(scaleMix:Float):Void {
         this.scaleMix = scaleMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained scales. */
-    public function getShearMix():Float {
+    inline public function getShearMix():Float {
         return shearMix;
     }
 
-    public function setShearMix(shearMix:Float):Void {
+    inline public function setShearMix(shearMix:Float):Void {
         this.shearMix = shearMix;
     }
 
     /** The transform constraint's setup pose data. */
-    public function getData():TransformConstraintData {
+    inline public function getData():TransformConstraintData {
         return data;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return data.name;
     }
 }

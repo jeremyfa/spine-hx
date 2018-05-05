@@ -47,11 +47,11 @@ package spine;
         this.dest = dest;
     }*/
 
-    /*public function getSource(premultipliedAlpha:Bool):Int {
+    /*inline public function getSource(premultipliedAlpha:Bool):Int {
         return premultipliedAlpha ? sourcePMA : source;
     }*/
 
-    /*public function getDest():Int {
+    /*inline public function getDest():Int {
         return dest;
     }*/
 

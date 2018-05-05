@@ -158,7 +158,7 @@ class Skeleton {
 
     /** Caches information about bones and constraints. Must be called if bones, constraints, or weighted path attachments are
      * added or removed. */
-    public function updateCache():Void {
+    inline public function updateCache():Void {
         var cache:Array<Updatable> = this.cache;
         cache.clear();
         cacheReset.clear();
@@ -201,7 +201,7 @@ class Skeleton {
             sortBone(bones.get(i)); i++; }
     }
 
-    private function sortIkConstraint(constraint:IkConstraint):Void {
+    inline private function sortIkConstraint(constraint:IkConstraint):Void {
         var target:Bone = constraint.target;
         sortBone(target);
 
@@ -220,7 +220,7 @@ class Skeleton {
         constrained.peek().sorted = true;
     }
 
-    private function sortPathConstraint(constraint:PathConstraint):Void {
+    inline private function sortPathConstraint(constraint:PathConstraint):Void {
         var slot:Slot = constraint.target;
         var slotIndex:Int = slot.getData().index;
         var slotBone:Bone = slot.bone;
@@ -246,7 +246,7 @@ class Skeleton {
             constrained.get(i).sorted = true; i++; }
     }
 
-    private function sortTransformConstraint(constraint:TransformConstraint):Void {
+    inline private function sortTransformConstraint(constraint:TransformConstraint):Void {
         sortBone(constraint.target);
 
         var constrained:Array<Bone> = constraint.bones;
@@ -270,12 +270,12 @@ class Skeleton {
             constrained.get(i).sorted = true; i++; }
     }
 
-    private function sortPathConstraintAttachmentWithSkin(skin:Skin, slotIndex:Int, slotBone:Bone):Void {
+    inline private function sortPathConstraintAttachmentWithSkin(skin:Skin, slotIndex:Int, slotBone:Bone):Void {
         for (entry in skin.attachments.entries()) {
             if (entry.key.slotIndex == slotIndex) sortPathConstraintAttachment(entry.value, slotBone); }
     }
 
-    private function sortPathConstraintAttachment(attachment:Attachment, slotBone:Bone):Void {
+    inline private function sortPathConstraintAttachment(attachment:Attachment, slotBone:Bone):Void {
         if (!(Std.is(attachment, PathAttachment))) return;
         var pathBones:IntArray = (cast(attachment, PathAttachment)).getBones();
         if (pathBones == null)
@@ -291,7 +291,7 @@ class Skeleton {
         }
     }
 
-    private function sortBone(bone:Bone):Void {
+    inline private function sortBone(bone:Bone):Void {
         if (bone.sorted) return;
         var parent:Bone = bone.parent;
         if (parent != null) sortBone(parent);
@@ -299,7 +299,7 @@ class Skeleton {
         cache.add(bone);
     }
 
-    private function sortReset(bones:Array<Bone>):Void {
+    inline private function sortReset(bones:Array<Bone>):Void {
         var i:Int = 0; var n:Int = bones.size; while (i < n) {
             var bone:Bone = bones.get(i);
             if (bone.sorted) sortReset(bone.children);
@@ -311,7 +311,7 @@ class Skeleton {
      * <p>
      * See <a href="http://esotericsoftware.com/spine-runtime-skeletons#World-transforms">World transforms</a> in the Spine
      * Runtimes Guide. */
-    public function updateWorldTransform():Void {
+    inline public function updateWorldTransform():Void {
         // This partial update avoids computing the world transform for constrained bones when 1) the bone is not updated
         // before the constraint, 2) the constraint only needs to access the applied local transform, and 3) the constraint calls
         // updateWorldTransform.
@@ -337,7 +337,7 @@ class Skeleton {
      * <p>
      * See <a href="http://esotericsoftware.com/spine-runtime-skeletons#World-transforms">World transforms</a> in the Spine
      * Runtimes Guide. */
-    public function updateWorldTransformWithParent(parent:Bone):Void {
+    inline public function updateWorldTransformWithParent(parent:Bone):Void {
         // This partial update avoids computing the world transform for constrained bones when 1) the bone is not updated
         // before the constraint, 2) the constraint only needs to access the applied local transform, and 3) the constraint calls
         // updateWorldTransform.
@@ -389,13 +389,13 @@ class Skeleton {
     }
 
     /** Sets the bones, constraints, slots, and draw order to their setup pose values. */
-    public function setToSetupPose():Void {
+    inline public function setToSetupPose():Void {
         setBonesToSetupPose();
         setSlotsToSetupPose();
     }
 
     /** Sets the bones and constraints to their setup pose values. */
-    public function setBonesToSetupPose():Void {
+    inline public function setBonesToSetupPose():Void {
         var bones:Array<Bone> = this.bones;
         var i:Int = 0; var n:Int = bones.size; while (i < n) {
             bones.get(i).setToSetupPose(); i++; }
@@ -429,7 +429,7 @@ class Skeleton {
     }
 
     /** Sets the slots and draw order to their setup pose values. */
-    public function setSlotsToSetupPose():Void {
+    inline public function setSlotsToSetupPose():Void {
         var slots:Array<Slot> = this.slots;
         Array.copy(slots.items, 0, drawOrder.items, 0, slots.size);
         var i:Int = 0; var n:Int = slots.size; while (i < n) {
@@ -488,7 +488,7 @@ class Skeleton {
     }
 
     /** The skeleton's slots in the order they should be drawn. The returned array may be modified to change the draw order. */
-    public function getDrawOrder():Array<Slot> {
+    inline public function getDrawOrder():Array<Slot> {
         return drawOrder;
     }
 
@@ -569,7 +569,7 @@ class Skeleton {
     /** A convenience method to set an attachment by finding the slot with {@link #findSlot(String)}, finding the attachment with
      * {@link #getAttachment(int, String)}, then setting the slot's {@link Slot#attachment}.
      * @param attachmentName May be null to clear the slot. */
-    public function setAttachment(slotName:String, attachmentName:String):Void {
+    inline public function setAttachment(slotName:String, attachmentName:String):Void {
         if (slotName == null) throw new IllegalArgumentException("slotName cannot be null.");
         var slot:Slot = findSlot(slotName);
         if (slot == null) throw new IllegalArgumentException("Slot not found: " + slotName);
@@ -583,14 +583,14 @@ class Skeleton {
     }
 
     /** The skeleton's IK constraints. */
-    public function getIkConstraints():Array<IkConstraint> {
+    inline public function getIkConstraints():Array<IkConstraint> {
         return ikConstraints;
     }
 
     /** Finds an IK constraint by comparing each IK constraint's name. It is more efficient to cache the results of this method
      * than to call it multiple times.
      * @return May be null. */
-    public function findIkConstraint(constraintName:String):IkConstraint {
+    inline public function findIkConstraint(constraintName:String):IkConstraint {
         if (constraintName == null) throw new IllegalArgumentException("constraintName cannot be null.");
         var ikConstraints:Array<IkConstraint> = this.ikConstraints;
         var i:Int = 0; var n:Int = ikConstraints.size; while (i < n) {
@@ -601,14 +601,14 @@ class Skeleton {
     }
 
     /** The skeleton's transform constraints. */
-    public function getTransformConstraints():Array<TransformConstraint> {
+    inline public function getTransformConstraints():Array<TransformConstraint> {
         return transformConstraints;
     }
 
     /** Finds a transform constraint by comparing each transform constraint's name. It is more efficient to cache the results of
      * this method than to call it multiple times.
      * @return May be null. */
-    public function findTransformConstraint(constraintName:String):TransformConstraint {
+    inline public function findTransformConstraint(constraintName:String):TransformConstraint {
         if (constraintName == null) throw new IllegalArgumentException("constraintName cannot be null.");
         var transformConstraints:Array<TransformConstraint> = this.transformConstraints;
         var i:Int = 0; var n:Int = transformConstraints.size; while (i < n) {
@@ -619,14 +619,14 @@ class Skeleton {
     }
 
     /** The skeleton's path constraints. */
-    public function getPathConstraints():Array<PathConstraint> {
+    inline public function getPathConstraints():Array<PathConstraint> {
         return pathConstraints;
     }
 
     /** Finds a path constraint by comparing each path constraint's name. It is more efficient to cache the results of this method
      * than to call it multiple times.
      * @return May be null. */
-    public function findPathConstraint(constraintName:String):PathConstraint {
+    inline public function findPathConstraint(constraintName:String):PathConstraint {
         if (constraintName == null) throw new IllegalArgumentException("constraintName cannot be null.");
         var pathConstraints:Array<PathConstraint> = this.pathConstraints;
         var i:Int = 0; var n:Int = pathConstraints.size; while (i < n) {
@@ -640,7 +640,7 @@ class Skeleton {
      * @param offset An output value, the distance from the skeleton origin to the bottom left corner of the AABB.
      * @param size An output value, the width and height of the AABB.
      * @param temp Working memory. */
-    public function getBounds(offset:Vector2, size:Vector2, temp:FloatArray):Void {
+    inline public function getBounds(offset:Vector2, size:Vector2, temp:FloatArray):Void {
         if (offset == null) throw new IllegalArgumentException("offset cannot be null.");
         if (size == null) throw new IllegalArgumentException("size cannot be null.");
         var drawOrder:Array<Slot> = this.drawOrder;
@@ -675,60 +675,60 @@ class Skeleton {
     }
 
     /** The color to tint all the skeleton's attachments. */
-    public function getColor():Color {
+    inline public function getColor():Color {
         return color;
     }
 
     /** A convenience method for setting the skeleton color. The color can also be set by modifying {@link #getColor()}. */
-    public function setColor(color:Color):Void {
+    inline public function setColor(color:Color):Void {
         if (color == null) throw new IllegalArgumentException("color cannot be null.");
         this.color.set(color);
     }
 
     /** If true, the entire skeleton is flipped over the Y axis. This affects all bones, even if the bone's transform mode
      * disallows scale inheritance. */
-    public function getFlipX():Bool {
+    inline public function getFlipX():Bool {
         return flipX;
     }
 
-    public function setFlipX(flipX:Bool):Void {
+    inline public function setFlipX(flipX:Bool):Void {
         this.flipX = flipX;
     }
 
     /** If true, the entire skeleton is flipped over the X axis. This affects all bones, even if the bone's transform mode
      * disallows scale inheritance. */
-    public function getFlipY():Bool {
+    inline public function getFlipY():Bool {
         return flipY;
     }
 
-    public function setFlipY(flipY:Bool):Void {
+    inline public function setFlipY(flipY:Bool):Void {
         this.flipY = flipY;
     }
 
-    public function setFlip(flipX:Bool, flipY:Bool):Void {
+    inline public function setFlip(flipX:Bool, flipY:Bool):Void {
         this.flipX = flipX;
         this.flipY = flipY;
     }
 
     /** Sets the skeleton X position, which is added to the root bone worldX position. */
-    public function getX():Float {
+    inline public function getX():Float {
         return x;
     }
 
-    public function setX(x:Float):Void {
+    inline public function setX(x:Float):Void {
         this.x = x;
     }
 
     /** Sets the skeleton Y position, which is added to the root bone worldY position. */
-    public function getY():Float {
+    inline public function getY():Float {
         return y;
     }
 
-    public function setY(y:Float):Void {
+    inline public function setY(y:Float):Void {
         this.y = y;
     }
 
-    public function setPosition(x:Float, y:Float):Void {
+    inline public function setPosition(x:Float, y:Float):Void {
         this.x = x;
         this.y = y;
     }
@@ -736,20 +736,20 @@ class Skeleton {
     /** Returns the skeleton's time. This can be used for tracking, such as with Slot {@link Slot#getAttachmentTime()}.
      * <p>
      * See {@link #update(float)}. */
-    public function getTime():Float {
+    inline public function getTime():Float {
         return time;
     }
 
-    public function setTime(time:Float):Void {
+    inline public function setTime(time:Float):Void {
         this.time = time;
     }
 
     /** Increments the skeleton's {@link #time}. */
-    public function update(delta:Float):Void {
+    inline public function update(delta:Float):Void {
         time += delta;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return data.name != null ? data.name : Type.getClassName(Type.getClass(this));
     }
 }

@@ -51,7 +51,7 @@ class SkeletonPool extends Pool<Skeleton> {
         this.skeletonData = skeletonData;
     }
 
-    override public function newObject():Skeleton {
+    override inline public function newObject():Skeleton {
         return new Skeleton(skeletonData);
     }
 }

@@ -52,7 +52,7 @@ class Skin {
     }
 
     /** Adds an attachment to the skin for the specified slot index and name. */
-    public function addAttachment(slotIndex:Int, name:String, attachment:Attachment):Void {
+    inline public function addAttachment(slotIndex:Int, name:String, attachment:Attachment):Void {
         if (attachment == null) throw new IllegalArgumentException("attachment cannot be null.");
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
         var key:Key = keyPool.obtain();
@@ -61,49 +61,49 @@ class Skin {
     }
 
     /** Adds all attachments from the specified skin to this skin. */
-    public function addAttachments(skin:Skin):Void {
+    inline public function addAttachments(skin:Skin):Void {
         for (entry in skin.attachments.entries()) {
             addAttachment(entry.key.slotIndex, entry.key.name, entry.value); }
     }
 
     /** Returns the attachment for the specified slot index and name, or null. */
-    public function getAttachment(slotIndex:Int, name:String):Attachment {
+    inline public function getAttachment(slotIndex:Int, name:String):Attachment {
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
         lookup.set(slotIndex, name);
         return attachments.get(lookup);
     }
 
-    public function findNamesForSlot(slotIndex:Int, names:Array<String>):Void {
+    inline public function findNamesForSlot(slotIndex:Int, names:Array<String>):Void {
         if (names == null) throw new IllegalArgumentException("names cannot be null.");
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
         for (key in attachments.keys()) {
             if (key.slotIndex == slotIndex) names.add(key.name); }
     }
 
-    public function findAttachmentsForSlot(slotIndex:Int, attachments:Array<Attachment>):Void {
+    inline public function findAttachmentsForSlot(slotIndex:Int, attachments:Array<Attachment>):Void {
         if (attachments == null) throw new IllegalArgumentException("attachments cannot be null.");
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
         for (entry in this.attachments.entries()) {
             if (entry.key.slotIndex == slotIndex) attachments.add(entry.value); }
     }
 
-    public function clear():Void {
+    inline public function clear():Void {
         for (key in attachments.keys()) {
             keyPool.free(key); }
         attachments.clear();
     }
 
     /** The skin's name, which is unique within the skeleton. */
-    public function getName():String {
+    inline public function getName():String {
         return name;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return name;
     }
 
     /** Attach each attachment in this skin if the corresponding attachment in the old skin is currently attached. */
-    public function attachAll(skeleton:Skeleton, oldSkin:Skin):Void {
+    inline public function attachAll(skeleton:Skeleton, oldSkin:Skin):Void {
         for (entry in oldSkin.attachments.entries()) {
             var slotIndex:Int = entry.key.slotIndex;
             var slot:Slot = skeleton.slots.get(slotIndex);
@@ -120,18 +120,18 @@ class Key {
     public var name:String;
     public var hashCode:Int = 0;
 
-    public function set(slotIndex:Int, name:String):Void {
+    inline public function set(slotIndex:Int, name:String):Void {
         if (name == null) throw new IllegalArgumentException("name cannot be null.");
         this.slotIndex = slotIndex;
         this.name = name;
         hashCode = 31 * (31 + name.getHashCode()) + slotIndex;
     }
 
-    public function getHashCode():Int {
+    inline public function getHashCode():Int {
         return hashCode;
     }
 
-    public function equals(object:Dynamic):Bool {
+    inline public function equals(object:Dynamic):Bool {
         if (object == null) return false;
         var other:Key = cast(object, Key);
         if (slotIndex != other.slotIndex) return false;
@@ -139,7 +139,7 @@ class Key {
         return true;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return slotIndex + ":" + name;
     }
 

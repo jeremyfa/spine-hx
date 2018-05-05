@@ -49,53 +49,53 @@ class IkConstraintData {
     }
 
     /** The IK constraint's name, which is unique within the skeleton. */
-    public function getName():String {
+    inline public function getName():String {
         return name;
     }
 
     /** See {@link Constraint#getOrder()}. */
-    public function getOrder():Int {
+    inline public function getOrder():Int {
         return order;
     }
 
-    public function setOrder(order:Int):Void {
+    inline public function setOrder(order:Int):Void {
         this.order = order;
     }
 
     /** The bones that are constrained by this IK constraint. */
-    public function getBones():Array<BoneData> {
+    inline public function getBones():Array<BoneData> {
         return bones;
     }
 
     /** The bone that is the IK target. */
-    public function getTarget():BoneData {
+    inline public function getTarget():BoneData {
         return target;
     }
 
-    public function setTarget(target:BoneData):Void {
+    inline public function setTarget(target:BoneData):Void {
         if (target == null) throw new IllegalArgumentException("target cannot be null.");
         this.target = target;
     }
 
     /** Controls the bend direction of the IK bones, either 1 or -1. */
-    public function getBendDirection():Int {
+    inline public function getBendDirection():Int {
         return bendDirection;
     }
 
-    public function setBendDirection(bendDirection:Int):Void {
+    inline public function setBendDirection(bendDirection:Int):Void {
         this.bendDirection = bendDirection;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    public function getMix():Float {
+    inline public function getMix():Float {
         return mix;
     }
 
-    public function setMix(mix:Float):Void {
+    inline public function setMix(mix:Float):Void {
         this.mix = mix;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return name;
     }
 }

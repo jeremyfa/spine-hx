@@ -48,7 +48,7 @@ class AtlasAttachmentLoader implements AttachmentLoader {
         this.atlas = atlas;
     }
 
-    public function newRegionAttachment(skin:Skin, name:String, path:String):RegionAttachment {
+    inline public function newRegionAttachment(skin:Skin, name:String, path:String):RegionAttachment {
         var region:AtlasRegion = atlas.findRegion(path);
         if (region == null) throw new RuntimeException("Region not found in atlas: " + path + " (region attachment: " + name + ")");
         var attachment:RegionAttachment = new RegionAttachment(name);
@@ -56,7 +56,7 @@ class AtlasAttachmentLoader implements AttachmentLoader {
         return attachment;
     }
 
-    public function newMeshAttachment(skin:Skin, name:String, path:String):MeshAttachment {
+    inline public function newMeshAttachment(skin:Skin, name:String, path:String):MeshAttachment {
         var region:AtlasRegion = atlas.findRegion(path);
         if (region == null) throw new RuntimeException("Region not found in atlas: " + path + " (mesh attachment: " + name + ")");
         var attachment:MeshAttachment = new MeshAttachment(name);
@@ -64,19 +64,19 @@ class AtlasAttachmentLoader implements AttachmentLoader {
         return attachment;
     }
 
-    public function newBoundingBoxAttachment(skin:Skin, name:String):BoundingBoxAttachment {
+    inline public function newBoundingBoxAttachment(skin:Skin, name:String):BoundingBoxAttachment {
         return new BoundingBoxAttachment(name);
     }
 
-    public function newClippingAttachment(skin:Skin, name:String):ClippingAttachment {
+    inline public function newClippingAttachment(skin:Skin, name:String):ClippingAttachment {
         return new ClippingAttachment(name);
     }
 
-    public function newPathAttachment(skin:Skin, name:String):PathAttachment {
+    inline public function newPathAttachment(skin:Skin, name:String):PathAttachment {
         return new PathAttachment(name);
     }
 
-    public function newPointAttachment(skin:Skin, name:String):PointAttachment {
+    inline public function newPointAttachment(skin:Skin, name:String):PointAttachment {
         return new PointAttachment(name);
     }
 }

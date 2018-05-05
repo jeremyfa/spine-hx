@@ -52,106 +52,106 @@ class PathConstraintData {
     }
 
     /** The path constraint's name, which is unique within the skeleton. */
-    public function getName():String {
+    inline public function getName():String {
         return name;
     }
 
     /** See {@link Constraint#getOrder()}. */
-    public function getOrder():Int {
+    inline public function getOrder():Int {
         return order;
     }
 
-    public function setOrder(order:Int):Void {
+    inline public function setOrder(order:Int):Void {
         this.order = order;
     }
 
     /** The bones that will be modified by this path constraint. */
-    public function getBones():Array<BoneData> {
+    inline public function getBones():Array<BoneData> {
         return bones;
     }
 
     /** The slot whose path attachment will be used to constrained the bones. */
-    public function getTarget():SlotData {
+    inline public function getTarget():SlotData {
         return target;
     }
 
-    public function setTarget(target:SlotData):Void {
+    inline public function setTarget(target:SlotData):Void {
         this.target = target;
     }
 
     /** The mode for positioning the first bone on the path. */
-    public function getPositionMode():PositionMode {
+    inline public function getPositionMode():PositionMode {
         return positionMode;
     }
 
-    public function setPositionMode(positionMode:PositionMode):Void {
+    inline public function setPositionMode(positionMode:PositionMode):Void {
         this.positionMode = positionMode;
     }
 
     /** The mode for positioning the bones after the first bone on the path. */
-    public function getSpacingMode():SpacingMode {
+    inline public function getSpacingMode():SpacingMode {
         return spacingMode;
     }
 
-    public function setSpacingMode(spacingMode:SpacingMode):Void {
+    inline public function setSpacingMode(spacingMode:SpacingMode):Void {
         this.spacingMode = spacingMode;
     }
 
     /** The mode for adjusting the rotation of the bones. */
-    public function getRotateMode():RotateMode {
+    inline public function getRotateMode():RotateMode {
         return rotateMode;
     }
 
-    public function setRotateMode(rotateMode:RotateMode):Void {
+    inline public function setRotateMode(rotateMode:RotateMode):Void {
         this.rotateMode = rotateMode;
     }
 
     /** An offset added to the constrained bone rotation. */
-    public function getOffsetRotation():Float {
+    inline public function getOffsetRotation():Float {
         return offsetRotation;
     }
 
-    public function setOffsetRotation(offsetRotation:Float):Void {
+    inline public function setOffsetRotation(offsetRotation:Float):Void {
         this.offsetRotation = offsetRotation;
     }
 
     /** The position along the path. */
-    public function getPosition():Float {
+    inline public function getPosition():Float {
         return position;
     }
 
-    public function setPosition(position:Float):Void {
+    inline public function setPosition(position:Float):Void {
         this.position = position;
     }
 
     /** The spacing between bones. */
-    public function getSpacing():Float {
+    inline public function getSpacing():Float {
         return spacing;
     }
 
-    public function setSpacing(spacing:Float):Void {
+    inline public function setSpacing(spacing:Float):Void {
         this.spacing = spacing;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    public function getRotateMix():Float {
+    inline public function getRotateMix():Float {
         return rotateMix;
     }
 
-    public function setRotateMix(rotateMix:Float):Void {
+    inline public function setRotateMix(rotateMix:Float):Void {
         this.rotateMix = rotateMix;
     }
 
     /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    public function getTranslateMix():Float {
+    inline public function getTranslateMix():Float {
         return translateMix;
     }
 
-    public function setTranslateMix(translateMix:Float):Void {
+    inline public function setTranslateMix(translateMix:Float):Void {
         this.translateMix = translateMix;
     }
 
-    public function toString():String {
+    inline public function toString():String {
         return name;
     }
 }
