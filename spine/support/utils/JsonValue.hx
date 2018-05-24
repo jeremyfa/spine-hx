@@ -169,6 +169,9 @@ class JsonDynamic implements JsonValue {
                 keys.push(field);
                 values.push(Reflect.field(item, field));
             }
+            if (keys.length == 0) {
+                return null;
+            }
             return new JsonChild(values, 0, keys);
         }
     }
@@ -287,6 +290,9 @@ class JsonChild implements JsonValue {
             for (field in Reflect.fields(item)) {
                 keys.push(field);
                 values.push(Reflect.field(item, field));
+            }
+            if (keys.length == 0) {
+                return null;
             }
             return new JsonChild(values, 0, keys);
         }
