@@ -37,7 +37,7 @@ class MathUtils {
     }
 
     inline static public function signum(val:Float):Int {
-        return val >= 0 ? 1 : -1;
+        return val > 0 ? 1 : val < 0 ? -1 : 0;
     }
     
 }
