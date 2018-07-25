@@ -17,7 +17,7 @@ abstract ObjectMap<K,V>(Map<Int,Array<Entry<K,V>>>) {
                 }
             }
         }
-        return null;
+        return defaultValue;
     }
 
     inline public function clear():Void {
