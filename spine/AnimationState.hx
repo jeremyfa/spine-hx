@@ -168,6 +168,9 @@ class AnimationState {
 
         var finished:Bool = updateMixingFrom(from, delta);
 
+        from.animationLast = from.nextAnimationLast;
+        from.trackLast = from.nextTrackLast;
+
         // Require mixTime > 0 to ensure the mixing from entry was applied at least once.
         if (to.mixTime > 0 && (to.mixTime >= to.mixDuration || to.timeScale == 0)) {
             // Require totalAlpha == 0 to ensure mixing is complete, unless mixDuration == 0 (the transition is a single frame).
@@ -179,8 +182,6 @@ class AnimationState {
             return finished;
         }
 
-        from.animationLast = from.nextAnimationLast;
-        from.trackLast = from.nextTrackLast;
         from.trackTime += delta * from.timeScale;
         to.mixTime += delta * to.timeScale;
         return false;
@@ -387,10 +388,12 @@ class AnimationState {
         i++; }
 
         // Queue complete if completed a loop iteration or the animation.
-        if (entry.loop ? (trackLastWrapped > entry.trackTime % duration)
-            : (animationTime >= animationEnd && entry.animationLast < animationEnd)) {
-            queue.complete(entry);
-        }
+        var complete:Bool = false;
+        if (entry.loop)
+            complete = duration == 0 || trackLastWrapped > entry.trackTime % duration;
+        else
+            complete = animationTime >= animationEnd && entry.animationLast < animationEnd;
+        if (complete) queue.complete(entry);
 
         // Queue events after complete.
         while (i < n) {
@@ -534,7 +537,7 @@ class AnimationState {
                         delay += duration * (1 + Std.int((last.trackTime / duration)));
                     else
                         delay += duration;
-                    delay -= data.getMix(last.animation, animation);                
+                    delay -= data.getMix(last.animation, animation);
                 }    else
                     delay = 0;
             }
