@@ -30,3 +30,8 @@ Ensure you have [Node.js](https://nodejs.org), [Haxe](https://haxe.org/) and [Gi
 ```
 haxe convert.hxml
 ```
+
+## Thanks to
+
+[@Beeblerox](https://github.com/Beeblerox) who provided a manually converted SkeletonBinary.hx file (from C# code base)
+
