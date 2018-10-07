@@ -32,7 +32,7 @@ class Convert {
 
         // Delete previously converted files
         println('Delete previously converted files\u2026');
-        deleteRecursive('spine', 'support');
+        deleteRecursive('spine', ['support', 'SkeletonBinary.hx']);
 
         // Convert
         var ctx = {
@@ -2947,7 +2947,7 @@ using StringTools;
 
     } //replaceStart
 
-    static function deleteRecursive(path:String, ?except:String) {
+    static function deleteRecursive(path:String, ?except:Array<String>) {
 
         if (!FileSystem.exists(path)) {
             return;
@@ -2955,7 +2955,7 @@ using StringTools;
         else if (FileSystem.isDirectory(path)) {
             var hasException = false;
             for (name in FileSystem.readDirectory(path)) {
-                if (except == null || name != except) {
+                if (except == null || except.indexOf(name) == -1) {
                     deleteRecursive(Path.join([path, name]));
                 }
                 else if (except != null) {
