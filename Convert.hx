@@ -2231,7 +2231,10 @@ using StringTools;
 
         // Per-file patches
         if (rootType == 'spine.AnimationStateData') {
-            haxe = haxe.replace('class Key {', 'private class Key {');
+            haxe = haxe.replace('import spine.support.utils.ObjectFloatMap', 'import spine.support.utils.AnimationStateMap');
+            haxe = haxe.replace('ObjectFloatMap<Key>', 'AnimationStateMap');
+            haxe = haxe.replace('ObjectFloatMap', 'AnimationStateMap');
+            haxe = haxe.replace('Key', 'AnimationStateDataKey');
             haxe = haxe.replace('setMix(fromName:String, toName:String, duration:Float)', 'setMixByName(fromName:String, toName:String, duration:Float)');
         }
         else if (rootType == 'spine.AnimationState') {
@@ -2244,6 +2247,8 @@ using StringTools;
             haxe = haxe.replace('class Animation {', 'class Animation {\n    private var hashCode = Std.int(Math.random() * 99999999);\n');
         }
         else if (rootType == 'spine.Skeleton') {
+            haxe = haxe.replace('ObjectMap<Key,Attachment>', 'AttachmentMap');
+            haxe = haxe.replace('ObjectMap', 'AttachmentMap');
             haxe = haxe.replace('updateCache', 'cache');
             haxe = haxe.replace('cache()', 'updateCache()');
             haxe = haxe.replace('sortPathConstraintAttachment(skin:Skin, slotIndex:Int, slotBone:Bone)', 'sortPathConstraintAttachmentWithSkin(skin:Skin, slotIndex:Int, slotBone:Bone)');
@@ -2279,6 +2284,10 @@ using StringTools;
         }
         else if (rootType == 'spine.BlendMode') {
             haxe = haxe.replace('import spine.support.graphics.GL20;', '');
+        }
+        else if (rootType == 'spine.Skin') {
+            haxe = haxe.replace('ObjectMap<Key,Attachment>', 'AttachmentMap');
+            haxe = haxe.replace('ObjectMap', 'AttachmentMap');
         }
 
         // Convert enums valueOf() / name() / ordinal()

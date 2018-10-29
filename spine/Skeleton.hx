@@ -37,7 +37,7 @@ import spine.support.graphics.Color;
 import spine.support.math.Vector2;
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
-import spine.support.utils.ObjectMap.Entry;
+import spine.support.utils.AttachmentMap.Entry;
 import spine.Skin.Key;
 import spine.attachments.Attachment;
 import spine.attachments.MeshAttachment;

@@ -1,34 +1,37 @@
 package spine.support.utils;
 
-abstract ObjectMap<K,V>(Map<Int,Array<Entry<K,V>>>) {
+import spine.Skin.Key;
+import spine.attachments.Attachment;
+
+abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
 
     inline public function new() {
         this = new Map();
     }
 
-    public function get(key:K, defaultValue:V = null):V {
-        var dKey:Dynamic = key;
-        var entries = this.get(dKey.getHashCode());
+    #if !spine_no_inline inline #end public function get(key:Key, defaultValue:Attachment = null):Attachment {
+        var entries = this.get(key.getHashCode());
+        var result:Attachment = defaultValue;
         if (entries != null) {
-            for (entry in entries) {
-                var dEntryKey:Dynamic = entry.key;
-                if (dEntryKey.equals(key)) {
-                    return entry.value;
+            for (i in 0...entries.length) {
+                var entry = entries.unsafeGet(i);
+                if (entry.key.equals(key)) {
+                    result = entry.value;
+                    break;
                 }
             }
         }
-        return defaultValue;
+        return result;
     }
 
-    inline public function clear():Void {
+    #if !spine_no_inline inline #end public function clear():Void {
         var keys = [];
         for (key in this.keys()) keys.push(key);
         for (key in keys) this.remove(key);
     }
 
-    public function put(key:K, value:V):Void {
-        var dKey:Dynamic = key;
-        var hashCode = dKey.getHashCode();
+    public function put(key:Key, value:Attachment):Void {
+        var hashCode = key.getHashCode();
         var entries = this.get(hashCode);
         if (entries == null) {
             entries = [];
@@ -37,8 +40,7 @@ abstract ObjectMap<K,V>(Map<Int,Array<Entry<K,V>>>) {
         var i = 0;
         var didSet = false;
         for (entry in entries) {
-            var dEntryKey:Dynamic = entry.key;
-            if (dEntryKey.equals(key)) {
+            if (entry.key.equals(key)) {
                 entries[i].key = key;
                 entries[i].value = value;
                 didSet = true;
@@ -75,15 +77,15 @@ abstract ObjectMap<K,V>(Map<Int,Array<Entry<K,V>>>) {
 
 }
 
-@:allow(spine.support.utils.ObjectMap)
+@:allow(spine.support.utils.AttachmentMap)
 @:structInit
-class Entry<K,V> {
+class Entry<Key,Attachment> {
 
-    public var key(default,null):K;
+    public var key(default,null):Key;
 
-    public var value(default,null):V;
+    public var value(default,null):Attachment;
 
-    public function new(key:K, value:V) {
+    public function new(key:Key, value:Attachment) {
         this.key = key;
         this.value = value;
     }

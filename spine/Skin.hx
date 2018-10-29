@@ -31,8 +31,8 @@
 package spine;
 
 import spine.support.utils.Array;
-import spine.support.utils.ObjectMap;
-import spine.support.utils.ObjectMap.Entry;
+import spine.support.utils.AttachmentMap;
+import spine.support.utils.AttachmentMap.Entry;
 import spine.support.utils.Pool;
 import spine.attachments.Attachment;
 
@@ -42,7 +42,7 @@ import spine.attachments.Attachment;
  * <a href="http://esotericsoftware.com/spine-runtime-skins">Runtime skins</a> in the Spine Runtimes Guide. */
 class Skin {
     public var name:String;
-    public var attachments:ObjectMap<Key,Attachment> = new ObjectMap();
+    public var attachments:AttachmentMap = new AttachmentMap();
     private var lookup:Key = new Key();
     public var keyPool:Pool<Key> = new KeyPool(64);
 

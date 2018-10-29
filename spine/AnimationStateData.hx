@@ -30,14 +30,14 @@
 
 package spine;
 
-import spine.support.utils.ObjectFloatMap;
+import spine.support.utils.AnimationStateMap;
 import spine.AnimationState.TrackEntry;
 
 /** Stores mix (crossfade) durations to be applied when {@link AnimationState} animations are changed. */
 class AnimationStateData {
     public var skeletonData:SkeletonData;
-    public var animationToMixTime:ObjectFloatMap<Key> = new ObjectFloatMap();
-    public var tempKey:Key = new Key();
+    public var animationToMixTime:AnimationStateMap = new AnimationStateMap();
+    public var tempAnimationStateDataKey:AnimationStateDataKey = new AnimationStateDataKey();
     public var defaultMix:Float = 0;
 
     public function new(skeletonData:SkeletonData) {
@@ -67,7 +67,7 @@ class AnimationStateData {
     #if !spine_no_inline inline #end public function setMix(from:Animation, to:Animation, duration:Float):Void {
         if (from == null) throw new IllegalArgumentException("from cannot be null.");
         if (to == null) throw new IllegalArgumentException("to cannot be null.");
-        var key:Key = new Key();
+        var key:AnimationStateDataKey = new AnimationStateDataKey();
         key.a1 = from;
         key.a2 = to;
         animationToMixTime.put(key, duration);
@@ -78,9 +78,9 @@ class AnimationStateData {
     #if !spine_no_inline inline #end public function getMix(from:Animation, to:Animation):Float {
         if (from == null) throw new IllegalArgumentException("from cannot be null.");
         if (to == null) throw new IllegalArgumentException("to cannot be null.");
-        tempKey.a1 = from;
-        tempKey.a2 = to;
-        return animationToMixTime.get(tempKey, defaultMix);
+        tempAnimationStateDataKey.a1 = from;
+        tempAnimationStateDataKey.a2 = to;
+        return animationToMixTime.get(tempAnimationStateDataKey, defaultMix);
     }
 
     /** The mix duration to use when no mix duration has been defined between two animations. */
@@ -93,17 +93,17 @@ class AnimationStateData {
     }
 }
 
-private class Key {
+class AnimationStateDataKey {
     public var a1:Animation; public var a2:Animation = null;
 
-    #if !spine_no_inline inline #end public function getHashCode():Int {
+    public function getHashCode():Int {
         return 31 * (31 + a1.getHashCode()) + a2.getHashCode();
     }
 
-    #if !spine_no_inline inline #end public function equals(obj:Dynamic):Bool {
+    public function equals(obj:Dynamic):Bool {
         if (this == obj) return true;
         if (obj == null) return false;
-        var other:Key = cast(obj, Key);
+        var other:AnimationStateDataKey = cast(obj, AnimationStateDataKey);
         if (a1 == null) {
             if (other.a1 != null) return false;
         } else if (!a1.equals(other.a1)) return false;
