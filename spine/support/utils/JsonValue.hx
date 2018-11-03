@@ -178,45 +178,45 @@ class JsonDynamic implements JsonValue {
 
 } //JsonDynamic
 
-class JsonChild implements JsonValue {
+class JsonChild extends JsonDynamic {
 
-    function toString() {
+    override function toString() {
         return 'JsonChild:'+data[index];
     }
 
     public var keys:Array<String>;
-    public var data:Array<Dynamic>;
     public var index:Int;
 
     public function new(data:Array<Dynamic>, index:Int, ?keys:Array<String>) {
-        this.data = data;
+        
+        super(data);
         this.index = index;
         this.keys = keys;
     }
     
-    public function has(key:String):Bool {
+    override public function has(key:String):Bool {
         return get(key) != null;
     }
 
-    public function require(key:String):JsonValue {
+    override public function require(key:String):JsonValue {
         return get(key);
     }
 
-    public function get(key:String):JsonValue {
+    override public function get(key:String):JsonValue {
         return Reflect.hasField(data[index], key) ? new JsonDynamic(Reflect.field(data[index], key)) : null;
     }
 
-    public function getChild(key:String):JsonValue {
+    override public function getChild(key:String):JsonValue {
         var item:Dynamic = Reflect.field(data[index], key);
         if (item == null) return null;
         else return new JsonDynamic(item).child;
     }
 
-    public function getString(key:String, defaultValue:String = null):String {
+    override public function getString(key:String, defaultValue:String = null):String {
         return Reflect.hasField(data[index], key) ? Reflect.field(data[index], key) : defaultValue;
     }
 
-    public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
+    override public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
         if (Std.is(key, Int)) {
             if (/*Std.is(data[index], Array) || */Std.is(data[index], std.Array)) {
                 return data[index][key];
@@ -229,36 +229,35 @@ class JsonChild implements JsonValue {
         }
     }
 
-    public function getInt(key:String, defaultValue:Int = 0):Int {
+    override public function getInt(key:String, defaultValue:Int = 0):Int {
         return Reflect.hasField(data[index], key) ? Reflect.field(data[index], key) : defaultValue;
     }
 
-    public function getBoolean(key:String, defaultValue:Bool = false):Bool {
+    override public function getBoolean(key:String, defaultValue:Bool = false):Bool {
         return Reflect.hasField(data[index], key) ? Reflect.field(data[index], key) : defaultValue;
     }
 
-    public function asString():String {
+    override public function asString():String {
         return data[index];
     }
 
-    public function asFloat():Float {
+    override public function asFloat():Float {
         return data[index];
     }
 
-    public function asInt():Int {
+    override public function asInt():Int {
         return data[index];
     }
 
-    public function isString():Bool {
+    override public function isString():Bool {
         return Std.is(data[index], String);
     }
 
-    public function isArray():Bool{
+    override public function isArray():Bool{
         return /*Std.is(data[index], Array) || */Std.is(data[index], std.Array);
     }
 
-    public var next(get,never):JsonValue;
-    function get_next():JsonValue {
+    override function get_next():JsonValue {
         if (index < data.length - 1) {
             return new JsonChild(data, index + 1, keys);
         }
@@ -267,18 +266,15 @@ class JsonChild implements JsonValue {
         }
     }
 
-    public var name(get,never):String;
-    function get_name():String {
+    override function get_name():String {
         return keys != null ? keys[index] : null;
     }
 
-    public var size(get,never):Int;
-    function get_size():Int {
+    override function get_size():Int {
         return data[index].length;
     }
 
-    public var child(get,never):JsonValue;
-    public function get_child():JsonValue {
+    override public function get_child():JsonValue {
         var item:Dynamic = data[index];
         if (item == null) return null;
         else if (/*Std.is(item, Array) || */Std.is(item, std.Array)) {
@@ -299,11 +295,11 @@ class JsonChild implements JsonValue {
         return null;
     }
 
-    public function asFloatArray():FloatArray {
+    override public function asFloatArray():FloatArray {
         return data[index];
     }
 
-    public function asShortArray():ShortArray {
+    override public function asShortArray():ShortArray {
         return data[index];
     }
 
