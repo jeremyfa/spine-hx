@@ -1027,7 +1027,7 @@ class DeformTimeline extends CurveTimeline {
             var lastVertices:FloatArray = frameVertices[frames.length - 1];
             if (alpha == 1) {
                 // Vertex positions or deform offsets, no alpha.
-                Array.copy(lastVertices, 0, vertices, 0, vertexCount);
+                Array.copyFloats(lastVertices, 0, vertices, 0, vertexCount);
             } else if (pose == setup) {
                 var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
                 if (vertexAttachment.getBones() == null) {

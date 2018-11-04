@@ -2245,6 +2245,7 @@ using StringTools;
         else if (rootType == 'spine.Animation') {
             haxe = haxe.replace('binarySearch(values:FloatArray, target:Float, step:Int)', 'binarySearchWithStep(values:FloatArray, target:Float, step:Int)');
             haxe = haxe.replace('class Animation {', 'class Animation {\n    private var hashCode = Std.int(Math.random() * 99999999);\n');
+            haxe = haxe.replace('System.arraycopy(lastVertices', 'Array.copyFloats(lastVertices');
         }
         else if (rootType == 'spine.Skeleton') {
             haxe = haxe.replace('ObjectMap<Key,Attachment>', 'AttachmentMap');

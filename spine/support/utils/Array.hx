@@ -17,6 +17,20 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
         }
     }
 
+    public static function copyFloats(src:std.Array<Float>, srcPos:Int, dest:std.Array<Float>, destPos:Int, length:Int) {
+        var val:Float;
+        var srcIndex = srcPos;
+        var destIndex = destPos;
+        var end = length + srcPos;
+        while (srcIndex < end) {
+            //dest[i + destPos] = src[i + srcPos];
+            val = src.unsafeGet(srcIndex);
+            dest.unsafeSet(destIndex, val);
+            srcIndex++;
+            destIndex++;
+        }
+    }
+
     public inline static function create(length:Float = 0):Dynamic {
         var len = Std.int(length);
         var array = new Array<Dynamic>(len != 0 ? len : 16);
