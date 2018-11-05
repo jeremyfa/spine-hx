@@ -89,7 +89,11 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
     }
 
     inline public function clear():Void {
+        #if cpp
+        untyped this.__SetSize(0);
+        #else
         this.splice(0, this.length);
+        #end
     }
 
     inline public function first():T {
