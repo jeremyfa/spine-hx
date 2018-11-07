@@ -178,48 +178,48 @@ class JsonDynamic implements JsonValue {
 
 } //JsonDynamic
 
-class JsonChild extends JsonDynamic {
+class JsonChild implements JsonValue {
 
-    override function toString() {
+    function toString() {
         return 'JsonChild:'+data[index];
     }
 
     public var keys:Array<String>;
+    public var data:Array<Dynamic>;
     public var index:Int;
 
     public function new(data:Array<Dynamic>, index:Int, ?keys:Array<String>) {
-        
-        super(data);
+        this.data = data;
         this.index = index;
         this.keys = keys;
     }
     
-    override public function has(key:String):Bool {
+    public function has(key:String):Bool {
         return get(key) != null;
     }
 
-    override public function require(key:String):JsonValue {
+    public function require(key:String):JsonValue {
         return get(key);
     }
 
-    override public function get(key:String):JsonValue {
+    public function get(key:String):JsonValue {
         return Reflect.hasField(data[index], key) ? new JsonDynamic(Reflect.field(data[index], key)) : null;
     }
 
-    override public function getChild(key:String):JsonValue {
+    public function getChild(key:String):JsonValue {
         var item:Dynamic = Reflect.field(data[index], key);
         if (item == null) return null;
         else return new JsonDynamic(item).child;
     }
 
-    override public function getString(key:String, defaultValue:String = null):String {
+    public function getString(key:String, defaultValue:String = null):String {
         return Reflect.hasField(data[index], key) ? Reflect.field(data[index], key) : defaultValue;
     }
 
-    override public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
+    public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
         if (Std.is(key, Int)) {
-            if (/*Std.is(data[index], Array) || */Std.is(data[index], std.Array)) {
-                return data[index][key];
+            if (Std.is(data[index], std.Array)) {
+                return getByIndex()[key];
             } else {
                 return 0;
             }
@@ -229,35 +229,36 @@ class JsonChild extends JsonDynamic {
         }
     }
 
-    override public function getInt(key:String, defaultValue:Int = 0):Int {
+    public function getInt(key:String, defaultValue:Int = 0):Int {
         return Reflect.hasField(data[index], key) ? Reflect.field(data[index], key) : defaultValue;
     }
 
-    override public function getBoolean(key:String, defaultValue:Bool = false):Bool {
+    public function getBoolean(key:String, defaultValue:Bool = false):Bool {
         return Reflect.hasField(data[index], key) ? Reflect.field(data[index], key) : defaultValue;
     }
 
-    override public function asString():String {
+    public function asString():String {
         return data[index];
     }
 
-    override public function asFloat():Float {
+    public function asFloat():Float {
         return data[index];
     }
 
-    override public function asInt():Int {
+    public function asInt():Int {
         return data[index];
     }
 
-    override public function isString():Bool {
+    public function isString():Bool {
         return Std.is(data[index], String);
     }
 
-    override public function isArray():Bool{
-        return /*Std.is(data[index], Array) || */Std.is(data[index], std.Array);
+    public function isArray():Bool{
+        return Std.is(data[index], std.Array);
     }
 
-    override function get_next():JsonValue {
+    public var next(get,never):JsonValue;
+    function get_next():JsonValue {
         if (index < data.length - 1) {
             return new JsonChild(data, index + 1, keys);
         }
@@ -266,18 +267,21 @@ class JsonChild extends JsonDynamic {
         }
     }
 
-    override function get_name():String {
+    public var name(get,never):String;
+    function get_name():String {
         return keys != null ? keys[index] : null;
     }
 
-    override function get_size():Int {
-        return data[index].length;
+    public var size(get,never):Int;
+    function get_size():Int {
+        return getByIndex().length;
     }
 
-    override public function get_child():JsonValue {
+    public var child(get,never):JsonValue;
+    public function get_child():JsonValue {
         var item:Dynamic = data[index];
         if (item == null) return null;
-        else if (/*Std.is(item, Array) || */Std.is(item, std.Array)) {
+        else if (Std.is(item, std.Array)) {
             return new JsonChild(item, 0);
         }
         else {
@@ -295,12 +299,17 @@ class JsonChild extends JsonDynamic {
         return null;
     }
 
-    override public function asFloatArray():FloatArray {
+    public function asFloatArray():FloatArray {
         return data[index];
     }
 
-    override public function asShortArray():ShortArray {
+    public function asShortArray():ShortArray {
         return data[index];
+    }
+
+    private inline function getByIndex():Dynamic
+    {
+        return (data:std.Array<Dynamic>)[index];
     }
 
 } //JsonChild
