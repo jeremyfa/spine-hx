@@ -56,10 +56,8 @@ abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
     public function entries() {
         var entries = [];
         for (entryList in this) {
-            if (entryList != null) { // Not sure why we need to check this in js :(
-                for (entry in entryList) {
-                    entries.push(entry);
-                }
+            for (entry in entryList) {
+                entries.push(entry);
             }
         }
         return entries;
