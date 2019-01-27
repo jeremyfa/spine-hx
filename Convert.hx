@@ -2289,6 +2289,7 @@ using StringTools;
         else if (rootType == 'spine.Skin') {
             haxe = haxe.replace('ObjectMap<Key,Attachment>', 'AttachmentMap');
             haxe = haxe.replace('ObjectMap', 'AttachmentMap');
+            haxe = haxe.replace('hashCode = 31 * (31 + name.hashCode()) + slotIndex;', 'hashCode = Std.int(31 * (31 + name.hashCode()) + slotIndex);');
         }
 
         // Convert enums valueOf() / name() / ordinal()

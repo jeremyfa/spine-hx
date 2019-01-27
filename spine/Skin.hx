@@ -124,7 +124,7 @@ class Key {
         if (name == null) throw new IllegalArgumentException("name cannot be null.");
         this.slotIndex = slotIndex;
         this.name = name;
-        hashCode = 31 * (31 + name.getHashCode()) + slotIndex;
+        hashCode = Std.int(31 * (31 + name.getHashCode()) + slotIndex);
     }
 
     #if !spine_no_inline inline #end public function getHashCode():Int {
