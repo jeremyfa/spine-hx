@@ -31,6 +31,8 @@ Ensure you have [Node.js](https://nodejs.org), [Haxe](https://haxe.org/) and [Gi
 haxe convert.hxml
 ```
 
+Every file of the runtime is converted automatically, except the files located inside ``support/`` directory and ``SkeletonBinary.hx``.
+
 ## Thanks to
 
 [@Beeblerox](https://github.com/Beeblerox) who provided a manually converted SkeletonBinary.hx file (from C# code base)
