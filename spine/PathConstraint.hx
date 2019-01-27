@@ -103,22 +103,29 @@ class PathConstraint implements Constraint {
         if (!translate && !rotate) return;
 
         var data:PathConstraintData = this.data;
-        var spacingMode:SpacingMode = data.spacingMode;
-        var lengthSpacing:Bool = spacingMode == SpacingMode.length;
+        var percentSpacing:Bool = data.spacingMode == SpacingMode.percent;
         var rotateMode:RotateMode = data.rotateMode;
         var tangents:Bool = rotateMode == RotateMode.tangent; var scale:Bool = rotateMode == RotateMode.chainScale;
         var boneCount:Int = this.bones.size; var spacesCount:Int = tangents ? boneCount : boneCount + 1;
         var bones = this.bones.items;
         var spaces:FloatArray = this.spaces.setSize(spacesCount); var lengths:FloatArray = null;
         var spacing:Float = this.spacing;
-        if (scale || lengthSpacing) {
+        if (scale || !percentSpacing) {
             if (scale) lengths = this.lengths.setSize(boneCount);
+            var lengthSpacing:Bool = data.spacingMode == SpacingMode.length;
             var i:Int = 0; var n:Int = spacesCount - 1; while (i < n) {
                 var bone:Bone = cast(bones[i], Bone);
                 var setupLength:Float = bone.data.length;
                 if (setupLength < epsilon) {
                     if (scale) lengths[i] = 0;
                     spaces[++i] = 0;
+                } else if (percentSpacing) {
+                    if (scale) {
+                        var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
+                        var length:Float = cast(Math.sqrt(x * x + y * y), Float);
+                        lengths[i] = length;
+                    }
+                    spaces[++i] = spacing;
                 } else {
                     var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
                     var length:Float = cast(Math.sqrt(x * x + y * y), Float);
@@ -132,7 +139,7 @@ class PathConstraint implements Constraint {
         }
 
         var positions:FloatArray = computeWorldPositions(cast(attachment, PathAttachment), spacesCount, tangents,
-            data.positionMode == PositionMode.percent, spacingMode == SpacingMode.percent);
+            data.positionMode == PositionMode.percent, percentSpacing);
         var boneX:Float = positions[0]; var boneY:Float = positions[1]; var offsetRotation:Float = data.offsetRotation;
         var tip:Bool = false;
         if (offsetRotation == 0)
@@ -203,7 +210,7 @@ class PathConstraint implements Constraint {
             var pathLength:Float = lengths[curveCount];
             if (percentPosition) position *= pathLength;
             if (percentSpacing) {
-                var i:Int = 0; while (i < spacesCount) {
+                var i:Int = 1; while (i < spacesCount) {
                     spaces[i] *= pathLength; i++; }
             }
             world = this.world.setSize(8);
@@ -309,9 +316,12 @@ class PathConstraint implements Constraint {
             x1 = x2;
             y1 = y2;
         i++; w += 6; }
-        if (percentPosition) position *= pathLength;
+        if (percentPosition)
+            position *= pathLength;
+        else
+            position *= pathLength / path.getLengths()[curveCount - 1];
         if (percentSpacing) {
-            var i:Int = 0; while (i < spacesCount) {
+            var i:Int = 1; while (i < spacesCount) {
                 spaces[i] *= pathLength; i++; }
         }
 
@@ -421,14 +431,23 @@ class PathConstraint implements Constraint {
     }
 
     #if !spine_no_inline inline #end private function addCurvePosition(p:Float, x1:Float, y1:Float, cx1:Float, cy1:Float, cx2:Float, cy2:Float, x2:Float, y2:Float, out:FloatArray, o:Int, tangents:Bool):Void {
-        if (p < epsilon || Math.isNaN(p)) p = epsilon;
+        if (p < epsilon || Math.isNaN(p)) {
+            out[o] = x1;
+            out[o + 1] = y1;
+            out[o + 2] = cast(Math.atan2(cy1 - y1, cx1 - x1), Float);
+            return;
+        }
         var tt:Float = p * p; var ttt:Float = tt * p; var u:Float = 1 - p; var uu:Float = u * u; var uuu:Float = uu * u;
         var ut:Float = u * p; var ut3:Float = ut * 3; var uut3:Float = u * ut3; var utt3:Float = ut3 * p;
         var x:Float = x1 * uuu + cx1 * uut3 + cx2 * utt3 + x2 * ttt; var y:Float = y1 * uuu + cy1 * uut3 + cy2 * utt3 + y2 * ttt;
         out[o] = x;
         out[o + 1] = y;
-        if (tangents)
-            out[o + 2] = cast(Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt)), Float);
+        if (tangents) {
+            if (p < 0.001)
+                out[o + 2] = cast(Math.atan2(cy1 - y1, cx1 - x1), Float);
+            else
+                out[o + 2] = cast(Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt)), Float);
+        }
     }
 
     #if !spine_no_inline inline #end public function getOrder():Int {

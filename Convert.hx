@@ -2261,8 +2261,8 @@ using StringTools;
             haxe = haxe.replace('sortPathConstraintAttachment(data.skins.', 'sortPathConstraintAttachmentWithSkin(data.skins.');
         }
         else if (rootType == 'spine.IkConstraint') {
-            haxe = haxe.replace('apply(bone:Bone, targetX:Float, targetY:Float, alpha:Float)', 'applyOne(bone:Bone, targetX:Float, targetY:Float, alpha:Float)');
-            haxe = haxe.replace('apply(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, alpha:Float)', 'applyTwo(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, alpha:Float)');
+            haxe = haxe.replace('apply(bone:Bone, targetX:Float, targetY:Float, compress:Bool, stretch:Bool, uniform:Bool, alpha:Float)', 'applyOne(bone:Bone, targetX:Float, targetY:Float, compress:Bool, stretch:Bool, uniform:Bool, alpha:Float)');
+            haxe = haxe.replace('apply(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, stretch:Bool, alpha:Float)', 'applyTwo(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, stretch:Bool, alpha:Float)');
         }
         else if (rootType == 'spine.Bone') {
             haxe = haxe.replace('updateWorldTransform(', 'updateWorldTransformWithData(');
@@ -2270,6 +2270,7 @@ using StringTools;
             haxe = haxe.replace('setScale(scale:Float)', 'setScale2(scale:Float)');
             haxe = haxe.replace(' cos(', ' Math.cos(');
             haxe = haxe.replace(' sin(', ' Math.sin(');
+            haxe = haxe.replace('(skeleton.scaleX < 0 != skeleton.scaleY < 0)', '((skeleton.scaleX < 0) != (skeleton.scaleY < 0))');
         }
         else if (rootType == 'spine.SkeletonBounds') {
             haxe = haxe.replace('containsPoint(polygon:FloatArray, x:Float, y:Float)', 'polygonContainsPoint(polygon:FloatArray, x:Float, y:Float)');
@@ -2290,6 +2291,9 @@ using StringTools;
             haxe = haxe.replace('ObjectMap<Key,Attachment>', 'AttachmentMap');
             haxe = haxe.replace('ObjectMap', 'AttachmentMap');
             haxe = haxe.replace('hashCode = 31 * (31 + name.hashCode()) + slotIndex;', 'hashCode = Std.int(31 * (31 + name.hashCode()) + slotIndex);');
+        }
+        else if (rootType == 'spine.attachments.VertexAttachment') {
+            haxe = haxe.replace('nextID()', 'getNextID()');
         }
 
         // Convert enums valueOf() / name() / ordinal()
@@ -2600,6 +2604,8 @@ using StringTools;
                         
                         var newLine = line.replace('applyOne(', 'applyTwo(');
                         newLine = newLine.replace('apply(', 'applyOne(');
+                        newLine = newLine.replace('.clear(1024)', '.clear()');
+                        newLine = newLine.replace('.clear(2048)', '.clear()');
                         newLine = newLine.replace('Animation.binarySearch(', 'Animation.binarySearchWithStep(');
 
                         // Add new change
@@ -3247,9 +3253,9 @@ using StringTools;
     static var RE_WORD = ~/^[a-zA-Z0-9_]+/;
     static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
     static var RE_IMPORT = ~/^import\s+(static\s+)?([^;\s]+)\s*;/;
-    static var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
+    static var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic|volatile)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
     static var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
-    static var RE_METHOD = ~/^((?:(?:public|private|protected|static|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
+    static var RE_METHOD = ~/^((?:(?:public|private|protected|static|final|synchronized)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
     static var RE_VAR = ~/^(?:([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
     static var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
     static var RE_HAXE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract|@:enum)\s+)+)?(enum|interface|class|abstract)\s+([a-zA-Z0-9,<>\[\]_]+)/;

@@ -36,7 +36,7 @@ import spine.AnimationState.AnimationStateListener;
 /** Stores the current pose values for an {@link Event}.
  * <p>
  * See Timeline
- * {@link Timeline#apply(Skeleton, float, float, com.badlogic.gdx.utils.Array, float, com.esotericsoftware.spine.Animation.MixPose, com.esotericsoftware.spine.Animation.MixDirection)},
+ * {@link Timeline#apply(Skeleton, float, float, com.badlogic.gdx.utils.Array, float, com.esotericsoftware.spine.Animation.MixBlend, com.esotericsoftware.spine.Animation.MixDirection)},
  * AnimationStateListener {@link AnimationStateListener#event(com.esotericsoftware.spine.AnimationState.TrackEntry, Event)}, and
  * <a href="http://esotericsoftware.com/spine-events">Events</a> in the Spine User Guide. */
 class Event {
@@ -44,6 +44,7 @@ class Event {
     public var intValue:Int = 0;
     public var floatValue:Float = 0;
     public var stringValue:String;
+    public var volume:Float = 0; public var balance:Float = 0;
     public var time:Float = 0;
 
     public function new(time:Float, data:EventData) {
@@ -74,6 +75,22 @@ class Event {
 
     #if !spine_no_inline inline #end public function setString(stringValue:String):Void {
         this.stringValue = stringValue;
+    }
+
+    #if !spine_no_inline inline #end public function getVolume():Float {
+        return volume;
+    }
+
+    #if !spine_no_inline inline #end public function setVolume(volume:Float):Void {
+        this.volume = volume;
+    }
+
+    #if !spine_no_inline inline #end public function getBalance():Float {
+        return balance;
+    }
+
+    #if !spine_no_inline inline #end public function setBalance(balance:Float):Void {
+        this.balance = balance;
     }
 
     /** The animation time this event was keyed. */

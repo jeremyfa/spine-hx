@@ -37,7 +37,8 @@ class EventData {
     public var name:String;
     public var intValue:Int = 0;
     public var floatValue:Float = 0;
-    public var stringValue:String;
+    public var stringValue:String; public var audioPath:String = null;
+    public var volume:Float = 0; public var balance:Float = 0;
 
     public function new(name:String) {
         if (name == null) throw new IllegalArgumentException("name cannot be null.");
@@ -66,6 +67,30 @@ class EventData {
 
     #if !spine_no_inline inline #end public function setString(stringValue:String):Void {
         this.stringValue = stringValue;
+    }
+
+    #if !spine_no_inline inline #end public function getAudioPath():String {
+        return audioPath;
+    }
+
+    #if !spine_no_inline inline #end public function setAudioPath(audioPath:String):Void {
+        this.audioPath = audioPath;
+    }
+
+    #if !spine_no_inline inline #end public function getVolume():Float {
+        return volume;
+    }
+
+    #if !spine_no_inline inline #end public function setVolume(volume:Float):Void {
+        this.volume = volume;
+    }
+
+    #if !spine_no_inline inline #end public function getBalance():Float {
+        return balance;
+    }
+
+    #if !spine_no_inline inline #end public function setBalance(balance:Float):Void {
+        this.balance = balance;
     }
 
     /** The name of the event, which is unique within the skeleton. */

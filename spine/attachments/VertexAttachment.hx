@@ -30,19 +30,18 @@
 
 package spine.attachments;
 
-import spine.support.concurrent.atomic.AtomicInteger;
-
-import spine.support.utils.FloatArray;
 import spine.Bone;
 import spine.Skeleton;
 import spine.Slot;
 
+import spine.support.utils.FloatArray;
+
 /** Base class for an attachment with vertices that are transformed by one or more bones and can be deformed by a slot's
  * {@link Slot#getAttachmentVertices()}. */
 class VertexAttachment extends Attachment {
-    private static var nextID:AtomicInteger = new AtomicInteger();
+    private static var nextID:Int = 0;
 
-    private var id:Int = (nextID.getAndIncrement() & 65535) << 11;
+    private var id:Int = (getNextID() & 65535) << 11;
     public var bones:IntArray;
     public var vertices:FloatArray;
     public var worldVerticesLength:Int = 0;
@@ -161,5 +160,9 @@ class VertexAttachment extends Attachment {
     /** Returns a unique ID for this attachment. */
     #if !spine_no_inline inline #end public function getId():Int {
         return id;
+    }
+
+    #if !spine_no_inline inline #end private static function getNextID():Int {
+        return nextID++;
     }
 }

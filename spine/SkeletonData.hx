@@ -52,7 +52,7 @@ class SkeletonData {
 
     // Nonessential.
     public var fps:Float = 30;
-    public var imagesPath:String;
+    public var imagesPath:String; public var audioPath:String = null;
 
     // --- Bones.
 
@@ -273,7 +273,7 @@ class SkeletonData {
         this.hash = hash;
     }
 
-    /** The path to the image directory as defined in Spine. Available only when nonessential data was exported.
+    /** The path to the images directory as defined in Spine. Available only when nonessential data was exported.
      * @return May be null. */
     #if !spine_no_inline inline #end public function getImagesPath():String {
         return imagesPath;
@@ -282,6 +282,17 @@ class SkeletonData {
     /** @param imagesPath May be null. */
     #if !spine_no_inline inline #end public function setImagesPath(imagesPath:String):Void {
         this.imagesPath = imagesPath;
+    }
+
+    /** The path to the audio directory as defined in Spine. Available only when nonessential data was exported.
+     * @return May be null. */
+    #if !spine_no_inline inline #end public function getAudioPath():String {
+        return audioPath;
+    }
+
+    /** @param audioPath May be null. */
+    #if !spine_no_inline inline #end public function setAudioPath(audioPath:String):Void {
+        this.audioPath = audioPath;
     }
 
     /** The dopesheet FPS in Spine. Available only when nonessential data was exported. */

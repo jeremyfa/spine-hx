@@ -242,16 +242,16 @@ class TransformConstraint implements Constraint {
             }
 
             var scaleX:Float = bone.ascaleX; var scaleY:Float = bone.ascaleY;
-            if (scaleMix > 0) {
+            if (scaleMix != 0) {
                 if (scaleX != 0) scaleX = (scaleX + (target.ascaleX - scaleX + data.offsetScaleX) * scaleMix) / scaleX;
                 if (scaleY != 0) scaleY = (scaleY + (target.ascaleY - scaleY + data.offsetScaleY) * scaleMix) / scaleY;
             }
 
             var shearY:Float = bone.ashearY;
-            if (shearMix > 0) {
+            if (shearMix != 0) {
                 var r:Float = target.ashearY - shearY + data.offsetShearY;
                 r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
-                bone.shearY += r * shearMix;
+                shearY += r * shearMix;
             }
 
             bone.updateWorldTransformWithData(x, y, rotation, scaleX, scaleY, bone.ashearX, shearY);
@@ -277,13 +277,13 @@ class TransformConstraint implements Constraint {
             }
 
             var scaleX:Float = bone.ascaleX; var scaleY:Float = bone.ascaleY;
-            if (scaleMix > 0) {
+            if (scaleMix != 0) {
                 scaleX *= ((target.ascaleX - 1 + data.offsetScaleX) * scaleMix) + 1;
                 scaleY *= ((target.ascaleY - 1 + data.offsetScaleY) * scaleMix) + 1;
             }
 
             var shearY:Float = bone.ashearY;
-            if (shearMix > 0) shearY += (target.ashearY + data.offsetShearY) * shearMix;
+            if (shearMix != 0) shearY += (target.ashearY + data.offsetShearY) * shearMix;
 
             bone.updateWorldTransformWithData(x, y, rotation, scaleX, scaleY, bone.ashearX, shearY);
         i++; }

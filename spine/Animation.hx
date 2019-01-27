@@ -30,13 +30,14 @@
 
 package spine;
 
+import spine.Animation.MixBlend.*;
 import spine.Animation.MixDirection.*;
-import spine.Animation.MixPose.*;
 
 import spine.support.graphics.Color;
 import spine.support.math.MathUtils;
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
+
 import spine.attachments.Attachment;
 import spine.attachments.VertexAttachment;
 
@@ -71,8 +72,9 @@ class Animation {
 
     /** Applies all the animation's timelines to the specified skeleton.
      * <p>
-     * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixPose, MixDirection)}. */
-    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, loop:Bool, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+     * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixBlend, MixDirection)}.
+     * @param loop If true, the animation repeats after {@link #getDuration()}. */
+    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, loop:Bool, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
         if (skeleton == null) throw new IllegalArgumentException("skeleton cannot be null.");
 
         if (loop && duration != 0) {
@@ -82,7 +84,7 @@ class Animation {
 
         var timelines:Array<Timeline> = this.timelines;
         var i:Int = 0; var n:Int = timelines.size; while (i < n) {
-            timelines.get(i).apply(skeleton, lastTime, time, events, alpha, pose, direction); i++; }
+            timelines.get(i).apply(skeleton, lastTime, time, events, alpha, blend, direction); i++; }
     }
 
     /** The animation's name, which is unique within the skeleton. */
@@ -147,38 +149,48 @@ interface Timeline {
      *           interpolate between the keys.
      * @param events If any events are fired, they are added to this list. Can be null to ignore firing events or if the
      *           timeline does not fire events.
-     * @param alpha 0 applies the current or setup pose value (depending on <code>setupPose</code>). 1 applies the timeline
-     *           value. Between 0 and 1 applies a value between the current or setup pose and the timeline value. By adjusting
+     * @param alpha 0 applies the current or setup value (depending on <code>blend</code>). 1 applies the timeline value.
+     *           Between 0 and 1 applies a value between the current or setup value and the timeline value. By adjusting
      *           <code>alpha</code> over time, an animation can be mixed in or out. <code>alpha</code> can also be useful to
      *           apply animations on top of each other (layered).
-     * @param pose Controls how mixing is applied when <code>alpha</code> < 1.
+     * @param blend Controls how mixing is applied when <code>alpha</code> < 1.
      * @param direction Indicates whether the timeline is mixing in or out. Used by timelines which perform instant transitions,
      *           such as {@link DrawOrderTimeline} or {@link AttachmentTimeline}. */
-    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void;
+    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void;
 
     /** Uniquely encodes both the type of this timeline and the skeleton property that it affects. */
     public function getPropertyId():Int;
 }
 
-/** Controls how a timeline is mixed with the setup or current pose.
+/** Controls how a timeline value is mixed with the setup pose value or current pose value.
  * <p>
- * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixPose, MixDirection)}. */
-@:enum abstract MixPose(Int) from Int to Int {
-    /** The timeline value is mixed with the setup pose (the current pose is not used). */
+ * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixBlend, MixDirection)}. */
+@:enum abstract MixBlend(Int) from Int to Int {
+    /** Transitions from the setup value to the timeline value (the current value is not used). Before the first key, the setup
+     * value is set. */
     var setup = 0;
-    /** The timeline value is mixed with the current pose. The setup pose is used as the timeline value before the first key,
-     * except for timelines which perform instant transitions, such as {@link DrawOrderTimeline} or
-     * {@link AttachmentTimeline}. */
-    var current = 1;
-    /** The timeline value is mixed with the current pose. No change is made before the first key (the current pose is kept
-     * until the first key). */
-    var currentLayered = 2;
+    /** Transitions from the current value to the timeline value. Before the first key, transitions from the current value to
+     * the setup value. Timelines which perform instant transitions, such as {@link DrawOrderTimeline} or
+     * {@link AttachmentTimeline}, use the setup value before the first key.
+     * <p>
+     * <code>first</code> is intended for the first animations applied, not for animations layered on top of those. */
+    var first = 1;
+    /** Transitions from the current value to the timeline value. No change is made before the first key (the current value is
+     * kept until the first key).
+     * <p>
+     * <code>replace</code> is intended for animations layered on top of others, not for the first animations applied. */
+    var replace = 2;
+    /** Transitions from the current value to the current value plus the timeline value. No change is made before the first key
+     * (the current value is kept until the first key).
+     * <p>
+     * <code>add</code> is intended for animations layered on top of others, not for the first animations applied. */
+    var add = 3;
 }
 
-/** Indicates whether a timeline's <code>alpha</code> is mixing out over time toward 0 (the setup or current pose) or mixing in
- * toward 1 (the timeline's pose).
+/** Indicates whether a timeline's <code>alpha</code> is mixing out over time toward 0 (the setup or current pose value) or
+ * mixing in toward 1 (the timeline's value).
  * <p>
- * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixPose, MixDirection)}. */
+ * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixBlend, MixDirection)}. */
 @:enum abstract MixDirection(Int) from Int to Int {
     var directionIn = 0; var directionOut = 1;
 }
@@ -192,10 +204,26 @@ interface Timeline {
     var twoColor = 14;
 }
 
+/** An interface for timelines which change the property of a bone. */
+interface BoneTimeline extends Timeline {
+    public function setBoneIndex(index:Int):Void;
+
+    /** The index of the bone in {@link Skeleton#getBones()} that will be changed. */
+    public function getBoneIndex():Int;
+}
+
+/** An interface for timelines which change the property of a slot. */
+interface SlotTimeline extends Timeline {
+    public function setSlotIndex(index:Int):Void;
+
+    /** The index of the slot in {@link Skeleton#getSlots()} that will be changed. */
+    public function getSlotIndex():Int;
+}
+
 /** The base class for timelines that use interpolation between key frame values. */
 class CurveTimeline implements Timeline {
     public function getPropertyId():Int { return 0; }
-    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {  }
+    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {  }
     inline public static var LINEAR:Float = 0; inline public static var STEPPED:Float = 1; inline public static var BEZIER:Float = 2;
     inline private static var BEZIER_SIZE:Int = 10 * 2 - 1;
 
@@ -282,7 +310,7 @@ class CurveTimeline implements Timeline {
 }
 
 /** Changes a bone's local {@link Bone#getRotation()}. */
-class RotateTimeline extends CurveTimeline {
+class RotateTimeline extends CurveTimeline implements BoneTimeline {
     inline public static var ENTRIES:Int = 2;
     inline public static var PREV_TIME:Int = -2; inline public static var PREV_ROTATION:Int = -1;
     inline public static var ROTATION:Int = 1;
@@ -321,31 +349,41 @@ class RotateTimeline extends CurveTimeline {
         frames[frameIndex + ROTATION] = degrees;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (pose); {
+            var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (blend); {
             if (_switchCond0 == setup) {
                 bone.rotation = bone.data.rotation;
                 return;
-            } else if (_switchCond0 == current) {
+            } else if (_switchCond0 == first) {
                 var r:Float = bone.data.rotation - bone.rotation;
-                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
-                bone.rotation += r * alpha;
+                bone.rotation += (r - (16384 - Std.int((16384.499999999996 - r / 360))) * 360) * alpha;
             } } break; }
             return;
         }
 
         if (time >= frames[frames.length - ENTRIES]) { // Time is after last frame.
-            if (pose == setup)
-                bone.rotation = bone.data.rotation + frames[frames.length + PREV_ROTATION] * alpha;
-            else {
-                var r:Float = bone.data.rotation + frames[frames.length + PREV_ROTATION] - bone.rotation;
-                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360; // Wrap within -180 and 180.
+            var r:Float = frames[frames.length + PREV_ROTATION];
+            var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (blend); {
+            if (_switchCond1 == setup) {
+                bone.rotation = bone.data.rotation + r * alpha;
+                break;
+            } else if (_switchCond1 == first) {
+                    r += bone.data.rotation - bone.rotation;
+                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
+                // Fall through.
                 bone.rotation += r * alpha;
-            }
+            } else if (_switchCond1 == replace) {
+                r += bone.data.rotation - bone.rotation;
+                r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
+                // Fall through.
+                bone.rotation += r * alpha;
+            } else if (_switchCond1 == add) {
+                bone.rotation += r * alpha;
+            } } break; }
             return;
         }
 
@@ -356,16 +394,22 @@ class RotateTimeline extends CurveTimeline {
         var percent:Float = getCurvePercent((frame >> 1) - 1, 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
 
         var r:Float = frames[frame + ROTATION] - prevRotation;
-        r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
-        r = prevRotation + r * percent;
-        if (pose == setup) {
-            r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
-            bone.rotation = bone.data.rotation + r * alpha;
-        } else {
-            r = bone.data.rotation + r - bone.rotation;
-            r -= (16384 - Std.int((16384.499999999996 - r / 360))) * 360;
-            bone.rotation += r * alpha;
-        }
+        r = prevRotation + (r - (16384 - Std.int((16384.499999999996 - r / 360))) * 360) * percent;
+        var _continueAfterSwitch2 = false; while(true) { var _switchCond2 = (blend); {
+        if (_switchCond2 == setup) {
+            bone.rotation = bone.data.rotation + (r - (16384 - Std.int((16384.499999999996 - r / 360))) * 360) * alpha;
+            break;
+        } else if (_switchCond2 == first) {
+                r += bone.data.rotation - bone.rotation;
+            // Fall through.
+            bone.rotation += (r - (16384 - Std.int((16384.499999999996 - r / 360))) * 360) * alpha;
+        } else if (_switchCond2 == replace) {
+            r += bone.data.rotation - bone.rotation;
+            // Fall through.
+            bone.rotation += (r - (16384 - Std.int((16384.499999999996 - r / 360))) * 360) * alpha;
+        } else if (_switchCond2 == add) {
+            bone.rotation += (r - (16384 - Std.int((16384.499999999996 - r / 360))) * 360) * alpha;
+        } } break; }
     }
 
     inline public static var LINEAR:Float = CurveTimeline.LINEAR;
@@ -378,7 +422,7 @@ class RotateTimeline extends CurveTimeline {
 }
 
 /** Changes a bone's local {@link Bone#getX()} and {@link Bone#getY()}. */
-class TranslateTimeline extends CurveTimeline {
+class TranslateTimeline extends CurveTimeline implements BoneTimeline {
     inline public static var ENTRIES:Int = 3;
     inline public static var PREV_TIME:Int = -3; inline public static var PREV_X:Int = -2; inline public static var PREV_Y:Int = -1;
     inline public static var X:Int = 1; inline public static var Y:Int = 2;
@@ -418,17 +462,17 @@ class TranslateTimeline extends CurveTimeline {
         frames[frameIndex + Y] = y;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (pose); {
-            if (_switchCond1 == setup) {
+            var _continueAfterSwitch3 = false; while(true) { var _switchCond3 = (blend); {
+            if (_switchCond3 == setup) {
                 bone.x = bone.data.x;
                 bone.y = bone.data.y;
                 return;
-            } else if (_switchCond1 == current) {
+            } else if (_switchCond3 == first) {
                 bone.x += (bone.data.x - bone.x) * alpha;
                 bone.y += (bone.data.y - bone.y) * alpha;
             } } break; }
@@ -451,13 +495,23 @@ class TranslateTimeline extends CurveTimeline {
             x += (frames[frame + X] - x) * percent;
             y += (frames[frame + Y] - y) * percent;
         }
-        if (pose == setup) {
+        var _continueAfterSwitch4 = false; while(true) { var _switchCond4 = (blend); {
+        if (_switchCond4 == setup) {
             bone.x = bone.data.x + x * alpha;
             bone.y = bone.data.y + y * alpha;
-        } else {
+            break;
+        } else if (_switchCond4 == first) {
+                bone.x += (bone.data.x + x - bone.x) * alpha;
+            bone.y += (bone.data.y + y - bone.y) * alpha;
+            break;
+        } else if (_switchCond4 == replace) {
             bone.x += (bone.data.x + x - bone.x) * alpha;
             bone.y += (bone.data.y + y - bone.y) * alpha;
-        }
+            break;
+        } else if (_switchCond4 == add) {
+            bone.x += x * alpha;
+            bone.y += y * alpha;
+        } } break; }
     }
 
     inline public static var LINEAR:Float = CurveTimeline.LINEAR;
@@ -479,17 +533,17 @@ class ScaleTimeline extends TranslateTimeline {
         return (TimelineType.scale << 24) + boneIndex;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch2 = false; while(true) { var _switchCond2 = (pose); {
-            if (_switchCond2 == setup) {
+            var _continueAfterSwitch5 = false; while(true) { var _switchCond5 = (blend); {
+            if (_switchCond5 == setup) {
                 bone.scaleX = bone.data.scaleX;
                 bone.scaleY = bone.data.scaleY;
                 return;
-            } else if (_switchCond2 == current) {
+            } else if (_switchCond5 == first) {
                 bone.scaleX += (bone.data.scaleX - bone.scaleX) * alpha;
                 bone.scaleY += (bone.data.scaleY - bone.scaleY) * alpha;
             } } break; }
@@ -513,27 +567,69 @@ class ScaleTimeline extends TranslateTimeline {
             y = (y + (frames[frame + Y] - y) * percent) * bone.data.scaleY;
         }
         if (alpha == 1) {
-            bone.scaleX = x;
-            bone.scaleY = y;
+            if (blend == add) {
+                bone.scaleX += x - bone.data.scaleX;
+                bone.scaleY += y - bone.data.scaleY;
+            } else {
+                bone.scaleX = x;
+                bone.scaleY = y;
+            }
         } else {
-            var bx:Float = 0; var by:Float = 0;
-            if (pose == setup) {
-                bx = bone.data.scaleX;
-                by = bone.data.scaleY;
-            } else {
-                bx = bone.scaleX;
-                by = bone.scaleY;
-            }
             // Mixing out uses sign of setup or current pose, else use sign of key.
+            var bx:Float = 0; var by:Float = 0;
             if (direction == spine.MixDirection.directionOut) {
-                x = Math.abs(x) * MathUtils.signum(bx);
-                y = Math.abs(y) * MathUtils.signum(by);
+                var _continueAfterSwitch6 = false; while(true) { var _switchCond6 = (blend); {
+                if (_switchCond6 == setup) {
+                    bx = bone.data.scaleX;
+                    by = bone.data.scaleY;
+                    bone.scaleX = bx + (Math.abs(x) * MathUtils.signum(bx) - bx) * alpha;
+                    bone.scaleY = by + (Math.abs(y) * MathUtils.signum(by) - by) * alpha;
+                    break;
+                } else if (_switchCond6 == first) {
+                        bx = bone.scaleX;
+                    by = bone.scaleY;
+                    bone.scaleX = bx + (Math.abs(x) * MathUtils.signum(bx) - bx) * alpha;
+                    bone.scaleY = by + (Math.abs(y) * MathUtils.signum(by) - by) * alpha;
+                    break;
+                } else if (_switchCond6 == replace) {
+                    bx = bone.scaleX;
+                    by = bone.scaleY;
+                    bone.scaleX = bx + (Math.abs(x) * MathUtils.signum(bx) - bx) * alpha;
+                    bone.scaleY = by + (Math.abs(y) * MathUtils.signum(by) - by) * alpha;
+                    break;
+                } else if (_switchCond6 == add) {
+                    bx = bone.scaleX;
+                    by = bone.scaleY;
+                    bone.scaleX = bx + (Math.abs(x) * MathUtils.signum(bx) - bone.data.scaleX) * alpha;
+                    bone.scaleY = by + (Math.abs(y) * MathUtils.signum(by) - bone.data.scaleY) * alpha;
+                } } break; }
             } else {
-                bx = Math.abs(bx) * MathUtils.signum(x);
-                by = Math.abs(by) * MathUtils.signum(y);
+                var _continueAfterSwitch7 = false; while(true) { var _switchCond7 = (blend); {
+                if (_switchCond7 == setup) {
+                    bx = Math.abs(bone.data.scaleX) * MathUtils.signum(x);
+                    by = Math.abs(bone.data.scaleY) * MathUtils.signum(y);
+                    bone.scaleX = bx + (x - bx) * alpha;
+                    bone.scaleY = by + (y - by) * alpha;
+                    break;
+                } else if (_switchCond7 == first) {
+                        bx = Math.abs(bone.scaleX) * MathUtils.signum(x);
+                    by = Math.abs(bone.scaleY) * MathUtils.signum(y);
+                    bone.scaleX = bx + (x - bx) * alpha;
+                    bone.scaleY = by + (y - by) * alpha;
+                    break;
+                } else if (_switchCond7 == replace) {
+                    bx = Math.abs(bone.scaleX) * MathUtils.signum(x);
+                    by = Math.abs(bone.scaleY) * MathUtils.signum(y);
+                    bone.scaleX = bx + (x - bx) * alpha;
+                    bone.scaleY = by + (y - by) * alpha;
+                    break;
+                } else if (_switchCond7 == add) {
+                    bx = MathUtils.signum(x);
+                    by = MathUtils.signum(y);
+                    bone.scaleX = Math.abs(bone.scaleX) * bx + (x - Math.abs(bone.data.scaleX) * bx) * alpha;
+                    bone.scaleY = Math.abs(bone.scaleY) * by + (y - Math.abs(bone.data.scaleY) * by) * alpha;
+                } } break; }
             }
-            bone.scaleX = bx + (x - bx) * alpha;
-            bone.scaleY = by + (y - by) * alpha;
         }
     }
 
@@ -568,17 +664,17 @@ class ShearTimeline extends TranslateTimeline {
         return (TimelineType.shear << 24) + boneIndex;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var bone:Bone = skeleton.bones.get(boneIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch3 = false; while(true) { var _switchCond3 = (pose); {
-            if (_switchCond3 == setup) {
+            var _continueAfterSwitch8 = false; while(true) { var _switchCond8 = (blend); {
+            if (_switchCond8 == setup) {
                 bone.shearX = bone.data.shearX;
                 bone.shearY = bone.data.shearY;
                 return;
-            } else if (_switchCond3 == current) {
+            } else if (_switchCond8 == first) {
                 bone.shearX += (bone.data.shearX - bone.shearX) * alpha;
                 bone.shearY += (bone.data.shearY - bone.shearY) * alpha;
             } } break; }
@@ -601,13 +697,23 @@ class ShearTimeline extends TranslateTimeline {
             x = x + (frames[frame + X] - x) * percent;
             y = y + (frames[frame + Y] - y) * percent;
         }
-        if (pose == setup) {
+        var _continueAfterSwitch9 = false; while(true) { var _switchCond9 = (blend); {
+        if (_switchCond9 == setup) {
             bone.shearX = bone.data.shearX + x * alpha;
             bone.shearY = bone.data.shearY + y * alpha;
-        } else {
+            break;
+        } else if (_switchCond9 == first) {
+                bone.shearX += (bone.data.shearX + x - bone.shearX) * alpha;
+            bone.shearY += (bone.data.shearY + y - bone.shearY) * alpha;
+            break;
+        } else if (_switchCond9 == replace) {
             bone.shearX += (bone.data.shearX + x - bone.shearX) * alpha;
             bone.shearY += (bone.data.shearY + y - bone.shearY) * alpha;
-        }
+            break;
+        } else if (_switchCond9 == add) {
+            bone.shearX += x * alpha;
+            bone.shearY += y * alpha;
+        } } break; }
     }
 
     inline public static var ENTRIES:Int = TranslateTimeline.ENTRIES;
@@ -632,7 +738,7 @@ class ShearTimeline extends TranslateTimeline {
 }
 
 /** Changes a slot's {@link Slot#getColor()}. */
-class ColorTimeline extends CurveTimeline {
+class ColorTimeline extends CurveTimeline implements SlotTimeline {
     inline public static var ENTRIES:Int = 5;
     inline private static var PREV_TIME:Int = -5; inline private static var PREV_R:Int = -4; inline private static var PREV_G:Int = -3; inline private static var PREV_B:Int = -2; inline private static var PREV_A:Int = -1;
     inline private static var R:Int = 1; inline private static var G:Int = 2; inline private static var B:Int = 3; inline private static var A:Int = 4;
@@ -674,16 +780,16 @@ class ColorTimeline extends CurveTimeline {
         frames[frameIndex + A] = a;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var slot:Slot = skeleton.slots.get(slotIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch4 = false; while(true) { var _switchCond4 = (pose); {
-            if (_switchCond4 == setup) {
+            var _continueAfterSwitch10 = false; while(true) { var _switchCond10 = (blend); {
+            if (_switchCond10 == setup) {
                 slot.color.set(slot.data.color);
                 return;
-            } else if (_switchCond4 == current) {
+            } else if (_switchCond10 == first) {
                 var color:Color = slot.color; var setup:Color = slot.data.color;
                 color.add((setup.r - color.r) * alpha, (setup.g - color.g) * alpha, (setup.b - color.b) * alpha,
                     (setup.a - color.a) * alpha);
@@ -718,7 +824,7 @@ class ColorTimeline extends CurveTimeline {
             slot.color.set(r, g, b, a);
         else {
             var color:Color = slot.color;
-            if (pose == setup) color.set(slot.data.color);
+            if (blend == setup) color.set(slot.data.color);
             color.add((r - color.r) * alpha, (g - color.g) * alpha, (b - color.b) * alpha, (a - color.a) * alpha);
         }
     }
@@ -733,7 +839,7 @@ class ColorTimeline extends CurveTimeline {
 }
 
 /** Changes a slot's {@link Slot#getColor()} and {@link Slot#getDarkColor()} for two color tinting. */
-class TwoColorTimeline extends CurveTimeline {
+class TwoColorTimeline extends CurveTimeline implements SlotTimeline {
     inline public static var ENTRIES:Int = 8;
     inline private static var PREV_TIME:Int = -8; inline private static var PREV_R:Int = -7; inline private static var PREV_G:Int = -6; inline private static var PREV_B:Int = -5; inline private static var PREV_A:Int = -4;
     inline private static var PREV_R2:Int = -3; inline private static var PREV_G2:Int = -2; inline private static var PREV_B2:Int = -1;
@@ -779,17 +885,17 @@ class TwoColorTimeline extends CurveTimeline {
         frames[frameIndex + B2] = b2;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var slot:Slot = skeleton.slots.get(slotIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch5 = false; while(true) { var _switchCond5 = (pose); {
-            if (_switchCond5 == setup) {
+            var _continueAfterSwitch11 = false; while(true) { var _switchCond11 = (blend); {
+            if (_switchCond11 == setup) {
                 slot.color.set(slot.data.color);
                 slot.darkColor.set(slot.data.darkColor);
                 return;
-            } else if (_switchCond5 == current) {
+            } else if (_switchCond11 == first) {
                 var light:Color = slot.color; var dark:Color = slot.darkColor; var setupLight:Color = slot.data.color; var setupDark:Color = slot.data.darkColor;
                 light.add((setupLight.r - light.r) * alpha, (setupLight.g - light.g) * alpha, (setupLight.b - light.b) * alpha,
                     (setupLight.a - light.a) * alpha);
@@ -835,7 +941,7 @@ class TwoColorTimeline extends CurveTimeline {
             slot.darkColor.set(r2, g2, b2, 1);
         } else {
             var light:Color = slot.color; var dark:Color = slot.darkColor;
-            if (pose == setup) {
+            if (blend == setup) {
                 light.set(slot.data.color);
                 dark.set(slot.data.darkColor);
             }
@@ -854,7 +960,7 @@ class TwoColorTimeline extends CurveTimeline {
 }
 
 /** Changes a slot's {@link Slot#getAttachment()}. */
-class AttachmentTimeline implements Timeline {
+class AttachmentTimeline implements SlotTimeline {
     public var slotIndex:Int = 0;
     public var frames:FloatArray; // time, ...
     public var attachmentNames:StringArray;
@@ -899,10 +1005,10 @@ class AttachmentTimeline implements Timeline {
         attachmentNames[frameIndex] = attachmentName;
     }
 
-    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var slot:Slot = skeleton.slots.get(slotIndex);
-        if (direction == spine.MixDirection.directionOut && pose == setup) {
+        if (direction == spine.MixDirection.directionOut && blend == setup) {
             var attachmentName:String = slot.data.attachmentName;
             slot.setAttachment(attachmentName == null ? null : skeleton.getAttachment(slotIndex, attachmentName));
             return;
@@ -910,7 +1016,7 @@ class AttachmentTimeline implements Timeline {
 
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            if (pose == setup) {
+            if (blend == setup || blend == first) {
                 var attachmentName:String = slot.data.attachmentName;
                 slot.setAttachment(attachmentName == null ? null : skeleton.getAttachment(slotIndex, attachmentName));
             }
@@ -929,7 +1035,7 @@ class AttachmentTimeline implements Timeline {
 }
 
 /** Changes a slot's {@link Slot#getAttachmentVertices()} to deform a {@link VertexAttachment}. */
-class DeformTimeline extends CurveTimeline {
+class DeformTimeline extends CurveTimeline implements SlotTimeline {
     public var slotIndex:Int = 0;
     public var attachment:VertexAttachment;
     private var frames:FloatArray; // time, ...
@@ -981,14 +1087,14 @@ class DeformTimeline extends CurveTimeline {
         frameVertices[frameIndex] = vertices;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var slot:Slot = skeleton.slots.get(slotIndex);
         var slotAttachment:Attachment = slot.attachment;
         if (!(Std.is(slotAttachment, VertexAttachment)) || !(cast(slotAttachment, VertexAttachment)).applyDeform(attachment)) return;
 
         var verticesArray:FloatArray = slot.getAttachmentVertices();
-        if (verticesArray.size == 0) alpha = 1;
+        if (verticesArray.size == 0) blend = setup;
 
         var frameVertices:FloatArray2D = this.frameVertices;
         var vertexCount:Int = frameVertices[0].length;
@@ -996,11 +1102,11 @@ class DeformTimeline extends CurveTimeline {
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
-            var _continueAfterSwitch6 = false; while(true) { var _switchCond6 = (pose); {
-            if (_switchCond6 == setup) {
+            var _continueAfterSwitch12 = false; while(true) { var _switchCond12 = (blend); {
+            if (_switchCond12 == setup) {
                 verticesArray.clear();
                 return;
-            } else if (_switchCond6 == current) {
+            } else if (_switchCond12 == first) {
                 if (alpha == 1) {
                     verticesArray.clear();
                     return;
@@ -1026,26 +1132,63 @@ class DeformTimeline extends CurveTimeline {
         if (time >= frames[frames.length - 1]) { // Time is after last frame.
             var lastVertices:FloatArray = frameVertices[frames.length - 1];
             if (alpha == 1) {
-                // Vertex positions or deform offsets, no alpha.
-                Array.copyFloats(lastVertices, 0, vertices, 0, vertexCount);
-            } else if (pose == setup) {
-                var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
-                if (vertexAttachment.getBones() == null) {
-                    // Unweighted vertex positions, with alpha.
-                    var setupVertices:FloatArray = vertexAttachment.getVertices();
-                    var i:Int = 0; while (i < vertexCount) {
-                        var setup:Float = setupVertices[i];
-                        vertices[i] = setup + (lastVertices[i] - setup) * alpha;
-                    i++; }
+                if (blend == add) {
+                    var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
+                    if (vertexAttachment.getBones() == null) {
+                        // Unweighted vertex positions, no alpha.
+                        var setupVertices:FloatArray = vertexAttachment.getVertices();
+                        var i:Int = 0; while (i < vertexCount) {
+                            vertices[i] += lastVertices[i] - setupVertices[i]; i++; }
+                    } else {
+                        // Weighted deform offsets, no alpha.
+                        var i:Int = 0; while (i < vertexCount) {
+                            vertices[i] += lastVertices[i]; i++; }
+                    }
                 } else {
-                    // Weighted deform offsets, with alpha.
-                    var i:Int = 0; while (i < vertexCount) {
-                        vertices[i] = lastVertices[i] * alpha; i++; }
+                    // Vertex positions or deform offsets, no alpha.
+                    Array.copyFloats(lastVertices, 0, vertices, 0, vertexCount);
                 }
             } else {
-                // Vertex positions or deform offsets, with alpha.
-                var i:Int = 0; while (i < vertexCount) {
-                    vertices[i] += (lastVertices[i] - vertices[i]) * alpha; i++; }
+                var _continueAfterSwitch13 = false; while(true) { var _switchCond13 = (blend); {
+                if (_switchCond13 == setup) {
+                    var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
+                    if (vertexAttachment.getBones() == null) {
+                        // Unweighted vertex positions, with alpha.
+                        var setupVertices:FloatArray = vertexAttachment.getVertices();
+                        var i:Int = 0; while (i < vertexCount) {
+                            var setup:Float = setupVertices[i];
+                            vertices[i] = setup + (lastVertices[i] - setup) * alpha;
+                        i++; }
+                    } else {
+                        // Weighted deform offsets, with alpha.
+                        var i:Int = 0; while (i < vertexCount) {
+                            vertices[i] = lastVertices[i] * alpha; i++; }
+                    }
+                    break;
+                }
+                else if (_switchCond13 == first) {
+                        // Vertex positions or deform offsets, with alpha.
+                    var i:Int = 0; while (i < vertexCount) {
+                        vertices[i] += (lastVertices[i] - vertices[i]) * alpha; i++; }
+                    break;
+                } else if (_switchCond13 == replace) {
+                    // Vertex positions or deform offsets, with alpha.
+                    var i:Int = 0; while (i < vertexCount) {
+                        vertices[i] += (lastVertices[i] - vertices[i]) * alpha; i++; }
+                    break;
+                } else if (_switchCond13 == add) {
+                    var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
+                    if (vertexAttachment.getBones() == null) {
+                        // Unweighted vertex positions, no alpha.
+                        var setupVertices:FloatArray = vertexAttachment.getVertices();
+                        var i:Int = 0; while (i < vertexCount) {
+                            vertices[i] += (lastVertices[i] - setupVertices[i]) * alpha; i++; }
+                    } else {
+                        // Weighted deform offsets, alpha.
+                        var i:Int = 0; while (i < vertexCount) {
+                            vertices[i] += lastVertices[i] * alpha; i++; }
+                    }
+                } } break; }
             }
             return;
         }
@@ -1058,33 +1201,80 @@ class DeformTimeline extends CurveTimeline {
         var percent:Float = getCurvePercent(Std.int(frame - 1), 1 - (time - frameTime) / (frames[Std.int(frame - 1)] - frameTime));
 
         if (alpha == 1) {
-            // Vertex positions or deform offsets, no alpha.
-            var i:Int = 0; while (i < vertexCount) {
-                var prev:Float = prevVertices[i];
-                vertices[i] = prev + (nextVertices[i] - prev) * percent;
-            i++; }
-        } else if (pose == setup) {
-            var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
-            if (vertexAttachment.getBones() == null) {
-                // Unweighted vertex positions, with alpha.
-                var setupVertices:FloatArray = vertexAttachment.getVertices();
-                var i:Int = 0; while (i < vertexCount) {
-                    var prev:Float = prevVertices[i]; var setup:Float = setupVertices[i];
-                    vertices[i] = setup + (prev + (nextVertices[i] - prev) * percent - setup) * alpha;
-                i++; }
+            if (blend == add) {
+                var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
+                if (vertexAttachment.getBones() == null) {
+                    // Unweighted vertex positions, no alpha.
+                    var setupVertices:FloatArray = vertexAttachment.getVertices();
+                    var i:Int = 0; while (i < vertexCount) {
+                        var prev:Float = prevVertices[i];
+                        vertices[i] += prev + (nextVertices[i] - prev) * percent - setupVertices[i];
+                    i++; }
+                } else {
+                    // Weighted deform offsets, no alpha.
+                    var i:Int = 0; while (i < vertexCount) {
+                        var prev:Float = prevVertices[i];
+                        vertices[i] += prev + (nextVertices[i] - prev) * percent;
+                    i++; }
+                }
             } else {
-                // Weighted deform offsets, with alpha.
+                // Vertex positions or deform offsets, no alpha.
                 var i:Int = 0; while (i < vertexCount) {
                     var prev:Float = prevVertices[i];
-                    vertices[i] = (prev + (nextVertices[i] - prev) * percent) * alpha;
+                    vertices[i] = prev + (nextVertices[i] - prev) * percent;
                 i++; }
             }
         } else {
-            // Vertex positions or deform offsets, with alpha.
-            var i:Int = 0; while (i < vertexCount) {
-                var prev:Float = prevVertices[i];
-                vertices[i] += (prev + (nextVertices[i] - prev) * percent - vertices[i]) * alpha;
-            i++; }
+            var _continueAfterSwitch14 = false; while(true) { var _switchCond14 = (blend); {
+            if (_switchCond14 == setup) {
+                var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
+                if (vertexAttachment.getBones() == null) {
+                    // Unweighted vertex positions, with alpha.
+                    var setupVertices:FloatArray = vertexAttachment.getVertices();
+                    var i:Int = 0; while (i < vertexCount) {
+                        var prev:Float = prevVertices[i]; var setup:Float = setupVertices[i];
+                        vertices[i] = setup + (prev + (nextVertices[i] - prev) * percent - setup) * alpha;
+                    i++; }
+                } else {
+                    // Weighted deform offsets, with alpha.
+                    var i:Int = 0; while (i < vertexCount) {
+                        var prev:Float = prevVertices[i];
+                        vertices[i] = (prev + (nextVertices[i] - prev) * percent) * alpha;
+                    i++; }
+                }
+                break;
+            }
+            else if (_switchCond14 == first) {
+                    // Vertex positions or deform offsets, with alpha.
+                var i:Int = 0; while (i < vertexCount) {
+                    var prev:Float = prevVertices[i];
+                    vertices[i] += (prev + (nextVertices[i] - prev) * percent - vertices[i]) * alpha;
+                i++; }
+                break;
+            } else if (_switchCond14 == replace) {
+                // Vertex positions or deform offsets, with alpha.
+                var i:Int = 0; while (i < vertexCount) {
+                    var prev:Float = prevVertices[i];
+                    vertices[i] += (prev + (nextVertices[i] - prev) * percent - vertices[i]) * alpha;
+                i++; }
+                break;
+            } else if (_switchCond14 == add) {
+                var vertexAttachment:VertexAttachment = cast(slotAttachment, VertexAttachment);
+                if (vertexAttachment.getBones() == null) {
+                    // Unweighted vertex positions, with alpha.
+                    var setupVertices:FloatArray = vertexAttachment.getVertices();
+                    var i:Int = 0; while (i < vertexCount) {
+                        var prev:Float = prevVertices[i];
+                        vertices[i] += (prev + (nextVertices[i] - prev) * percent - setupVertices[i]) * alpha;
+                    i++; }
+                } else {
+                    // Weighted deform offsets, with alpha.
+                    var i:Int = 0; while (i < vertexCount) {
+                        var prev:Float = prevVertices[i];
+                        vertices[i] += (prev + (nextVertices[i] - prev) * percent) * alpha;
+                    i++; }
+                }
+            } } break; }
         }
     }
 
@@ -1133,14 +1323,14 @@ class EventTimeline implements Timeline {
     }
 
     /** Fires events for frames > <code>lastTime</code> and <= <code>time</code>. */
-    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, firedEvents:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, firedEvents:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         if (firedEvents == null) return;
         var frames:FloatArray = this.frames;
         var frameCount:Int = frames.length;
 
         if (lastTime > time) { // Fire events after last time for looped animations.
-            apply(skeleton, lastTime, 999999999, firedEvents, alpha, pose, direction);
+            apply(skeleton, lastTime, 999999999, firedEvents, alpha, blend, direction);
             lastTime = -1;
         } else if (lastTime >= frames[frameCount - 1]) // Last time is after last frame.
             return;
@@ -1199,18 +1389,18 @@ class DrawOrderTimeline implements Timeline {
         drawOrders[frameIndex] = drawOrder;
     }
 
-    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var drawOrder:Array<Slot> = skeleton.drawOrder;
         var slots:Array<Slot> = skeleton.slots;
-        if (direction == spine.MixDirection.directionOut && pose == setup) {
+        if (direction == spine.MixDirection.directionOut && blend == setup) {
             Array.copy(slots.items, 0, drawOrder.items, 0, slots.size);
             return;
         }
 
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            if (pose == setup) Array.copy(slots.items, 0, drawOrder.items, 0, slots.size);
+            if (blend == setup || blend == first) Array.copy(slots.items, 0, drawOrder.items, 0, slots.size);
             return;
         }
 
@@ -1230,14 +1420,15 @@ class DrawOrderTimeline implements Timeline {
     }
 }
 
-/** Changes an IK constraint's {@link IkConstraint#getMix()} and {@link IkConstraint#getBendDirection()}. */
+/** Changes an IK constraint's {@link IkConstraint#getMix()}, {@link IkConstraint#getBendDirection()},
+ * {@link IkConstraint#getStretch()}, and {@link IkConstraint#getCompress()}. */
 class IkConstraintTimeline extends CurveTimeline {
-    inline public static var ENTRIES:Int = 3;
-    inline private static var PREV_TIME:Int = -3; inline private static var PREV_MIX:Int = -2; inline private static var PREV_BEND_DIRECTION:Int = -1;
-    inline private static var MIX:Int = 1; inline private static var BEND_DIRECTION:Int = 2;
+    inline public static var ENTRIES:Int = 5;
+    inline private static var PREV_TIME:Int = -5; inline private static var PREV_MIX:Int = -4; inline private static var PREV_BEND_DIRECTION:Int = -3; inline private static var PREV_COMPRESS:Int = -2; inline private static var PREV_STRETCH:Int = -1;
+    inline private static var MIX:Int = 1; inline private static var BEND_DIRECTION:Int = 2; inline private static var COMPRESS:Int = 3; inline private static var STRETCH:Int = 4;
 
     public var ikConstraintIndex:Int = 0;
-    private var frames:FloatArray; // time, mix, bendDirection, ...
+    private var frames:FloatArray; // time, mix, bendDirection, compress, stretch, ...
 
     public function new(frameCount:Int) {
         super(frameCount);
@@ -1258,44 +1449,61 @@ class IkConstraintTimeline extends CurveTimeline {
         return ikConstraintIndex;
     }
 
-    /** The time in seconds, mix, and bend direction for each key frame. */
+    /** The time in seconds, mix, bend direction, compress, and stretch for each key frame. */
     #if !spine_no_inline inline #end public function getFrames():FloatArray {
         return frames;
     }
 
-    /** Sets the time in seconds, mix, and bend direction for the specified key frame. */
-    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, mix:Float, bendDirection:Int):Void {
+    /** Sets the time in seconds, mix, bend direction, compress, and stretch for the specified key frame. */
+    #if !spine_no_inline inline #end public function setFrame(frameIndex:Int, time:Float, mix:Float, bendDirection:Int, compress:Bool, stretch:Bool):Void {
         frameIndex *= ENTRIES;
         frames[frameIndex] = time;
         frames[frameIndex + MIX] = mix;
         frames[frameIndex + BEND_DIRECTION] = bendDirection;
+        frames[frameIndex + COMPRESS] = compress ? 1 : 0;
+        frames[frameIndex + STRETCH] = stretch ? 1 : 0;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var constraint:IkConstraint = skeleton.ikConstraints.get(ikConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch7 = false; while(true) { var _switchCond7 = (pose); {
-            if (_switchCond7 == setup) {
+            var _continueAfterSwitch15 = false; while(true) { var _switchCond15 = (blend); {
+            if (_switchCond15 == setup) {
                 constraint.mix = constraint.data.mix;
                 constraint.bendDirection = constraint.data.bendDirection;
+                constraint.compress = constraint.data.compress;
+                constraint.stretch = constraint.data.stretch;
                 return;
-            } else if (_switchCond7 == current) {
+            } else if (_switchCond15 == first) {
                 constraint.mix += (constraint.data.mix - constraint.mix) * alpha;
                 constraint.bendDirection = constraint.data.bendDirection;
+                constraint.compress = constraint.data.compress;
+                constraint.stretch = constraint.data.stretch;
             } } break; }
             return;
         }
 
         if (time >= frames[frames.length - ENTRIES]) { // Time is after last frame.
-            if (pose == setup) {
+            if (blend == setup) {
                 constraint.mix = constraint.data.mix + (frames[frames.length + PREV_MIX] - constraint.data.mix) * alpha;
-                constraint.bendDirection = direction == spine.MixDirection.directionOut ? constraint.data.bendDirection
-                    : Std.int(frames[frames.length + PREV_BEND_DIRECTION]);
+                if (direction == spine.MixDirection.directionOut) {
+                    constraint.bendDirection = constraint.data.bendDirection;
+                    constraint.compress = constraint.data.compress;
+                    constraint.stretch = constraint.data.stretch;
+                } else {
+                    constraint.bendDirection = Std.int(frames[frames.length + PREV_BEND_DIRECTION]);
+                    constraint.compress = frames[frames.length + PREV_COMPRESS] != 0;
+                    constraint.stretch = frames[frames.length + PREV_STRETCH] != 0;
+                }
             } else {
                 constraint.mix += (frames[frames.length + PREV_MIX] - constraint.mix) * alpha;
-                if (direction == spine.MixDirection.directionIn) constraint.bendDirection = Std.int(frames[frames.length + PREV_BEND_DIRECTION]);
+                if (direction == spine.MixDirection.directionIn) {
+                    constraint.bendDirection = Std.int(frames[frames.length + PREV_BEND_DIRECTION]);
+                    constraint.compress = frames[frames.length + PREV_COMPRESS] != 0;
+                    constraint.stretch = frames[frames.length + PREV_STRETCH] != 0;
+                }
             }
             return;
         }
@@ -1306,13 +1514,24 @@ class IkConstraintTimeline extends CurveTimeline {
         var frameTime:Float = frames[frame];
         var percent:Float = getCurvePercent(Std.int(frame / ENTRIES - 1), 1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
 
-        if (pose == setup) {
+        if (blend == setup) {
             constraint.mix = constraint.data.mix + (mix + (frames[frame + MIX] - mix) * percent - constraint.data.mix) * alpha;
-            constraint.bendDirection = direction == spine.MixDirection.directionOut ? constraint.data.bendDirection
-                : Std.int(frames[frame + PREV_BEND_DIRECTION]);
+            if (direction == spine.MixDirection.directionOut) {
+                constraint.bendDirection = constraint.data.bendDirection;
+                constraint.compress = constraint.data.compress;
+                constraint.stretch = constraint.data.stretch;
+            } else {
+                constraint.bendDirection = Std.int(frames[frame + PREV_BEND_DIRECTION]);
+                constraint.compress = frames[frame + PREV_COMPRESS] != 0;
+                constraint.stretch = frames[frame + PREV_STRETCH] != 0;
+            }
         } else {
             constraint.mix += (mix + (frames[frame + MIX] - mix) * percent - constraint.mix) * alpha;
-            if (direction == spine.MixDirection.directionIn) constraint.bendDirection = Std.int(frames[frame + PREV_BEND_DIRECTION]);
+            if (direction == spine.MixDirection.directionIn) {
+                constraint.bendDirection = Std.int(frames[frame + PREV_BEND_DIRECTION]);
+                constraint.compress = frames[frame + PREV_COMPRESS] != 0;
+                constraint.stretch = frames[frame + PREV_STRETCH] != 0;
+            }
         }
     }
 
@@ -1368,20 +1587,20 @@ class TransformConstraintTimeline extends CurveTimeline {
         frames[frameIndex + SHEAR] = shearMix;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var constraint:TransformConstraint = skeleton.transformConstraints.get(transformConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
             var data:TransformConstraintData = constraint.data;
-            var _continueAfterSwitch8 = false; while(true) { var _switchCond8 = (pose); {
-            if (_switchCond8 == setup) {
+            var _continueAfterSwitch16 = false; while(true) { var _switchCond16 = (blend); {
+            if (_switchCond16 == setup) {
                 constraint.rotateMix = data.rotateMix;
                 constraint.translateMix = data.translateMix;
                 constraint.scaleMix = data.scaleMix;
                 constraint.shearMix = data.shearMix;
                 return;
-            } else if (_switchCond8 == current) {
+            } else if (_switchCond16 == first) {
                 constraint.rotateMix += (data.rotateMix - constraint.rotateMix) * alpha;
                 constraint.translateMix += (data.translateMix - constraint.translateMix) * alpha;
                 constraint.scaleMix += (data.scaleMix - constraint.scaleMix) * alpha;
@@ -1413,7 +1632,7 @@ class TransformConstraintTimeline extends CurveTimeline {
             scale += (frames[frame + SCALE] - scale) * percent;
             shear += (frames[frame + SHEAR] - shear) * percent;
         }
-        if (pose == setup) {
+        if (blend == setup) {
             var data:TransformConstraintData = constraint.data;
             constraint.rotateMix = data.rotateMix + (rotate - data.rotateMix) * alpha;
             constraint.translateMix = data.translateMix + (translate - data.translateMix) * alpha;
@@ -1477,16 +1696,16 @@ class PathConstraintPositionTimeline extends CurveTimeline {
         frames[frameIndex + VALUE] = position;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var constraint:PathConstraint = skeleton.pathConstraints.get(pathConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch9 = false; while(true) { var _switchCond9 = (pose); {
-            if (_switchCond9 == setup) {
+            var _continueAfterSwitch17 = false; while(true) { var _switchCond17 = (blend); {
+            if (_switchCond17 == setup) {
                 constraint.position = constraint.data.position;
                 return;
-            } else if (_switchCond9 == current) {
+            } else if (_switchCond17 == first) {
                 constraint.position += (constraint.data.position - constraint.position) * alpha;
             } } break; }
             return;
@@ -1505,7 +1724,7 @@ class PathConstraintPositionTimeline extends CurveTimeline {
 
             position += (frames[frame + VALUE] - position) * percent;
         }
-        if (pose == setup)
+        if (blend == setup)
             constraint.position = constraint.data.position + (position - constraint.data.position) * alpha;
         else
             constraint.position += (position - constraint.position) * alpha;
@@ -1530,16 +1749,16 @@ class PathConstraintSpacingTimeline extends PathConstraintPositionTimeline {
         return (TimelineType.pathConstraintSpacing << 24) + pathConstraintIndex;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var constraint:PathConstraint = skeleton.pathConstraints.get(pathConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch10 = false; while(true) { var _switchCond10 = (pose); {
-            if (_switchCond10 == setup) {
+            var _continueAfterSwitch18 = false; while(true) { var _switchCond18 = (blend); {
+            if (_switchCond18 == setup) {
                 constraint.spacing = constraint.data.spacing;
                 return;
-            } else if (_switchCond10 == current) {
+            } else if (_switchCond18 == first) {
                 constraint.spacing += (constraint.data.spacing - constraint.spacing) * alpha;
             } } break; }
             return;
@@ -1559,7 +1778,7 @@ class PathConstraintSpacingTimeline extends PathConstraintPositionTimeline {
             spacing += (frames[frame + VALUE] - spacing) * percent;
         }
 
-        if (pose == setup)
+        if (blend == setup)
             constraint.spacing = constraint.data.spacing + (spacing - constraint.data.spacing) * alpha;
         else
             constraint.spacing += (spacing - constraint.spacing) * alpha;
@@ -1624,17 +1843,17 @@ class PathConstraintMixTimeline extends CurveTimeline {
         frames[frameIndex + TRANSLATE] = translateMix;
     }
 
-    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, pose:MixPose, direction:MixDirection):Void {
+    override public function apply(skeleton:Skeleton, lastTime:Float, time:Float, events:Array<Event>, alpha:Float, blend:MixBlend, direction:MixDirection):Void {
 
         var constraint:PathConstraint = skeleton.pathConstraints.get(pathConstraintIndex);
         var frames:FloatArray = this.frames;
         if (time < frames[0]) { // Time is before first frame.
-            var _continueAfterSwitch11 = false; while(true) { var _switchCond11 = (pose); {
-            if (_switchCond11 == setup) {
+            var _continueAfterSwitch19 = false; while(true) { var _switchCond19 = (blend); {
+            if (_switchCond19 == setup) {
                 constraint.rotateMix = constraint.data.rotateMix;
                 constraint.translateMix = constraint.data.translateMix;
                 return;
-            } else if (_switchCond11 == current) {
+            } else if (_switchCond19 == first) {
                 constraint.rotateMix += (constraint.data.rotateMix - constraint.rotateMix) * alpha;
                 constraint.translateMix += (constraint.data.translateMix - constraint.translateMix) * alpha;
             } } break; }
@@ -1658,7 +1877,7 @@ class PathConstraintMixTimeline extends CurveTimeline {
             translate += (frames[frame + TRANSLATE] - translate) * percent;
         }
 
-        if (pose == setup) {
+        if (blend == setup) {
             constraint.rotateMix = constraint.data.rotateMix + (rotate - constraint.data.rotateMix) * alpha;
             constraint.translateMix = constraint.data.translateMix + (translate - constraint.data.translateMix) * alpha;
         } else {
@@ -1676,22 +1895,25 @@ class PathConstraintMixTimeline extends CurveTimeline {
     inline private static var BEZIER_SIZE:Int = CurveTimeline.BEZIER_SIZE;
 }
 
-class MixPose_enum {
+class MixBlend_enum {
 
     public inline static var setup_value = 0;
-    public inline static var current_value = 1;
-    public inline static var currentLayered_value = 2;
+    public inline static var first_value = 1;
+    public inline static var replace_value = 2;
+    public inline static var add_value = 3;
 
     public inline static var setup_name = "setup";
-    public inline static var current_name = "current";
-    public inline static var currentLayered_name = "currentLayered";
+    public inline static var first_name = "first";
+    public inline static var replace_name = "replace";
+    public inline static var add_name = "add";
 
-    public inline static function valueOf(value:String):MixPose {
+    public inline static function valueOf(value:String):MixBlend {
         return switch (value) {
-            case "setup": MixPose.setup;
-            case "current": MixPose.current;
-            case "currentLayered": MixPose.currentLayered;
-            default: MixPose.setup;
+            case "setup": MixBlend.setup;
+            case "first": MixBlend.first;
+            case "replace": MixBlend.replace;
+            case "add": MixBlend.add;
+            default: MixBlend.setup;
         };
     }
 

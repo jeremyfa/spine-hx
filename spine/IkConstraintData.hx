@@ -41,6 +41,7 @@ class IkConstraintData {
     public var bones:Array<BoneData> = new Array();
     public var target:BoneData;
     public var bendDirection:Int = 1;
+    public var compress:Bool = false; public var stretch:Bool = false; public var uniform:Bool = false;
     public var mix:Float = 1;
 
     public function new(name:String) {
@@ -77,6 +78,15 @@ class IkConstraintData {
         this.target = target;
     }
 
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
+    #if !spine_no_inline inline #end public function getMix():Float {
+        return mix;
+    }
+
+    #if !spine_no_inline inline #end public function setMix(mix:Float):Void {
+        this.mix = mix;
+    }
+
     /** Controls the bend direction of the IK bones, either 1 or -1. */
     #if !spine_no_inline inline #end public function getBendDirection():Int {
         return bendDirection;
@@ -86,13 +96,33 @@ class IkConstraintData {
         this.bendDirection = bendDirection;
     }
 
-    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    #if !spine_no_inline inline #end public function getMix():Float {
-        return mix;
+    /** When true and only a single bone is being constrained, if the target is too close, the bone is scaled to reach it. */
+    #if !spine_no_inline inline #end public function getCompress():Bool {
+        return compress;
     }
 
-    #if !spine_no_inline inline #end public function setMix(mix:Float):Void {
-        this.mix = mix;
+    #if !spine_no_inline inline #end public function setCompress(compress:Bool):Void {
+        this.compress = compress;
+    }
+
+    /** When true, if the target is out of range, the parent bone is scaled to reach it. If more than one bone is being constrained
+     * and the parent bone has local nonuniform scale, stretch is not applied. */
+    #if !spine_no_inline inline #end public function getStretch():Bool {
+        return stretch;
+    }
+
+    #if !spine_no_inline inline #end public function setStretch(stretch:Bool):Void {
+        this.stretch = stretch;
+    }
+
+    /** When true, only a single bone is being constrained, and {@link #getCompress()} or {@link #getStretch()} is used, the bone
+     * is scaled on both the X and Y axes. */
+    #if !spine_no_inline inline #end public function getUniform():Bool {
+        return uniform;
+    }
+
+    #if !spine_no_inline inline #end public function setUniform(uniform:Bool):Void {
+        this.uniform = uniform;
     }
 
     #if !spine_no_inline inline #end public function toString():String {

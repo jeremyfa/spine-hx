@@ -349,9 +349,27 @@ class AtlasRegion extends TextureRegion
     public var splits : Array<Int>;
     public var pads : Array<Int>;
     public var page : AtlasPage;
+    public var textureWidth : Int = 0;
+    public var textureHeight : Int = 0;
 
     public function new()
     {
         super();
     }
+
+    inline public function getTexture() : AtlasRegionTexture {
+        return this;
+    }
+}
+
+abstract AtlasRegionTexture(AtlasRegion) from AtlasRegion to AtlasRegion {
+
+    inline public function getWidth() : Int {
+        return this.textureWidth;
+    }
+
+    inline public function getHeight() : Int {
+        return this.textureHeight;
+    }
+
 }

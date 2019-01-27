@@ -247,14 +247,26 @@ class SkeletonClipping {
                     }
                     // v1 inside, v2 outside
                     var c0:Float = inputY2 - inputY; var c2:Float = inputX2 - inputX;
-                    var ua:Float = (c2 * (edgeY - inputY) - c0 * (edgeX - inputX)) / (c0 * (edgeX2 - edgeX) - c2 * (edgeY2 - edgeY));
-                    output.add(edgeX + (edgeX2 - edgeX) * ua);
-                    output.add(edgeY + (edgeY2 - edgeY) * ua);
+                    var s:Float = c0 * (edgeX2 - edgeX) - c2 * (edgeY2 - edgeY);
+                    if (Math.abs(s) > 0.000001) {
+                        var ua:Float = (c2 * (edgeY - inputY) - c0 * (edgeX - inputX)) / s;
+                        output.add(edgeX + (edgeX2 - edgeX) * ua);
+                        output.add(edgeY + (edgeY2 - edgeY) * ua);
+                    } else {
+                        output.add(edgeX);
+                        output.add(edgeY);
+                    }
                 } else if (side2) { // v1 outside, v2 inside
                     var c0:Float = inputY2 - inputY; var c2:Float = inputX2 - inputX;
-                    var ua:Float = (c2 * (edgeY - inputY) - c0 * (edgeX - inputX)) / (c0 * (edgeX2 - edgeX) - c2 * (edgeY2 - edgeY));
-                    output.add(edgeX + (edgeX2 - edgeX) * ua);
-                    output.add(edgeY + (edgeY2 - edgeY) * ua);
+                    var s:Float = c0 * (edgeX2 - edgeX) - c2 * (edgeY2 - edgeY);
+                    if (Math.abs(s) > 0.000001) {
+                        var ua:Float = (c2 * (edgeY - inputY) - c0 * (edgeX - inputX)) / s;
+                        output.add(edgeX + (edgeX2 - edgeX) * ua);
+                        output.add(edgeY + (edgeY2 - edgeY) * ua);
+                    } else {
+                        output.add(edgeX);
+                        output.add(edgeY);
+                    }
                     output.add(inputX2);
                     output.add(inputY2);
                 }

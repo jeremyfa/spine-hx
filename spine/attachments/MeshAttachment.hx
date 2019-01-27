@@ -33,6 +33,7 @@ package spine.attachments;
 import spine.support.graphics.Color;
 import spine.support.graphics.TextureAtlas.AtlasRegion;
 import spine.support.graphics.TextureRegion;
+
 import spine.Animation.DeformTimeline;
 
 /** An attachment that displays a textured mesh. A mesh has hull vertices and internal vertices within the hull. Holes are not
@@ -57,21 +58,42 @@ class MeshAttachment extends VertexAttachment {
         super(name);
     }
 
-    #if !spine_no_inline inline #end public function setRegion(region:TextureRegion):Void {
+    public function setRegion(region:TextureRegion):Void {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         this.region = region;
     }
 
-    #if !spine_no_inline inline #end public function getRegion():TextureRegion {
+    public function getRegion():TextureRegion {
         if (region == null) throw new IllegalStateException("Region has not been set: " + this);
         return region;
     }
 
     /** Calculates {@link #uvs} using {@link #regionUVs} and the {@link #region}. Must be called after changing the region UVs or
      * region. */
-    #if !spine_no_inline inline #end public function updateUVs():Void {
+    public function updateUVs():Void {
+        var regionUVs:FloatArray = this.regionUVs;
+        if (this.uvs == null || this.uvs.length != regionUVs.length) this.uvs = FloatArray.create(regionUVs.length);
+        var uvs:FloatArray = this.uvs;
         var u:Float = 0; var v:Float = 0; var width:Float = 0; var height:Float = 0;
-        if (region == null) {
+        if (Std.is(region, AtlasRegion)) {
+            var region:AtlasRegion = cast(this.region, AtlasRegion);
+            var textureWidth:Float = region.getTexture().getWidth(); var textureHeight:Float = region.getTexture().getHeight();
+            if (region.rotate) {
+                u = region.getU() - (region.originalHeight - region.offsetY - region.packedWidth) / textureWidth;
+                v = region.getV() - (region.originalWidth - region.offsetX - region.packedHeight) / textureHeight;
+                width = region.originalHeight / textureWidth;
+                height = region.originalWidth / textureHeight;
+                var i:Int = 0; var n:Int = uvs.length; while (i < n) {
+                    uvs[i] = u + regionUVs[i + 1] * width;
+                    uvs[i + 1] = v + height - regionUVs[i] * height;
+                i += 2; }
+                return;
+            }
+            u = region.getU() - region.offsetX / textureWidth;
+            v = region.getV() - (region.originalHeight - region.offsetY - region.packedHeight) / textureHeight;
+            width = region.originalWidth / textureWidth;
+            height = region.originalHeight / textureHeight;
+        } else if (region == null) {
             u = v = 0;
             width = height = 1;
         } else {
@@ -80,20 +102,10 @@ class MeshAttachment extends VertexAttachment {
             width = region.getU2() - u;
             height = region.getV2() - v;
         }
-        var regionUVs:FloatArray = this.regionUVs;
-        if (this.uvs == null || this.uvs.length != regionUVs.length) this.uvs = FloatArray.create(regionUVs.length);
-        var uvs:FloatArray = this.uvs;
-        if (Std.is(region, AtlasRegion) && (cast(region, AtlasRegion)).rotate) {
-            var i:Int = 0; var n:Int = uvs.length; while (i < n) {
-                uvs[i] = u + regionUVs[i + 1] * width;
-                uvs[i + 1] = v + height - regionUVs[i] * height;
-            i += 2; }
-        } else {
-            var i:Int = 0; var n:Int = uvs.length; while (i < n) {
-                uvs[i] = u + regionUVs[i] * width;
-                uvs[i + 1] = v + regionUVs[i + 1] * height;
-            i += 2; }
-        }
+        var i:Int = 0; var n:Int = uvs.length; while (i < n) {
+            uvs[i] = u + regionUVs[i] * width;
+            uvs[i + 1] = v + regionUVs[i + 1] * height;
+        i += 2; }
     }
 
     /** Returns true if the <code>sourceAttachment</code> is this mesh, else returns true if {@link #inheritDeform} is true and the

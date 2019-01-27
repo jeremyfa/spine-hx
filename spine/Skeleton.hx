@@ -30,14 +30,14 @@
 
 package spine;
 
-import spine.utils.SpineUtils.cosDeg;
-import spine.utils.SpineUtils.sinDeg;
+import spine.utils.SpineUtils.*;
 
 import spine.support.graphics.Color;
 import spine.support.math.Vector2;
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
 import spine.support.utils.AttachmentMap.Entry;
+
 import spine.Skin.Key;
 import spine.attachments.Attachment;
 import spine.attachments.MeshAttachment;
@@ -61,7 +61,7 @@ class Skeleton {
     public var skin:Skin;
     public var color:Color;
     public var time:Float = 0;
-    public var flipX:Bool = false; public var flipY:Bool = false;
+    public var scaleX:Float = 1; public var scaleY:Float = 1;
     public var x:Float = 0; public var y:Float = 0;
 
     public function new(data:SkeletonData) {
@@ -150,8 +150,8 @@ class Skeleton {
         skin = skeleton.skin;
         color = new Color(skeleton.color);
         time = skeleton.time;
-        flipX = skeleton.flipX;
-        flipY = skeleton.flipY;
+        scaleX = skeleton.scaleX;
+        scaleY = skeleton.scaleY;
 
         updateCache();
     }*/
@@ -331,9 +331,9 @@ class Skeleton {
         var i:Int = 0; var n:Int = cache.size; while (i < n) {
             cache.get(i).update(); i++; }
     }
-    
-    /** Updates the world transform for each bone and applies all constraints. The 
-     *  root bone will be temporarily parented to the specified bone.
+
+    /** Updates the world transform for each bone and applies all constraints. The root bone will be temporarily parented to the
+     * specified bone.
      * <p>
      * See <a href="http://esotericsoftware.com/spine-runtime-skeletons#World-transforms">World transforms</a> in the Spine
      * Runtimes Guide. */
@@ -353,7 +353,7 @@ class Skeleton {
             bone.ashearY = bone.shearY;
             bone.appliedValid = true;
         i++; }
-        
+
         // Apply the parent bone transform to the root bone. The root bone
         // always inherits scale, rotation and reflection.
         var rootBone:Bone = getRootBone();
@@ -366,20 +366,11 @@ class Skeleton {
         var lb:Float = cosDeg(rotationY) * rootBone.scaleY;
         var lc:Float = sinDeg(rootBone.rotation + rootBone.shearX) * rootBone.scaleX;
         var ld:Float = sinDeg(rotationY) * rootBone.scaleY;
-        rootBone.a = pa * la + pb * lc;
-        rootBone.b = pa * lb + pb * ld;
-        rootBone.c = pc * la + pd * lc;
-        rootBone.d = pc * lb + pd * ld;
-        
-        if (flipY) {
-            rootBone.a = -rootBone.a;
-            rootBone.b = -rootBone.b;
-        }
-        if (flipX) {
-            rootBone.c = -rootBone.c;
-            rootBone.d = -rootBone.d;
-        }
-        
+        rootBone.a = (pa * la + pb * lc) * scaleX;
+        rootBone.b = (pa * lb + pb * ld) * scaleX;
+        rootBone.c = (pc * la + pd * lc) * scaleY;
+        rootBone.d = (pc * lb + pd * ld) * scaleY;
+
         // Update everything except root bone.
         var cache:Array<Updatable> = this.cache;
         var i:Int = 0; var n:Int = cache.size; while (i < n) {
@@ -403,8 +394,10 @@ class Skeleton {
         var ikConstraints:Array<IkConstraint> = this.ikConstraints;
         var i:Int = 0; var n:Int = ikConstraints.size; while (i < n) {
             var constraint:IkConstraint = ikConstraints.get(i);
-            constraint.bendDirection = constraint.data.bendDirection;
             constraint.mix = constraint.data.mix;
+            constraint.bendDirection = constraint.data.bendDirection;
+            constraint.compress = constraint.data.compress;
+            constraint.stretch = constraint.data.stretch;
         i++; }
 
         var transformConstraints:Array<TransformConstraint> = this.transformConstraints;
@@ -685,29 +678,29 @@ class Skeleton {
         this.color.set(color);
     }
 
-    /** If true, the entire skeleton is flipped over the Y axis. This affects all bones, even if the bone's transform mode
-     * disallows scale inheritance. */
-    #if !spine_no_inline inline #end public function getFlipX():Bool {
-        return flipX;
+    /** Scales the entire skeleton on the X axis. This affects all bones, even if the bone's transform mode disallows scale
+     * inheritance. */
+    #if !spine_no_inline inline #end public function getScaleX():Float {
+        return scaleX;
     }
 
-    #if !spine_no_inline inline #end public function setFlipX(flipX:Bool):Void {
-        this.flipX = flipX;
+    #if !spine_no_inline inline #end public function setScaleX(scaleX:Float):Void {
+        this.scaleX = scaleX;
     }
 
-    /** If true, the entire skeleton is flipped over the X axis. This affects all bones, even if the bone's transform mode
-     * disallows scale inheritance. */
-    #if !spine_no_inline inline #end public function getFlipY():Bool {
-        return flipY;
+    /** Scales the entire skeleton on the Y axis. This affects all bones, even if the bone's transform mode disallows scale
+     * inheritance. */
+    #if !spine_no_inline inline #end public function getScaleY():Float {
+        return scaleY;
     }
 
-    #if !spine_no_inline inline #end public function setFlipY(flipY:Bool):Void {
-        this.flipY = flipY;
+    #if !spine_no_inline inline #end public function setScaleY(scaleY:Float):Void {
+        this.scaleY = scaleY;
     }
 
-    #if !spine_no_inline inline #end public function setFlip(flipX:Bool, flipY:Bool):Void {
-        this.flipX = flipX;
-        this.flipY = flipY;
+    #if !spine_no_inline inline #end public function setScale(scaleX:Float, scaleY:Float):Void {
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
     }
 
     /** Sets the skeleton X position, which is added to the root bone worldX position. */

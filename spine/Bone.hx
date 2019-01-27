@@ -30,12 +30,13 @@
 
 package spine;
 
-import spine.utils.SpineUtils.*;
 import spine.support.math.Matrix3.*;
+import spine.utils.SpineUtils.*;
 
 import spine.support.math.Matrix3;
 import spine.support.math.Vector2;
 import spine.support.utils.Array;
+
 import spine.BoneData.TransformMode;
 import spine.BoneData.TransformMode_enum;
 
@@ -112,28 +113,14 @@ class Bone implements Updatable {
 
         var parent:Bone = this.parent;
         if (parent == null) { // Root bone.
-            var rotationY:Float = rotation + 90 + shearY;
-            var la:Float = cosDeg(rotation + shearX) * scaleX;
-            var lb:Float = cosDeg(rotationY) * scaleY;
-            var lc:Float = sinDeg(rotation + shearX) * scaleX;
-            var ld:Float = sinDeg(rotationY) * scaleY;
             var skeleton:Skeleton = this.skeleton;
-            if (skeleton.flipX) {
-                x = -x;
-                la = -la;
-                lb = -lb;
-            }
-            if (skeleton.flipY) {
-                y = -y;
-                lc = -lc;
-                ld = -ld;
-            }
-            a = la;
-            b = lb;
-            c = lc;
-            d = ld;
-            worldX = x + skeleton.x;
-            worldY = y + skeleton.y;
+            var rotationY:Float = rotation + 90 + shearY; var sx:Float = skeleton.scaleX; var sy:Float = skeleton.scaleY;
+            a = cosDeg(rotation + shearX) * scaleX * sx;
+            b = cosDeg(rotationY) * scaleY * sy;
+            c = sinDeg(rotation + shearX) * scaleX * sx;
+            d = sinDeg(rotationY) * scaleY * sy;
+            worldX = x * sx + skeleton.x;
+            worldY = y * sy + skeleton.y;
             return;
         }
 
@@ -189,65 +176,57 @@ class Bone implements Updatable {
         else if (_switchCond0 == noScale) {
             {
             var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
-            var za:Float = pa * cos + pb * sin;
-            var zc:Float = pc * cos + pd * sin;
+            var za:Float = (pa * cos + pb * sin) / skeleton.scaleX;
+            var zc:Float = (pc * cos + pd * sin) / skeleton.scaleY;
             var s:Float = cast(Math.sqrt(za * za + zc * zc), Float);
             if (s > 0.00001) s = 1 / s;
             za *= s;
             zc *= s;
             s = cast(Math.sqrt(za * za + zc * zc), Float);
+            if (data.transformMode == TransformMode.noScale
+                && (pa * pd - pb * pc < 0) != ((skeleton.scaleX < 0) != (skeleton.scaleY < 0))) s = -s;
             var r:Float = PI / 2 + atan2(zc, za);
             var zb:Float = Math.cos(r) * s;
             var zd:Float = Math.sin(r) * s;
             var la:Float = cosDeg(shearX) * scaleX;
             var lb:Float = cosDeg(90 + shearY) * scaleY;
             var lc:Float = sinDeg(shearX) * scaleX;
-            var ld:Float = sinDeg(90 + shearY) * scaleY;            
-            if (data.transformMode != TransformMode.noScaleOrReflection ? pa * pd - pb * pc < 0 : skeleton.flipX != skeleton.flipY) {
-                zb = -zb;
-                zd = -zd;
-            }            
+            var ld:Float = sinDeg(90 + shearY) * scaleY;
             a = za * la + zb * lc;
             b = za * lb + zb * ld;
             c = zc * la + zd * lc;
             d = zc * lb + zd * ld;
-            return;
+            break;
         }
         } else if (_switchCond0 == noScaleOrReflection) {
             var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
-            var za:Float = pa * cos + pb * sin;
-            var zc:Float = pc * cos + pd * sin;
+            var za:Float = (pa * cos + pb * sin) / skeleton.scaleX;
+            var zc:Float = (pc * cos + pd * sin) / skeleton.scaleY;
             var s:Float = cast(Math.sqrt(za * za + zc * zc), Float);
             if (s > 0.00001) s = 1 / s;
             za *= s;
             zc *= s;
             s = cast(Math.sqrt(za * za + zc * zc), Float);
+            if (data.transformMode == TransformMode.noScale
+                && (pa * pd - pb * pc < 0) != ((skeleton.scaleX < 0) != (skeleton.scaleY < 0))) s = -s;
             var r:Float = PI / 2 + atan2(zc, za);
             var zb:Float = Math.cos(r) * s;
             var zd:Float = Math.sin(r) * s;
             var la:Float = cosDeg(shearX) * scaleX;
             var lb:Float = cosDeg(90 + shearY) * scaleY;
             var lc:Float = sinDeg(shearX) * scaleX;
-            var ld:Float = sinDeg(90 + shearY) * scaleY;            
-            if (data.transformMode != TransformMode.noScaleOrReflection ? pa * pd - pb * pc < 0 : skeleton.flipX != skeleton.flipY) {
-                zb = -zb;
-                zd = -zd;
-            }            
+            var ld:Float = sinDeg(90 + shearY) * scaleY;
             a = za * la + zb * lc;
             b = za * lb + zb * ld;
             c = zc * la + zd * lc;
             d = zc * lb + zd * ld;
-            return;
+            break;
         }
         } break; }
-        if (skeleton.flipX) {
-            a = -a;
-            b = -b;
-        }
-        if (skeleton.flipY) {
-            c = -c;
-            d = -d;
-        }
+        a *= skeleton.scaleX;
+        b *= skeleton.scaleX;
+        c *= skeleton.scaleY;
+        d *= skeleton.scaleY;
     }
 
     /** Sets this bone's local transform to the setup pose. */
@@ -597,11 +576,12 @@ class Bone implements Updatable {
     /** Transforms a world rotation to a local rotation. */
     #if !spine_no_inline inline #end public function worldToLocalRotation(worldRotation:Float):Float {
         var sin:Float = sinDeg(worldRotation); var cos:Float = cosDeg(worldRotation);
-        return atan2(a * sin - c * cos, d * cos - b * sin) * radDeg;
+        return atan2(a * sin - c * cos, d * cos - b * sin) * radDeg + rotation - shearX;
     }
 
     /** Transforms a local rotation to a world rotation. */
     #if !spine_no_inline inline #end public function localToWorldRotation(localRotation:Float):Float {
+        localRotation -= rotation - shearX;
         var sin:Float = sinDeg(localRotation); var cos:Float = cosDeg(localRotation);
         return atan2(cos * c + sin * d, cos * a + sin * b) * radDeg;
     }

@@ -53,11 +53,15 @@ abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
         }
     }
 
+    inline public function remove(key:Key):Void {
+        this.remove(key.getHashCode());
+    }
+
     public function entries() {
         var entries = [];
         for (entryList in this) {
-            for (entry in entryList) {
-                entries.push(entry);
+            for (i in 0...entryList.length) {
+                entries.push(entryList[i]);
             }
         }
         return entries;
@@ -66,11 +70,22 @@ abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
     public function keys() {
         var keys = [];
         for (entryList in this) {
-            for (entry in entryList) {
-                keys.push(entry.key);
+            for (i in 0...entryList.length) {
+                keys.push(entryList[i].key);
             }
         }
         return keys;
+    }
+
+    public var size(get,never):Int;
+    function get_size():Int {
+        var numEntries = 0;
+        for (entryList in this) {
+            for (i in 0...entryList.length) {
+                numEntries++;
+            }
+        }
+        return numEntries;
     }
 
 }

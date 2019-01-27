@@ -42,8 +42,9 @@ class IkConstraint implements Constraint {
     public var data:IkConstraintData;
     public var bones:Array<Bone>;
     public var target:Bone;
-    public var mix:Float = 1;
     public var bendDirection:Int = 0;
+    public var compress:Bool = false; public var stretch:Bool = false;
+    public var mix:Float = 1;
 
     public function new(data:IkConstraintData, skeleton:Skeleton) {
         if (data == null) throw new IllegalArgumentException("data cannot be null.");
@@ -51,6 +52,8 @@ class IkConstraint implements Constraint {
         this.data = data;
         mix = data.mix;
         bendDirection = data.bendDirection;
+        compress = data.compress;
+        stretch = data.stretch;
 
         bones = new Array(data.bones.size);
         for (boneData in data.bones) {
@@ -69,6 +72,8 @@ class IkConstraint implements Constraint {
         target = skeleton.bones.get(constraint.target.data.index);
         mix = constraint.mix;
         bendDirection = constraint.bendDirection;
+        compress = constraint.compress;
+        stretch = constraint.stretch;
     }*/
 
     /** Applies the constraint to the constrained bones. */
@@ -81,10 +86,10 @@ class IkConstraint implements Constraint {
         var bones:Array<Bone> = this.bones;
         var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (bones.size); {
         if (_switchCond0 == 1) {
-            applyOne(bones.first(), target.worldX, target.worldY, mix);
+            applyOne(bones.first(), target.worldX, target.worldY, compress, stretch, data.uniform, mix);
             break;
         } else if (_switchCond0 == 2) {
-            applyTwo(bones.first(), bones.get(1), target.worldX, target.worldY, bendDirection, mix);
+            applyTwo(bones.first(), bones.get(1), target.worldX, target.worldY, bendDirection, stretch, mix);
             break;
         } } break; }
     }
@@ -125,6 +130,25 @@ class IkConstraint implements Constraint {
         this.bendDirection = bendDirection;
     }
 
+    /** When true and only a single bone is being constrained, if the target is too close, the bone is scaled to reach it. */
+    #if !spine_no_inline inline #end public function getCompress():Bool {
+        return compress;
+    }
+
+    #if !spine_no_inline inline #end public function setCompress(compress:Bool):Void {
+        this.compress = compress;
+    }
+
+    /** When true, if the target is out of range, the parent bone is scaled to reach it. If more than one bone is being constrained
+     * and the parent bone has local nonuniform scale, stretch is not applied. */
+    #if !spine_no_inline inline #end public function getStretch():Bool {
+        return stretch;
+    }
+
+    #if !spine_no_inline inline #end public function setStretch(stretch:Bool):Void {
+        this.stretch = stretch;
+    }
+
     /** The IK constraint's setup pose data. */
     #if !spine_no_inline inline #end public function getData():IkConstraintData {
         return data;
@@ -135,7 +159,7 @@ class IkConstraint implements Constraint {
     }
 
     /** Applies 1 bone IK. The target is specified in the world coordinate system. */
-    public static function applyOne(bone:Bone, targetX:Float, targetY:Float, alpha:Float):Void {
+    public static function applyOne(bone:Bone, targetX:Float, targetY:Float, compress:Bool, stretch:Bool, uniform:Bool, alpha:Float):Void {
         if (!bone.appliedValid) bone.updateAppliedTransform();
         var p:Bone = bone.parent;
         var id:Float = 1 / (p.a * p.d - p.b * p.c);
@@ -145,21 +169,30 @@ class IkConstraint implements Constraint {
         if (bone.ascaleX < 0) rotationIK += 180;
         if (rotationIK > 180)
             rotationIK -= 360;
-        else if (rotationIK < -180) rotationIK += 360;
-        bone.updateWorldTransformWithData(bone.ax, bone.ay, bone.arotation + rotationIK * alpha, bone.ascaleX, bone.ascaleY, bone.ashearX,
-            bone.ashearY);
+        else if (rotationIK < -180) //
+            rotationIK += 360;
+        var sx:Float = bone.ascaleX; var sy:Float = bone.ascaleY;
+        if (compress || stretch) {
+            var b:Float = bone.data.length * sx; var dd:Float = cast(Math.sqrt(tx * tx + ty * ty), Float);
+            if ((compress && dd < b) || (stretch && dd > b) && b > 0.0001) {
+                var s:Float = (dd / b - 1) * alpha + 1;
+                sx *= s;
+                if (uniform) sy *= s;
+            }
+        }
+        bone.updateWorldTransformWithData(bone.ax, bone.ay, bone.arotation + rotationIK * alpha, sx, sy, bone.ashearX, bone.ashearY);
     }
 
     /** Applies 2 bone IK. The target is specified in the world coordinate system.
      * @param child A direct descendant of the parent bone. */
-    public static function applyTwo(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, alpha:Float):Void {
+    public static function applyTwo(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, stretch:Bool, alpha:Float):Void {
         if (alpha == 0) {
             child.updateWorldTransform();
             return;
         }
         if (!parent.appliedValid) parent.updateAppliedTransform();
         if (!child.appliedValid) child.updateAppliedTransform();
-        var px:Float = parent.ax; var py:Float = parent.ay; var psx:Float = parent.ascaleX; var psy:Float = parent.ascaleY; var csx:Float = child.ascaleX;
+        var px:Float = parent.ax; var py:Float = parent.ay; var psx:Float = parent.ascaleX; var sx:Float = psx; var psy:Float = parent.ascaleY; var csx:Float = child.ascaleX;
         var os1:Int = 0; var os2:Int = 0; var s2:Int = 0;
         if (psx < 0) {
             psx = -psx;
@@ -195,7 +228,7 @@ class IkConstraint implements Constraint {
         c = pp.c;
         d = pp.d;
         var id:Float = 1 / (a * d - b * c); var x:Float = targetX - pp.worldX; var y:Float = targetY - pp.worldY;
-        var tx:Float = (x * d - y * b) * id - px; var ty:Float = (y * a - x * c) * id - py;
+        var tx:Float = (x * d - y * b) * id - px; var ty:Float = (y * a - x * c) * id - py; var dd:Float = tx * tx + ty * ty;
         x = cwx - pp.worldX;
         y = cwy - pp.worldY;
         var dx:Float = (x * d - y * b) * id - px; var dy:Float = (y * a - x * c) * id - py;
@@ -203,10 +236,13 @@ class IkConstraint implements Constraint {
         var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
         if (u) {
             l2 *= psx;
-            var cos:Float = (tx * tx + ty * ty - l1 * l1 - l2 * l2) / (2 * l1 * l2);
+            var cos:Float = (dd - l1 * l1 - l2 * l2) / (2 * l1 * l2);
             if (cos < -1)
                 cos = -1;
-            else if (cos > 1) cos = 1;
+            else if (cos > 1) {
+                cos = 1;
+                if (stretch && l1 + l2 > 0.0001) sx *= (cast(Math.sqrt(dd) / (l1 + l2) - 1, Float)) * alpha + 1;
+            }
             a2 = cast(Math.acos(cos) * bendDir, Float);
             a = l1 + l2 * cos;
             b = l2 * sin(a2);
@@ -214,7 +250,7 @@ class IkConstraint implements Constraint {
         } else {
             a = psx * l2;
             b = psy * l2;
-            var aa:Float = a * a; var bb:Float = b * b; var dd:Float = tx * tx + ty * ty; var ta:Float = atan2(ty, tx);
+            var aa:Float = a * a; var bb:Float = b * b; var ta:Float = atan2(ty, tx);
             c = bb * l1 * l1 + aa * dd - aa * bb;
             var c1:Float = -2 * bb * l1; var c2:Float = bb - aa;
             d = c1 * c1 - 4 * c2 * c;
@@ -266,7 +302,7 @@ class IkConstraint implements Constraint {
         if (a1 > 180)
             a1 -= 360;
         else if (a1 < -180) a1 += 360;
-        parent.updateWorldTransformWithData(px, py, rotation + a1 * alpha, parent.ascaleX, parent.ascaleY, 0, 0);
+        parent.updateWorldTransformWithData(px, py, rotation + a1 * alpha, sx, parent.ascaleY, 0, 0);
         rotation = child.arotation;
         a2 = ((a2 + os) * radDeg - child.ashearX) * s2 + os2 - rotation;
         if (a2 > 180)
