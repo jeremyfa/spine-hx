@@ -14,7 +14,7 @@ spine-hx works with data exported from Spine 3.7.xx.
 
 spine-hx supports all Spine features until 3.7.xx.
 
-spine-hx does not support loading the binary format.
+spine-hx does support loading the binary format.
 
 ## Renderer
 
