@@ -148,7 +148,7 @@ class SkeletonJson {
             data.transformMode = TransformMode_enum.valueOf(boneMap.getString("transform", TransformMode_enum.normal_name));
 
             var color:String = boneMap.getString("color", null);
-            if (color != null) data.getColor().set(Color.valueOf(color));
+            if (color != null) data.getColor().setColor(Color.valueOf(color));
 
             skeletonData.bones.add(data);
         boneMap = boneMap.next; }
@@ -162,7 +162,7 @@ class SkeletonJson {
             var data:SlotData = new SlotData(skeletonData.slots.size, slotName, boneData);
 
             var color:String = slotMap.getString("color", null);
-            if (color != null) data.getColor().set(Color.valueOf(color));
+            if (color != null) data.getColor().setColor(Color.valueOf(color));
 
             var dark:String = slotMap.getString("dark", null);
             if (dark != null) data.setDarkColor(Color.valueOf(dark));
@@ -337,7 +337,7 @@ class SkeletonJson {
             region.setHeight(map.getFloat("height") * scale);
 
             var color:String = map.getString("color", null);
-            if (color != null) region.getColor().set(Color.valueOf(color));
+            if (color != null) region.getColor().setColor(Color.valueOf(color));
 
             region.updateOffset();
             return region;
@@ -348,7 +348,7 @@ class SkeletonJson {
             readVertices(map, box, map.getInt("vertexCount") << 1);
 
             var color:String = map.getString("color", null);
-            if (color != null) box.getColor().set(Color.valueOf(color));
+            if (color != null) box.getColor().setColor(Color.valueOf(color));
             return box;
         }
         else if (_switchCond0 == mesh) {
@@ -359,7 +359,7 @@ class SkeletonJson {
             mesh.setPath(path);
 
             var color:String = map.getString("color", null);
-            if (color != null) mesh.getColor().set(Color.valueOf(color));
+            if (color != null) mesh.getColor().setColor(Color.valueOf(color));
 
             mesh.setWidth(map.getFloat("width", 0) * scale);
             mesh.setHeight(map.getFloat("height", 0) * scale);
@@ -388,7 +388,7 @@ class SkeletonJson {
             mesh.setPath(path);
 
             var color:String = map.getString("color", null);
-            if (color != null) mesh.getColor().set(Color.valueOf(color));
+            if (color != null) mesh.getColor().setColor(Color.valueOf(color));
 
             mesh.setWidth(map.getFloat("width", 0) * scale);
             mesh.setHeight(map.getFloat("height", 0) * scale);
@@ -426,7 +426,7 @@ class SkeletonJson {
             path.setLengths(lengths);
 
             var color:String = map.getString("color", null);
-            if (color != null) path.getColor().set(Color.valueOf(color));
+            if (color != null) path.getColor().setColor(Color.valueOf(color));
             return path;
         }
         else if (_switchCond0 == point) {
@@ -437,7 +437,7 @@ class SkeletonJson {
             point.setRotation(map.getFloat("rotation", 0));
 
             var color:String = map.getString("color", null);
-            if (color != null) point.getColor().set(Color.valueOf(color));
+            if (color != null) point.getColor().setColor(Color.valueOf(color));
             return point;
         }
         else if (_switchCond0 == clipping) {
@@ -454,7 +454,7 @@ class SkeletonJson {
             readVertices(map, clip, map.getInt("vertexCount") << 1);
 
             var color:String = map.getString("color", null);
-            if (color != null) clip.getColor().set(Color.valueOf(color));
+            if (color != null) clip.getColor().setColor(Color.valueOf(color));
             return clip;
         }
         } break; }

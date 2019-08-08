@@ -2673,6 +2673,25 @@ using StringTools;
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
                     }
+                    else if (item.message.startsWith('spine.support.graphics.Color should be Float')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        
+                        var newLine = line.replace('.set(', '.setColor(');
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Edit line
+                        lines[item.line - 1] = newLine;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
                     else if (item.message.startsWith('Cannot inline a not final return')) {
 
                         var file = getFile(item.filePath);

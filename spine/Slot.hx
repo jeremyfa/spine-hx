@@ -135,8 +135,8 @@ class Slot {
 
     /** Sets this slot to the setup pose. */
     #if !spine_no_inline inline #end public function setToSetupPose():Void {
-        color.set(data.color);
-        if (darkColor != null) darkColor.set(data.darkColor);
+        color.setColor(data.color);
+        if (darkColor != null) darkColor.setColor(data.darkColor);
         if (data.attachmentName == null)
             setAttachment(null);
         else {
