@@ -675,7 +675,7 @@ class Skeleton {
     /** A convenience method for setting the skeleton color. The color can also be set by modifying {@link #getColor()}. */
     #if !spine_no_inline inline #end public function setColor(color:Color):Void {
         if (color == null) throw new IllegalArgumentException("color cannot be null.");
-        this.color.set(color);
+        this.color.setColor(color);
     }
 
     /** Scales the entire skeleton on the X axis. This affects all bones, even if the bone's transform mode disallows scale

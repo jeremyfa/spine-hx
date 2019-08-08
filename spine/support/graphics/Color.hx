@@ -69,20 +69,19 @@ class Color {
         this.a = a;
     }
     
-    public function set(r:Either<Color,Float>, g:Float = -1, b:Float = -1, a:Float = -1):Color {
-        if (Std.is(r, Float)) {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            if (a != -1) this.a = a;
-        }
-        else {
-            var color:Color = r;
-            this.r = color.r;
-            this.g = color.g;
-            this.b = color.b;
-            this.a = color.a;
-        }
+    inline public function setColor(color:Color):Color {
+        this.r = color.r;
+        this.g = color.g;
+        this.b = color.b;
+        this.a = color.a;
+        return this;
+    }
+    
+    inline public function set(r:Float, g:Float, b:Float, a:Float = -1):Color {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        if (a != -1) this.a = a;
         return this;
     }
     

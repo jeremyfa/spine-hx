@@ -787,7 +787,7 @@ class ColorTimeline extends CurveTimeline implements SlotTimeline {
         if (time < frames[0]) { // Time is before first frame.
             var _continueAfterSwitch10 = false; while(true) { var _switchCond10 = (blend); {
             if (_switchCond10 == setup) {
-                slot.color.set(slot.data.color);
+                slot.color.setColor(slot.data.color);
                 return;
             } else if (_switchCond10 == first) {
                 var color:Color = slot.color; var setup:Color = slot.data.color;
@@ -824,7 +824,7 @@ class ColorTimeline extends CurveTimeline implements SlotTimeline {
             slot.color.set(r, g, b, a);
         else {
             var color:Color = slot.color;
-            if (blend == setup) color.set(slot.data.color);
+            if (blend == setup) color.setColor(slot.data.color);
             color.add((r - color.r) * alpha, (g - color.g) * alpha, (b - color.b) * alpha, (a - color.a) * alpha);
         }
     }
@@ -892,8 +892,8 @@ class TwoColorTimeline extends CurveTimeline implements SlotTimeline {
         if (time < frames[0]) { // Time is before first frame.
             var _continueAfterSwitch11 = false; while(true) { var _switchCond11 = (blend); {
             if (_switchCond11 == setup) {
-                slot.color.set(slot.data.color);
-                slot.darkColor.set(slot.data.darkColor);
+                slot.color.setColor(slot.data.color);
+                slot.darkColor.setColor(slot.data.darkColor);
                 return;
             } else if (_switchCond11 == first) {
                 var light:Color = slot.color; var dark:Color = slot.darkColor; var setupLight:Color = slot.data.color; var setupDark:Color = slot.data.darkColor;
@@ -942,8 +942,8 @@ class TwoColorTimeline extends CurveTimeline implements SlotTimeline {
         } else {
             var light:Color = slot.color; var dark:Color = slot.darkColor;
             if (blend == setup) {
-                light.set(slot.data.color);
-                dark.set(slot.data.darkColor);
+                light.setColor(slot.data.color);
+                dark.setColor(slot.data.darkColor);
             }
             light.add((r - light.r) * alpha, (g - light.g) * alpha, (b - light.b) * alpha, (a - light.a) * alpha);
             dark.add((r2 - dark.r) * alpha, (g2 - dark.g) * alpha, (b2 - dark.b) * alpha, 0);
