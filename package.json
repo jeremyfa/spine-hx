@@ -17,6 +17,12 @@
   },
   "homepage": "https://github.com/jeremyfa/spine-hx#readme",
   "dependencies": {
+    "haxe": "^5.0.10",
     "source-map-support": "^0.4.18"
+  },
+  "haxeDependencies": {
+    "haxe": "3.4.7",
+    "haxelib": "3.3.0",
+    "neko": "2.2.0"
   }
 }
