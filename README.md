@@ -28,10 +28,13 @@ This repository will be updated on a regular basis when new versions of Spine ge
 Ensure you have [Node.js](https://nodejs.org), [Haxe](https://haxe.org/) and [Git](https://git-scm.com/) installed on your machine, then run in a terminal, inside _spine-hx_ directory:
 
 ```
+npm install
 haxe convert.hxml
 ```
 
 Every file of the runtime is converted automatically, except the files located inside ``support/`` directory and ``SkeletonBinary.hx``.
+
+Warning: haxe 3.4.7 should be used for conversion, for now.
 
 ## Thanks to
 

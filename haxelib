@@ -1,0 +1,3 @@
+#!/bin/bash
+export PATH=${0%/*}':'$PATH
+node "${0%/*}"/node_modules/.bin/haxelib "$@"
