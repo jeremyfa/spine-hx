@@ -1,36 +1,38 @@
 /******************************************************************************
- * Spine Runtimes Software License v2.5
+ * Spine Runtimes License Agreement
+ * Last updated May 1, 2019. Replaces all prior versions.
  *
- * Copyright (c) 2013-2016, Esoteric Software
- * All rights reserved.
+ * Copyright (c) 2013-2019, Esoteric Software LLC
  *
- * You are granted a perpetual, non-exclusive, non-sublicensable, and
- * non-transferable license to use, install, execute, and perform the Spine
- * Runtimes software and derivative works solely for personal or internal
- * use. Without the written permission of Esoteric Software (see Section 2 of
- * the Spine Software License Agreement), you may not (a) modify, translate,
- * adapt, or develop new applications using the Spine Runtimes or otherwise
- * create derivative works or improvements of the Spine Runtimes or (b) remove,
- * delete, alter, or obscure any trademarks or any copyright, trademark, patent,
- * or other intellectual property or proprietary rights notices on or in the
- * Software, including any copy thereof. Redistributions in binary or source
- * form must include this license and terms.
+ * Integration of the Spine Runtimes into software or otherwise creating
+ * derivative works of the Spine Runtimes is permitted under the terms and
+ * conditions of Section 2 of the Spine Editor License Agreement:
+ * http://esotericsoftware.com/spine-editor-license
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL ESOTERIC SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS INTERRUPTION, OR LOSS OF
- * USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Otherwise, it is permitted to integrate the Spine Runtimes into software
+ * or otherwise create derivative works of the Spine Runtimes (collectively,
+ * "Products"), provided that each user of the Products must obtain their own
+ * Spine Editor license and redistribution of the Products in any form must
+ * include this license and copyright notice.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+ * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
+ * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
 
-import spine.Animation.RotateTimeline.*;
+import spine.Animation.RotateTimeline.ENTRIES;
+import spine.Animation.RotateTimeline.PREV_ROTATION;
+import spine.Animation.RotateTimeline.PREV_TIME;
+import spine.Animation.RotateTimeline.ROTATION;
 
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
@@ -38,7 +40,6 @@ import spine.support.utils.IntArray;
 import spine.support.utils.IntSet;
 import spine.support.utils.Pool;
 import spine.support.utils.Pool.Poolable;
-
 import spine.Animation.AttachmentTimeline;
 import spine.Animation.DrawOrderTimeline;
 import spine.Animation.MixBlend;
@@ -129,7 +130,7 @@ class AnimationState {
                 var nextTime:Float = current.trackLast - next.delay;
                 if (nextTime >= 0) {
                     next.delay = 0;
-                    next.trackTime = (nextTime / current.timeScale + delta) * next.timeScale;
+                    next.trackTime = current.timeScale == 0 ? 0 : (nextTime / current.timeScale + delta) * next.timeScale;
                     current.trackTime += currentDelta;
                     setCurrent(i, next, true);
                     while (next.mixingFrom != null) {
@@ -217,13 +218,13 @@ class AnimationState {
             var animationLast:Float = current.animationLast; var animationTime:Float = current.getAnimationTime();
             var timelineCount:Int = current.animation.timelines.size;
             var timelines = current.animation.timelines.items;
-            if (i == 0 && (mix == 1 || blend == MixBlend.add)) {
+            if ((i == 0 && mix == 1) || blend == MixBlend.add) {
                 var ii:Int = 0; while (ii < timelineCount) {
                     (cast(timelines[ii], Timeline)).apply(skeleton, animationLast, animationTime, events, mix, blend, MixDirection.directionIn); ii++; }
             } else {
                 var timelineMode:IntArray = current.timelineMode.items;
 
-                var firstFrame:Bool = current.timelinesRotation.size == 0;
+                var firstFrame:Bool = current.timelinesRotation.size != timelineCount << 1;
                 if (firstFrame) current.timelinesRotation.setSize(timelineCount << 1);
                 var timelinesRotation:FloatArray = current.timelinesRotation.items;
 
@@ -231,8 +232,8 @@ class AnimationState {
                     var timeline:Timeline = cast(timelines[ii], Timeline);
                     var timelineBlend:MixBlend = timelineMode[ii] == SUBSEQUENT ? blend : MixBlend.setup;
                     if (Std.is(timeline, RotateTimeline)) {
-                        applyRotateTimeline(timeline, skeleton, animationTime, mix, timelineBlend, timelinesRotation, ii << 1,
-                            firstFrame);
+                        applyRotateTimeline(cast(timeline, RotateTimeline), skeleton, animationTime, mix, timelineBlend, timelinesRotation,
+                            ii << 1, firstFrame);
                     } else
                         timeline.apply(skeleton, animationLast, animationTime, events, mix, timelineBlend, MixDirection.directionIn);
                 ii++; }
@@ -275,7 +276,7 @@ class AnimationState {
             var timelineMode:IntArray = from.timelineMode.items;
             var timelineHoldMix = from.timelineHoldMix.items;
 
-            var firstFrame:Bool = from.timelinesRotation.size == 0;
+            var firstFrame:Bool = from.timelinesRotation.size != timelineCount << 1;
             if (firstFrame) from.timelinesRotation.setSize(timelineCount << 1);
             var timelinesRotation:FloatArray = from.timelinesRotation.items;
 
@@ -308,8 +309,8 @@ class AnimationState {
                 } } break; } if (_continueAfterSwitch0) { i++; continue; }
                 from.totalAlpha += alpha;
                 if (Std.is(timeline, RotateTimeline)) {
-                    applyRotateTimeline(timeline, skeleton, animationTime, alpha, timelineBlend, timelinesRotation, i << 1,
-                        firstFrame);
+                    applyRotateTimeline(cast(timeline, RotateTimeline), skeleton, animationTime, alpha, timelineBlend, timelinesRotation,
+                        i << 1, firstFrame);
                 } else {
                     if (timelineBlend == MixBlend.setup) {
                         if (Std.is(timeline, AttachmentTimeline)) {
@@ -331,7 +332,7 @@ class AnimationState {
         return mix;
     }
 
-    #if !spine_no_inline inline #end private function applyRotateTimeline(timeline:Timeline, skeleton:Skeleton, time:Float, alpha:Float, blend:MixBlend, timelinesRotation:FloatArray, i:Int, firstFrame:Bool):Void {
+    private function applyRotateTimeline(timeline:RotateTimeline, skeleton:Skeleton, time:Float, alpha:Float, blend:MixBlend, timelinesRotation:FloatArray, i:Int, firstFrame:Bool):Void {
 
         if (firstFrame) timelinesRotation[i] = 0;
 
@@ -340,33 +341,45 @@ class AnimationState {
             return;
         }
 
-        var rotateTimeline:RotateTimeline = cast(timeline, RotateTimeline);
-        var bone:Bone = skeleton.bones.get(rotateTimeline.boneIndex);
-        var frames:FloatArray = rotateTimeline.frames;
+        var bone:Bone = skeleton.bones.get(timeline.boneIndex);
+        var frames:FloatArray = timeline.frames;
+        var r1:Float = 0; var r2:Float = 0;
         if (time < frames[0]) { // Time is before first frame.
-            if (blend == MixBlend.setup) bone.rotation = bone.data.rotation;
-            return;
-        }
+            var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (blend); {
+            if (_switchCond1 == setup) {
+                bone.rotation = bone.data.rotation;
+                // Fall through.
+                return;
+                r1 = bone.rotation;
+                r2 = bone.data.rotation;
+            } else if (_switchCond1 == first) {
+                r1 = bone.rotation;
+                r2 = bone.data.rotation;
+            } else {
+                return;
+                r1 = bone.rotation;
+                r2 = bone.data.rotation;
+            } } break; }
+        } else {
+            r1 = blend == MixBlend.setup ? bone.data.rotation : bone.rotation;
+            if (time >= frames[frames.length - ENTRIES]) // Time is after last frame.
+                r2 = bone.data.rotation + frames[frames.length + PREV_ROTATION];
+            else {
+                // Interpolate between the previous frame and the current frame.
+                var frame:Int = Animation.binarySearchWithStep(frames, time, ENTRIES);
+                var prevRotation:Float = frames[frame + PREV_ROTATION];
+                var frameTime:Float = frames[frame];
+                var percent:Float = timeline.getCurvePercent((frame >> 1) - 1,
+                    1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
 
-        var r2:Float = 0;
-        if (time >= frames[frames.length - ENTRIES]) // Time is after last frame.
-            r2 = bone.data.rotation + frames[frames.length + PREV_ROTATION];
-        else {
-            // Interpolate between the previous frame and the current frame.
-            var frame:Int = Animation.binarySearchWithStep(frames, time, ENTRIES);
-            var prevRotation:Float = frames[frame + PREV_ROTATION];
-            var frameTime:Float = frames[frame];
-            var percent:Float = rotateTimeline.getCurvePercent((frame >> 1) - 1,
-                1 - (time - frameTime) / (frames[frame + PREV_TIME] - frameTime));
-
-            r2 = frames[frame + ROTATION] - prevRotation;
-            r2 -= (16384 - Std.int((16384.499999999996 - r2 / 360))) * 360;
-            r2 = prevRotation + r2 * percent + bone.data.rotation;
-            r2 -= (16384 - Std.int((16384.499999999996 - r2 / 360))) * 360;
+                r2 = frames[frame + ROTATION] - prevRotation;
+                r2 -= (16384 - Std.int((16384.499999999996 - r2 / 360))) * 360;
+                r2 = prevRotation + r2 * percent + bone.data.rotation;
+                r2 -= (16384 - Std.int((16384.499999999996 - r2 / 360))) * 360;
+            }
         }
 
         // Mix between rotations using the direction of the shortest route on the first frame.
-        var r1:Float = blend == MixBlend.setup ? bone.data.rotation : bone.rotation;
         var total:Float = 0; var diff:Float = r2 - r1;
         diff -= (16384 - Std.int((16384.499999999996 - diff / 360))) * 360;
         if (diff == 0)
@@ -1180,18 +1193,18 @@ class EventQueue {
         var i:Int = 0; while (i < objects.size) {
             var type:EventType = cast(objects.get(i), EventType);
             var entry:TrackEntry = cast(objects.get(i + 1), TrackEntry);
-            var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (type); {
-            if (_switchCond1 == spine.EventType.start) {
+            var _continueAfterSwitch2 = false; while(true) { var _switchCond2 = (type); {
+            if (_switchCond2 == spine.EventType.start) {
                 if (entry.listener != null) entry.listener.start(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).start(entry); ii++; }
                 break;
-            } else if (_switchCond1 == spine.EventType.interrupt) {
+            } else if (_switchCond2 == spine.EventType.interrupt) {
                 if (entry.listener != null) entry.listener.interrupt(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).interrupt(entry); ii++; }
                 break;
-            } else if (_switchCond1 == spine.EventType.end) {
+            } else if (_switchCond2 == spine.EventType.end) {
                 if (entry.listener != null) entry.listener.end(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).end(entry); ii++; }
@@ -1201,18 +1214,18 @@ class EventQueue {
                     listeners.get(ii).dispose(entry); ii++; }
                 AnimationState_this.trackEntryPool.free(entry);
                 break;
-            } else if (_switchCond1 == spine.EventType.dispose) {
+            } else if (_switchCond2 == spine.EventType.dispose) {
                 if (entry.listener != null) entry.listener.dispose(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).dispose(entry); ii++; }
                 AnimationState_this.trackEntryPool.free(entry);
                 break;
-            } else if (_switchCond1 == spine.EventType.complete) {
+            } else if (_switchCond2 == spine.EventType.complete) {
                 if (entry.listener != null) entry.listener.complete(entry);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).complete(entry); ii++; }
                 break;
-            } else if (_switchCond1 == spine.EventType.event) {
+            } else if (_switchCond2 == spine.EventType.event) {
                 var event:Event = cast(objects.get(i++ + 2), Event);
                 if (entry.listener != null) entry.listener.event(entry, event);
                 var ii:Int = 0; while (ii < listeners.size) {
@@ -1236,7 +1249,8 @@ class EventQueue {
     var start = 0; var interrupt = 1; var end = 2; var dispose = 3; var complete = 4; var event = 5;
 }
 
-/** The interface to implement for receiving TrackEntry events.
+/** The interface to implement for receiving TrackEntry events. It is always safe to call AnimationState methods when receiving
+ * events.
  * <p>
  * See TrackEntry {@link TrackEntry#setListener(AnimationStateListener)} and AnimationState
  * {@link AnimationState#addListener(AnimationStateListener)}. */
@@ -1255,10 +1269,14 @@ interface AnimationStateListener {
      * References to the entry should not be kept after <code>dispose</code> is called, as it may be destroyed or reused. */
     public function dispose(entry:TrackEntry):Void;
 
-    /** Invoked every time this entry's animation completes a loop. */
+    /** Invoked every time this entry's animation completes a loop. Because this event is trigged in
+     * {@link AnimationState#apply(Skeleton)}, any animations set in response to the event won't be applied until the next time
+     * the AnimationState is applied. */
     public function complete(entry:TrackEntry):Void;
 
-    /** Invoked when this entry's animation triggers an event. */
+    /** Invoked when this entry's animation triggers an event. Because this event is trigged in
+     * {@link AnimationState#apply(Skeleton)}, any animations set in response to the event won't be applied until the next time
+     * the AnimationState is applied. */
     public function event(entry:TrackEntry, event:Event):Void;
 }
 
