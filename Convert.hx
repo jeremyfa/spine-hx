@@ -2486,7 +2486,7 @@ using StringTools;
                 '-js main',
                 '--no-output'
             ]).stderr);*/
-            var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('haxe', [
+            var diagnostics = parseCompilerOutput('' + ChildProcess.spawnSync('./haxe', [
                 'build-static.hxml'
             ]).stderr);
 
