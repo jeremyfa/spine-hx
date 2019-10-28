@@ -22,12 +22,12 @@ class Convert {
         if (FileSystem.exists('./spine-runtimes/.git')) {
             println('Update official spine-runtimes repository\u2026');
             setCwd('spine-runtimes');
-            command('git', ['pull', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['pull']);
             setCwd('..');
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            command('git', ['clone', '-b', '3.7', '--depth', '1', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['clone', '-b', '3.7', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
