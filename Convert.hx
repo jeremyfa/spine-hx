@@ -1028,11 +1028,16 @@ using StringTools;
                         }
 
                         var n = 0;
+                        var haxeBeforeElse = null;
+                        var elseData = null;
                         for (aCase in cases) {
                             if (aCase.caseVal != 'default') {
                                 if (n > 0) haxe += 'else ';
                                 haxe += 'if (' + switchCondName + ' == ' + aCase.caseVal + ') ';
                             } else {
+                                if (n < cases.length - 1) {
+                                    haxeBeforeElse = haxe;
+                                }
                                 haxe += 'else ';
                             }
                             var hasBrace = aCase.body.ltrim().startsWith('{');
@@ -1063,7 +1068,16 @@ using StringTools;
                                 }
                             }
                             if (!hasBrace) haxe += '} ';
+                            if (haxeBeforeElse != null) {
+                                elseData = haxe.substring(haxeBeforeElse.length);
+                                haxe = haxeBeforeElse;
+                                haxeBeforeElse = null;
+                            }
                             n++;
+                        }
+
+                        if (elseData != null) {
+                            haxe += elseData;
                         }
 
                         haxe += '} break; }';
