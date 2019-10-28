@@ -77,6 +77,16 @@ abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
         return keys;
     }
 
+    public function values() {
+        var values = [];
+        for (entryList in this) {
+            for (i in 0...entryList.length) {
+                values.push(entryList[i].value);
+            }
+        }
+        return values;
+    }
+
     public var size(get,never):Int;
     function get_size():Int {
         var numEntries = 0;
