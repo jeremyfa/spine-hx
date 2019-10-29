@@ -55,7 +55,7 @@ class SlotData {
         return index;
     }
 
-    /** The name of the slot, which is unique within the skeleton. */
+    /** The name of the slot, which is unique across all slots in the skeleton. */
     #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
@@ -77,6 +77,7 @@ class SlotData {
         return darkColor;
     }
 
+    /** @param darkColor May be null. */
     #if !spine_no_inline inline #end public function setDarkColor(darkColor:Color):Void {
         this.darkColor = darkColor;
     }
@@ -97,6 +98,7 @@ class SlotData {
     }
 
     #if !spine_no_inline inline #end public function setBlendMode(blendMode:BlendMode):Void {
+////        if (blendMode == null) throw new IllegalArgumentException("blendMode cannot be null.");
         this.blendMode = blendMode;
     }
 

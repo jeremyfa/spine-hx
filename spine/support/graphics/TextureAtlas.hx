@@ -345,10 +345,19 @@ class AtlasRegion extends TextureRegion
     public var originalWidth : Int = 0;
     public var originalHeight : Int = 0;
     public var index : Int = 0;
-    public var rotate : Bool = false;
+    public var degrees : Int = 0;
     public var splits : Array<Int>;
     public var pads : Array<Int>;
     public var page : AtlasPage;
+
+    public var rotate (get,set) : Bool;
+    inline function get_rotate() : Bool {
+        return degrees == 90;
+    }
+    inline function set_rotate(rotate : Bool) : Bool {
+        degrees = (rotate ? 90 : 0);
+        return rotate;
+    }
 
     public function new()
     {

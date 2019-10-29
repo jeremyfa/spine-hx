@@ -29,6 +29,8 @@
 
 package spine;
 
+import spine.utils.SpineUtils.*;
+
 import spine.support.files.FileHandle;
 import spine.support.graphics.Color;
 import spine.support.graphics.TextureAtlas;
@@ -38,6 +40,7 @@ import spine.support.utils.IntArray;
 import spine.support.utils.JsonReader;
 import spine.support.utils.JsonValue;
 import spine.support.utils.SerializationException;
+
 import spine.Animation.AttachmentTimeline;
 import spine.Animation.ColorTimeline;
 import spine.Animation.CurveTimeline;
@@ -103,10 +106,12 @@ class SkeletonJson {
     }
 
     #if !spine_no_inline inline #end public function setScale(scale:Float):Void {
+        if (scale == 0) throw new IllegalArgumentException("scale cannot be 0.");
         this.scale = scale;
     }
 
     #if !spine_no_inline inline #end public function parse(file:FileHandle):JsonValue {
+        if (file == null) throw new IllegalArgumentException("file cannot be null.");
         return new JsonReader().parse(file);
     }
 
@@ -125,6 +130,8 @@ class SkeletonJson {
         if (skeletonMap != null) {
             skeletonData.hash = skeletonMap.getString("hash", null);
             skeletonData.version = skeletonMap.getString("spine", null);
+            skeletonData.x = skeletonMap.getFloat("x", 0);
+            skeletonData.y = skeletonMap.getFloat("y", 0);
             skeletonData.width = skeletonMap.getFloat("width", 0);
             skeletonData.height = skeletonMap.getFloat("height", 0);
             skeletonData.fps = skeletonMap.getFloat("fps", 30);
@@ -150,6 +157,7 @@ class SkeletonJson {
             data.shearX = boneMap.getFloat("shearX", 0);
             data.shearY = boneMap.getFloat("shearY", 0);
             data.transformMode = TransformMode_enum.valueOf(boneMap.getString("transform", TransformMode_enum.normal_name));
+            data.skinRequired = boneMap.getBoolean("skin", false);
 
             var color:String = boneMap.getString("color", null);
             if (color != null) data.getColor().setColor(Color.valueOf(color));
@@ -180,19 +188,20 @@ class SkeletonJson {
         var constraintMap:JsonValue = root.getChild("ik"); while (constraintMap != null) {
             var data:IkConstraintData = new IkConstraintData(constraintMap.getString("name"));
             data.order = constraintMap.getInt("order", 0);
+            data.skinRequired = constraintMap.getBoolean("skin", false);
 
-            var boneMap:JsonValue = constraintMap.getChild("bones"); while (boneMap != null) {
-                var boneName:String = boneMap.asString();
-                var bone:BoneData = skeletonData.findBone(boneName);
-                if (bone == null) throw new SerializationException("IK bone not found: " + boneName);
+            var entry:JsonValue = constraintMap.getChild("bones"); while (entry != null) {
+                var bone:BoneData = skeletonData.findBone(entry.asString());
+                if (bone == null) throw new SerializationException("IK bone not found: " + entry);
                 data.bones.add(bone);
-            boneMap = boneMap.next; }
+            entry = entry.next; }
 
             var targetName:String = constraintMap.getString("target");
             data.target = skeletonData.findBone(targetName);
             if (data.target == null) throw new SerializationException("IK target bone not found: " + targetName);
 
             data.mix = constraintMap.getFloat("mix", 1);
+            data.softness = constraintMap.getFloat("softness", 0) * scale;
             data.bendDirection = constraintMap.getBoolean("bendPositive", true) ? 1 : -1;
             data.compress = constraintMap.getBoolean("compress", false);
             data.stretch = constraintMap.getBoolean("stretch", false);
@@ -205,13 +214,13 @@ class SkeletonJson {
         var constraintMap:JsonValue = root.getChild("transform"); while (constraintMap != null) {
             var data:TransformConstraintData = new TransformConstraintData(constraintMap.getString("name"));
             data.order = constraintMap.getInt("order", 0);
+            data.skinRequired = constraintMap.getBoolean("skin", false);
 
-            var boneMap:JsonValue = constraintMap.getChild("bones"); while (boneMap != null) {
-                var boneName:String = boneMap.asString();
-                var bone:BoneData = skeletonData.findBone(boneName);
-                if (bone == null) throw new SerializationException("Transform constraint bone not found: " + boneName);
+            var entry:JsonValue = constraintMap.getChild("bones"); while (entry != null) {
+                var bone:BoneData = skeletonData.findBone(entry.asString());
+                if (bone == null) throw new SerializationException("Transform constraint bone not found: " + entry);
                 data.bones.add(bone);
-            boneMap = boneMap.next; }
+            entry = entry.next; }
 
             var targetName:String = constraintMap.getString("target");
             data.target = skeletonData.findBone(targetName);
@@ -239,13 +248,13 @@ class SkeletonJson {
         var constraintMap:JsonValue = root.getChild("path"); while (constraintMap != null) {
             var data:PathConstraintData = new PathConstraintData(constraintMap.getString("name"));
             data.order = constraintMap.getInt("order", 0);
+            data.skinRequired = constraintMap.getBoolean("skin", false);
 
-            var boneMap:JsonValue = constraintMap.getChild("bones"); while (boneMap != null) {
-                var boneName:String = boneMap.asString();
-                var bone:BoneData = skeletonData.findBone(boneName);
-                if (bone == null) throw new SerializationException("Path bone not found: " + boneName);
+            var entry:JsonValue = constraintMap.getChild("bones"); while (entry != null) {
+                var bone:BoneData = skeletonData.findBone(entry.asString());
+                if (bone == null) throw new SerializationException("Path bone not found: " + entry);
                 data.bones.add(bone);
-            boneMap = boneMap.next; }
+            entry = entry.next; }
 
             var targetName:String = constraintMap.getString("target");
             data.target = skeletonData.findSlot(targetName);
@@ -267,14 +276,34 @@ class SkeletonJson {
 
         // Skins.
         var skinMap:JsonValue = root.getChild("skins"); while (skinMap != null) {
-            var skin:Skin = new Skin(skinMap.name);
-            var slotEntry:JsonValue = skinMap.child; while (slotEntry != null) {
+            var skin:Skin = new Skin(skinMap.getString("name"));
+            var entry:JsonValue = skinMap.getChild("bones"); while (entry != null) {
+                var bone:BoneData = skeletonData.findBone(entry.asString());
+                if (bone == null) throw new SerializationException("Skin bone not found: " + entry);
+                skin.bones.add(bone);
+            entry = entry.next; }
+            var entry:JsonValue = skinMap.getChild("ik"); while (entry != null) {
+                var constraint:IkConstraintData = skeletonData.findIkConstraint(entry.asString());
+                if (constraint == null) throw new SerializationException("Skin IK constraint not found: " + entry);
+                skin.constraints.add(constraint);
+            entry = entry.next; }
+            var entry:JsonValue = skinMap.getChild("transform"); while (entry != null) {
+                var constraint:TransformConstraintData = skeletonData.findTransformConstraint(entry.asString());
+                if (constraint == null) throw new SerializationException("Skin transform constraint not found: " + entry);
+                skin.constraints.add(constraint);
+            entry = entry.next; }
+            var entry:JsonValue = skinMap.getChild("path"); while (entry != null) {
+                var constraint:PathConstraintData = skeletonData.findPathConstraint(entry.asString());
+                if (constraint == null) throw new SerializationException("Skin path constraint not found: " + entry);
+                skin.constraints.add(constraint);
+            entry = entry.next; }
+            var slotEntry:JsonValue = skinMap.getChild("attachments"); while (slotEntry != null) {
                 var slot:SlotData = skeletonData.findSlot(slotEntry.name);
                 if (slot == null) throw new SerializationException("Slot not found: " + slotEntry.name);
                 var entry:JsonValue = slotEntry.child; while (entry != null) {
                     try {
                         var attachment:Attachment = readAttachment(entry, skin, slot.index, entry.name, skeletonData);
-                        if (attachment != null) skin.addAttachment(slot.index, entry.name, attachment);
+                        if (attachment != null) skin.setAttachment(slot.index, entry.name, attachment);
                     } catch (ex:Dynamic) {
                         throw new SerializationException("Error reading attachment: " + entry.name + ", skin: " + skin, ex);
                     }
@@ -291,7 +320,8 @@ class SkeletonJson {
             if (skin == null) throw new SerializationException("Skin not found: " + linkedMesh.skin);
             var parent:Attachment = skin.getAttachment(linkedMesh.slotIndex, linkedMesh.parent);
             if (parent == null) throw new SerializationException("Parent mesh not found: " + linkedMesh.parent);
-            linkedMesh.mesh.setParentMesh(cast(parent, MeshAttachment));
+            linkedMesh.mesh.setDeformAttachment(linkedMesh.inheritDeform ? fastCast(parent , VertexAttachment): linkedMesh.mesh);
+            linkedMesh.mesh.setParentMesh(fastCast(parent, MeshAttachment));
             linkedMesh.mesh.updateUVs();
         i++; }
         linkedMeshes.clear();
@@ -378,8 +408,8 @@ class SkeletonJson {
 
             var parent:String = map.getString("parent", null);
             if (parent != null) {
-                mesh.setInheritDeform(map.getBoolean("deform", true));
-                linkedMeshes.add(new LinkedMesh(mesh, map.getString("skin", null), slotIndex, parent));
+                linkedMeshes
+                    .add(new LinkedMesh(mesh, map.getString("skin", null), slotIndex, parent, map.getBoolean("deform", true)));
                 return mesh;
             }
 
@@ -407,8 +437,8 @@ class SkeletonJson {
 
             var parent:String = map.getString("parent", null);
             if (parent != null) {
-                mesh.setInheritDeform(map.getBoolean("deform", true));
-                linkedMeshes.add(new LinkedMesh(mesh, map.getString("skin", null), slotIndex, parent));
+                linkedMeshes
+                    .add(new LinkedMesh(mesh, map.getString("skin", null), slotIndex, parent, map.getBoolean("deform", true)));
                 return mesh;
             }
 
@@ -517,7 +547,7 @@ class SkeletonJson {
 
                     var frameIndex:Int = 0;
                     var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex++, valueMap.getFloat("time"), valueMap.getString("name")); valueMap = valueMap.next; }
+                        timeline.setFrame(frameIndex++, valueMap.getFloat("time", 0), valueMap.getString("name")); valueMap = valueMap.next; }
                     timelines.add(timeline);
                     duration = MathUtils.max(duration, timeline.getFrames()[timeline.getFrameCount() - 1]);
 
@@ -528,7 +558,7 @@ class SkeletonJson {
                     var frameIndex:Int = 0;
                     var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
                         var color:Color = Color.valueOf(valueMap.getString("color"));
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time"), color.r, color.g, color.b, color.a);
+                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), color.r, color.g, color.b, color.a);
                         readCurve(valueMap, timeline, frameIndex);
                         frameIndex++;
                     valueMap = valueMap.next; }
@@ -543,7 +573,7 @@ class SkeletonJson {
                     var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
                         var light:Color = Color.valueOf(valueMap.getString("light"));
                         var dark:Color = Color.valueOf(valueMap.getString("dark"));
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time"), light.r, light.g, light.b, light.a, dark.r, dark.g,
+                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), light.r, light.g, light.b, light.a, dark.r, dark.g,
                             dark.b);
                         readCurve(valueMap, timeline, frameIndex);
                         frameIndex++;
@@ -568,7 +598,7 @@ class SkeletonJson {
 
                     var frameIndex:Int = 0;
                     var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time"), valueMap.getFloat("angle"));
+                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("angle", 0));
                         readCurve(valueMap, timeline, frameIndex);
                         frameIndex++;
                     valueMap = valueMap.next; }
@@ -577,10 +607,11 @@ class SkeletonJson {
 
                 } else if (timelineName.equals("translate") || timelineName.equals("scale") || timelineName.equals("shear")) {
                     var timeline:TranslateTimeline = null;
-                    var timelineScale:Float = 1;
-                    if (timelineName.equals("scale"))
+                    var timelineScale:Float = 1; var defaultValue:Float = 0;
+                    if (timelineName.equals("scale")) {
                         timeline = new ScaleTimeline(timelineMap.size);
-                    else if (timelineName.equals("shear"))
+                        defaultValue = 1;
+                    } else if (timelineName.equals("shear"))
                         timeline = new ShearTimeline(timelineMap.size);
                     else {
                         timeline = new TranslateTimeline(timelineMap.size);
@@ -590,8 +621,8 @@ class SkeletonJson {
 
                     var frameIndex:Int = 0;
                     var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        var x:Float = valueMap.getFloat("x", 0); var y:Float = valueMap.getFloat("y", 0);
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time"), x * timelineScale, y * timelineScale);
+                        var x:Float = valueMap.getFloat("x", defaultValue); var y:Float = valueMap.getFloat("y", defaultValue);
+                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), x * timelineScale, y * timelineScale);
                         readCurve(valueMap, timeline, frameIndex);
                         frameIndex++;
                     valueMap = valueMap.next; }
@@ -610,9 +641,9 @@ class SkeletonJson {
             timeline.ikConstraintIndex = skeletonData.getIkConstraints().indexOf(constraint, true);
             var frameIndex:Int = 0;
             var valueMap:JsonValue = constraintMap.child; while (valueMap != null) {
-                timeline.setFrame(frameIndex, valueMap.getFloat("time"), valueMap.getFloat("mix", 1),
-                    valueMap.getBoolean("bendPositive", true) ? 1 : -1, valueMap.getBoolean("compress", false),
-                    valueMap.getBoolean("stretch", false));
+                timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("mix", 1),
+                    valueMap.getFloat("softness", 0) * scale, valueMap.getBoolean("bendPositive", true) ? 1 : -1,
+                    valueMap.getBoolean("compress", false), valueMap.getBoolean("stretch", false));
                 readCurve(valueMap, timeline, frameIndex);
                 frameIndex++;
             valueMap = valueMap.next; }
@@ -627,7 +658,7 @@ class SkeletonJson {
             timeline.transformConstraintIndex = skeletonData.getTransformConstraints().indexOf(constraint, true);
             var frameIndex:Int = 0;
             var valueMap:JsonValue = constraintMap.child; while (valueMap != null) {
-                timeline.setFrame(frameIndex, valueMap.getFloat("time"), valueMap.getFloat("rotateMix", 1),
+                timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("rotateMix", 1),
                     valueMap.getFloat("translateMix", 1), valueMap.getFloat("scaleMix", 1), valueMap.getFloat("shearMix", 1));
                 readCurve(valueMap, timeline, frameIndex);
                 frameIndex++;
@@ -638,7 +669,7 @@ class SkeletonJson {
         constraintMap = constraintMap.next; }
 
         // Path constraint timelines.
-        var constraintMap:JsonValue = map.getChild("paths"); while (constraintMap != null) {
+        var constraintMap:JsonValue = map.getChild("path"); while (constraintMap != null) {
             var data:PathConstraintData = skeletonData.findPathConstraint(constraintMap.name);
             if (data == null) throw new SerializationException("Path constraint not found: " + constraintMap.name);
             var index:Int = skeletonData.pathConstraints.indexOf(data, true);
@@ -657,7 +688,7 @@ class SkeletonJson {
                     timeline.pathConstraintIndex = index;
                     var frameIndex:Int = 0;
                     var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time"), valueMap.getFloat(timelineName, 0) * timelineScale);
+                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat(timelineName, 0) * timelineScale);
                         readCurve(valueMap, timeline, frameIndex);
                         frameIndex++;
                     valueMap = valueMap.next; }
@@ -669,7 +700,7 @@ class SkeletonJson {
                     timeline.pathConstraintIndex = index;
                     var frameIndex:Int = 0;
                     var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time"), valueMap.getFloat("rotateMix", 1),
+                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("rotateMix", 1),
                             valueMap.getFloat("translateMix", 1));
                         readCurve(valueMap, timeline, frameIndex);
                         frameIndex++;
@@ -689,7 +720,7 @@ class SkeletonJson {
                 var slot:SlotData = skeletonData.findSlot(slotMap.name);
                 if (slot == null) throw new SerializationException("Slot not found: " + slotMap.name);
                 var timelineMap:JsonValue = slotMap.child; while (timelineMap != null) {
-                    var attachment:VertexAttachment = cast(skin.getAttachment(slot.index, timelineMap.name), VertexAttachment);
+                    var attachment:VertexAttachment = fastCast(skin.getAttachment(slot.index, timelineMap.name), VertexAttachment);
                     if (attachment == null) throw new SerializationException("Deform attachment not found: " + timelineMap.name);
                     var weighted:Bool = attachment.getBones() != null;
                     var vertices:FloatArray = attachment.getVertices();
@@ -708,7 +739,7 @@ class SkeletonJson {
                         else {
                             deform = FloatArray.create(deformLength);
                             var start:Int = valueMap.getInt("offset", 0);
-                            Array.copy(verticesValue.asFloatArray(), 0, deform, start, verticesValue.size);
+                            arraycopy(verticesValue.asFloatArray(), 0, deform, start, verticesValue.size);
                             if (scale != 1) {
                                 var i:Int = start; var n:Int = i + verticesValue.size; while (i < n) {
                                     deform[i] *= scale; i++; }
@@ -719,7 +750,7 @@ class SkeletonJson {
                             }
                         }
 
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time"), deform);
+                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), deform);
                         readCurve(valueMap, timeline, frameIndex);
                         frameIndex++;
                     valueMap = valueMap.next; }
@@ -761,7 +792,7 @@ class SkeletonJson {
                     var i:Int = slotCount - 1; while (i >= 0) {
                         if (drawOrder[i] == -1) drawOrder[i] = unchanged[--unchangedIndex]; i--; }
                 }
-                timeline.setFrame(frameIndex++, drawOrderMap.getFloat("time"), drawOrder);
+                timeline.setFrame(frameIndex++, drawOrderMap.getFloat("time", 0), drawOrder);
             drawOrderMap = drawOrderMap.next; }
             timelines.add(timeline);
             duration = MathUtils.max(duration, timeline.getFrames()[timeline.getFrameCount() - 1]);
@@ -775,7 +806,7 @@ class SkeletonJson {
             var eventMap:JsonValue = eventsMap.child; while (eventMap != null) {
                 var eventData:EventData = skeletonData.findEvent(eventMap.getString("name"));
                 if (eventData == null) throw new SerializationException("Event not found: " + eventMap.getString("name"));
-                var event:Event = new Event(eventMap.getFloat("time"), eventData);
+                var event:Event = new Event(eventMap.getFloat("time", 0), eventData);
                 event.intValue = eventMap.getInt("int", eventData.intValue);
                 event.floatValue = eventMap.getFloat("float", eventData.floatValue);
                 event.stringValue = eventMap.getString("string", eventData.stringValue);
@@ -796,11 +827,10 @@ class SkeletonJson {
     #if !spine_no_inline inline #end public function readCurve(map:JsonValue, timeline:CurveTimeline, frameIndex:Int):Void {
         var curve:JsonValue = map.get("curve");
         if (curve == null) return;
-        if (curve.isString() && curve.asString().equals("stepped"))
+        if (curve.isString())
             timeline.setStepped(frameIndex);
-        else if (curve.isArray()) {
-            timeline.setCurve(frameIndex, curve.getFloat(0), curve.getFloat(1), curve.getFloat(2), curve.getFloat(3));
-        }
+        else
+            timeline.setCurve(frameIndex, curve.asFloat(), map.getFloat("c2", 0), map.getFloat("c3", 1), map.getFloat("c4", 1));
     }
 }
 
@@ -808,11 +838,13 @@ class LinkedMesh {
     public var parent:String; public var skin:String = null;
     public var slotIndex:Int = 0;
     public var mesh:MeshAttachment;
+    public var inheritDeform:Bool = false;
 
-    public function new(mesh:MeshAttachment, skin:String, slotIndex:Int, parent:String) {
+    public function new(mesh:MeshAttachment, skin:String, slotIndex:Int, parent:String, inheritDeform:Bool) {
         this.mesh = mesh;
         this.skin = skin;
         this.slotIndex = slotIndex;
         this.parent = parent;
+        this.inheritDeform = inheritDeform;
     }
 }

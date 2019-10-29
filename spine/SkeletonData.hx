@@ -46,7 +46,7 @@ class SkeletonData {
     public var ikConstraints:Array<IkConstraintData> = new Array();
     public var transformConstraints:Array<TransformConstraintData> = new Array();
     public var pathConstraints:Array<PathConstraintData> = new Array();
-    public var width:Float = 0; public var height:Float = 0;
+    public var x:Float = 0; public var y:Float = 0; public var width:Float = 0; public var height:Float = 0;
     public var version:String; public var hash:String = null;
 
     // Nonessential.
@@ -99,7 +99,7 @@ class SkeletonData {
      * <p>
      * See {@link Skeleton#getAttachment(int, String)}.
      * @return May be null. */
-    public function getDefaultSkin():Skin {
+    #if !spine_no_inline inline #end public function getDefaultSkin():Skin {
         return defaultSkin;
     }
 
@@ -163,7 +163,7 @@ class SkeletonData {
     // --- IK constraints
 
     /** The skeleton's IK constraints. */
-    #if !spine_no_inline inline #end public function getIkConstraints():Array<IkConstraintData> {
+    public function getIkConstraints():Array<IkConstraintData> {
         return ikConstraints;
     }
 
@@ -183,7 +183,7 @@ class SkeletonData {
     // --- Transform constraints
 
     /** The skeleton's transform constraints. */
-    #if !spine_no_inline inline #end public function getTransformConstraints():Array<TransformConstraintData> {
+    public function getTransformConstraints():Array<TransformConstraintData> {
         return transformConstraints;
     }
 
@@ -203,7 +203,7 @@ class SkeletonData {
     // --- Path constraints
 
     /** The skeleton's path constraints. */
-    #if !spine_no_inline inline #end public function getPathConstraints():Array<PathConstraintData> {
+    public function getPathConstraints():Array<PathConstraintData> {
         return pathConstraints;
     }
 
@@ -231,6 +231,24 @@ class SkeletonData {
     /** @param name May be null. */
     #if !spine_no_inline inline #end public function setName(name:String):Void {
         this.name = name;
+    }
+
+    /** The X coordinate of the skeleton's axis aligned bounding box in the setup pose. */
+    #if !spine_no_inline inline #end public function getX():Float {
+        return x;
+    }
+
+    #if !spine_no_inline inline #end public function setX(x:Float):Void {
+        this.x = x;
+    }
+
+    /** The Y coordinate of the skeleton's axis aligned bounding box in the setup pose. */
+    #if !spine_no_inline inline #end public function getY():Float {
+        return y;
+    }
+
+    #if !spine_no_inline inline #end public function setY(y:Float):Void {
+        this.y = y;
     }
 
     /** The width of the skeleton's axis aligned bounding box in the setup pose. */

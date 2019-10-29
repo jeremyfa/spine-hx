@@ -49,6 +49,7 @@ class Convert {
         // Add import.hx
         File.saveContent('spine/import.hx', "
 import spine.support.error.*;
+import spine.support.utils.FastCast.*;
 import spine.support.utils.BooleanArray;
 import spine.support.utils.Short;
 import spine.support.utils.ShortArray;
@@ -805,7 +806,7 @@ using StringTools;
                     } else if (castType == 'Float') {
                         haxe += RE_CAST.matched(2).ltrim();
                     } else {
-                        haxe += 'cast(' + RE_CAST.matched(2).ltrim();
+                        haxe += 'fastCast(' + RE_CAST.matched(2).ltrim();
                     }
                     i += RE_CAST.matched(0).length;
 
@@ -2260,6 +2261,7 @@ using StringTools;
             haxe = haxe.replace('setAnimation(trackIndex:Int, animationName:String, loop:Bool)', 'setAnimationByName(trackIndex:Int, animationName:String, loop:Bool)');
             haxe = haxe.replace('addAnimation(trackIndex:Int, animationName:String, loop:Bool, delay:Float)', 'addAnimationByName(trackIndex:Int, animationName:String, loop:Bool, delay:Float)');
             haxe = haxe.replace('animationsChanged()', 'handleAnimationsChanged()');
+            haxe = haxe.replace('fastCast(objects.get(i), EventType)', 'cast objects.get(i)');
         }
         else if (rootType == 'spine.Animation') {
             haxe = haxe.replace('binarySearch(values:FloatArray, target:Float, step:Int)', 'binarySearchWithStep(values:FloatArray, target:Float, step:Int)');
@@ -2267,7 +2269,7 @@ using StringTools;
             haxe = haxe.replace('System.arraycopy(lastVertices', 'Array.copyFloats(lastVertices');
         }
         else if (rootType == 'spine.Skeleton') {
-            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'SkinEntryMap');
+            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'AttachmentMap');
             haxe = haxe.replace('updateCache', 'cache');
             haxe = haxe.replace('cache()', 'updateCache()');
             haxe = haxe.replace('sortPathConstraintAttachment(skin:Skin, slotIndex:Int, slotBone:Bone)', 'sortPathConstraintAttachmentWithSkin(skin:Skin, slotIndex:Int, slotBone:Bone)');
@@ -2303,7 +2305,7 @@ using StringTools;
         }
         else if (rootType == 'spine.utils.SkeletonClipping') {
             haxe = haxe.replace('clipEnd(slot:Slot)', 'clipEndWithSlot(slot:Slot)');
-            haxe = haxe.replace('cast(polygons[p], FloatArray)', 'polygons[p]');
+            haxe = haxe.replace('fastCast(polygons[p], FloatArray)', 'polygons[p]');
         }
         else if (rootType == 'spine.utils.Triangulator') {
             haxe = haxe.replace('isConcave(', 'isGeometryConcave(');
@@ -2313,13 +2315,20 @@ using StringTools;
             haxe = haxe.replace('import spine.support.graphics.GL20;', '');
         }
         else if (rootType == 'spine.Skin') {
-            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'SkinEntryMap');
-            haxe = haxe.replace('OrderedMap', 'SkinEntryMap');
+            haxe = haxe.replace('new SkinEntry()', 'new SkinEntry(0, "", null)');
+            haxe = haxe.replace('new SkinEntry(', '@:privateAccess new SkinEntry(');
+            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'AttachmentMap');
+            haxe = haxe.replace('OrderedMap', 'AttachmentMap');
+            haxe = haxe.replace('this.attachments.orderedKeys().ordered = false;', '//this.attachments.orderedKeys().ordered = false;');
             haxe = haxe.replace('getAttachments(slotIndex:Int, attachments:Array<SkinEntry>', 'getAttachmentsInSkinForSlot(slotIndex:Int, attachments:Array<SkinEntry>');
             haxe = haxe.replace('hashCode = 31 * (31 + name.hashCode()) + slotIndex;', 'hashCode = Std.int(31 * (31 + name.hashCode()) + slotIndex);');
         }
         else if (rootType == 'spine.attachments.VertexAttachment') {
             haxe = haxe.replace('nextID()', 'getNextID()');
+        }
+        else if (rootType == 'spine.utils.SpineUtils') {
+            haxe = haxe.replace('System.arraycopy(', 'spine.support.utils.Array.copy(');
+            haxe = haxe.replace('java.lang.reflect.Array.getLength(', 'spine.support.utils.Array.getLengthOf(');
         }
 
         // Convert enums valueOf() / name() / ordinal()
@@ -2643,6 +2652,25 @@ using StringTools;
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
                     }
+                    else if (item.message.startsWith('Float should be spine.Bone')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        
+                        var newLine = line.replace('apply(', 'applyOne(');
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Edit line
+                        lines[item.line - 1] = newLine;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
                     else if (item.message == 'Not enough arguments, expected step:Int') {
                         numFixed++;
 
@@ -2672,15 +2700,29 @@ using StringTools;
                         var lines = file.split("\n");
                         var lineIndex = item.line - 1;
                         var line = lines[lineIndex];
-                        var snippet = line.substring(item.start, item.end);
-                        var newSnippet = '0';
 
-                        // Add new change
-                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+                        if (line.indexOf('Mode == null)') != -1) {
+                        
+                            var newLine = '//' + line;
 
-                        // Edit line
-                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
-                        lines[lineIndex] = line;
+                            // Add new change
+                            lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                            // Edit line
+                            lines[item.line - 1] = newLine;
+                        }
+                        else {
+
+                            var snippet = line.substring(item.start, item.end);
+                            var newSnippet = snippet.replace('null', '0');
+
+                            // Add new change
+                            lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                            // Edit line
+                            line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                            lines[lineIndex] = line;
+                        }
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
@@ -2725,6 +2767,7 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
                     }
                     else if (item.message.startsWith('Cannot inline a not final return')) {
+                        numFixed++;
 
                         var file = getFile(item.filePath);
 
@@ -2751,6 +2794,7 @@ using StringTools;
                     }
                     else if (RE_ERROR_IDENTIFIER_NOT_PART.match(item.message)) {
                         numFixed++;
+
                         var identifier = RE_ERROR_IDENTIFIER_NOT_PART.matched(1);
                         var newIdentifier = identifier;
 
@@ -2802,6 +2846,31 @@ using StringTools;
                         saveFile(item.filePath, lines.join("\n"));
 
                     }
+                    else if (item.message.startsWith('Function body required')) {
+                        numFixed++;
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = snippet;
+
+                        if (newSnippet.endsWith(';')) {
+                            newSnippet = newSnippet.substring(0, newSnippet.length - 1) + ' { return null; }';
+                        }
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        line = line.replace('#if !spine_no_inline inline #end ', '');
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+
                 } else if (item.location == 'lines') {
                     if (RE_ERROR_FIELD_NEEDED_BY.match(item.message)) {
 

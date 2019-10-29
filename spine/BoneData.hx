@@ -39,6 +39,7 @@ class BoneData {
     public var length:Float = 0;
     public var x:Float = 0; public var y:Float = 0; public var rotation:Float = 0; public var scaleX:Float = 1; public var scaleY:Float = 1; public var shearX:Float = 0; public var shearY:Float = 0;
     public var transformMode:TransformMode = TransformMode.normal;
+    public var skinRequired:Bool = false;
 
     // Nonessential.
     public var color:Color = new Color(0.61, 0.61, 0.61, 1); // 9b9b9bff
@@ -74,7 +75,7 @@ class BoneData {
         return index;
     }
 
-    /** The name of the bone, which is unique within the skeleton. */
+    /** The name of the bone, which is unique across all bones in the skeleton. */
     #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
@@ -172,7 +173,19 @@ class BoneData {
     }
 
     #if !spine_no_inline inline #end public function setTransformMode(transformMode:TransformMode):Void {
+////        if (transformMode == null) throw new IllegalArgumentException("transformMode cannot be null.");
         this.transformMode = transformMode;
+    }
+
+    /** When true, {@link Skeleton#updateWorldTransform()} only updates this bone if the {@link Skeleton#getSkin()} contains this
+     * bone.
+     * @see Skin#getBones() */
+    #if !spine_no_inline inline #end public function getSkinRequired():Bool {
+        return skinRequired;
+    }
+
+    #if !spine_no_inline inline #end public function setSkinRequired(skinRequired:Bool):Void {
+        this.skinRequired = skinRequired;
     }
 
     /** The color of the bone as it was in Spine. Available only when nonessential data was exported. Bones are not usually

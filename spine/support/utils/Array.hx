@@ -31,6 +31,10 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
         }
     }
 
+    inline public static function getLengthOf(array:std.Array<Float>) {
+        return array.length;
+    }
+
     public inline static function create(length:Float = 0):Dynamic {
         var len = Std.int(length);
         var array = new Array<Dynamic>(len != 0 ? len : 16);

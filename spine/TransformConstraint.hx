@@ -38,11 +38,13 @@ import spine.support.utils.Array;
  * bones to match that of the target bone.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-transform-constraints">Transform constraints</a> in the Spine User Guide. */
-class TransformConstraint implements Constraint {
+class TransformConstraint implements Updatable {
     public var data:TransformConstraintData;
     public var bones:Array<Bone>;
     public var target:Bone;
     public var rotateMix:Float = 0; public var translateMix:Float = 0; public var scaleMix:Float = 0; public var shearMix:Float = 0;
+
+    public var active:Bool = false;
     public var temp:Vector2 = new Vector2();
 
     public function new(data:TransformConstraintData, skeleton:Skeleton) {
@@ -75,7 +77,7 @@ class TransformConstraint implements Constraint {
     }*/
 
     /** Applies the constraint to the constrained bones. */
-    public function apply():Void {
+    public function applyNoArgs():Void {
         update();
     }
 
@@ -128,12 +130,12 @@ class TransformConstraint implements Constraint {
             }
 
             if (scaleMix > 0) {
-                var s:Float = cast(Math.sqrt(bone.a * bone.a + bone.c * bone.c), Float);
-                if (s != 0) s = (s + (cast(Math.sqrt(ta * ta + tc * tc) - s + data.offsetScaleX, Float)) * scaleMix) / s;
+                var s:Float = Math.sqrt(bone.a * bone.a + bone.c * bone.c);
+                if (s != 0) s = (s + (Math.sqrt(ta * ta + tc * tc) - s + data.offsetScaleX) * scaleMix) / s;
                 bone.a *= s;
                 bone.c *= s;
-                s = cast(Math.sqrt(bone.b * bone.b + bone.d * bone.d), Float);
-                if (s != 0) s = (s + (cast(Math.sqrt(tb * tb + td * td) - s + data.offsetScaleY, Float)) * scaleMix) / s;
+                s = Math.sqrt(bone.b * bone.b + bone.d * bone.d);
+                if (s != 0) s = (s + (Math.sqrt(tb * tb + td * td) - s + data.offsetScaleY) * scaleMix) / s;
                 bone.b *= s;
                 bone.d *= s;
                 modified = true;
@@ -147,7 +149,7 @@ class TransformConstraint implements Constraint {
                     r -= PI2;
                 else if (r < -PI) r += PI2;
                 r = by + (r + offsetShearY) * shearMix;
-                var s:Float = cast(Math.sqrt(b * b + d * d), Float);
+                var s:Float = Math.sqrt(b * b + d * d);
                 bone.b = cos(r) * s;
                 bone.d = sin(r) * s;
                 modified = true;
@@ -192,10 +194,10 @@ class TransformConstraint implements Constraint {
             }
 
             if (scaleMix > 0) {
-                var s:Float = (cast(Math.sqrt(ta * ta + tc * tc) - 1 + data.offsetScaleX, Float)) * scaleMix + 1;
+                var s:Float = (Math.sqrt(ta * ta + tc * tc) - 1 + data.offsetScaleX) * scaleMix + 1;
                 bone.a *= s;
                 bone.c *= s;
-                s = (cast(Math.sqrt(tb * tb + td * td) - 1 + data.offsetScaleY, Float)) * scaleMix + 1;
+                s = (Math.sqrt(tb * tb + td * td) - 1 + data.offsetScaleY) * scaleMix + 1;
                 bone.b *= s;
                 bone.d *= s;
                 modified = true;
@@ -208,7 +210,7 @@ class TransformConstraint implements Constraint {
                 else if (r < -PI) r += PI2;
                 var b:Float = bone.b; var d:Float = bone.d;
                 r = atan2(d, b) + (r - PI / 2 + offsetShearY) * shearMix;
-                var s:Float = cast(Math.sqrt(b * b + d * d), Float);
+                var s:Float = Math.sqrt(b * b + d * d);
                 bone.b = cos(r) * s;
                 bone.d = sin(r) * s;
                 modified = true;
@@ -288,10 +290,6 @@ class TransformConstraint implements Constraint {
         i++; }
     }
 
-    #if !spine_no_inline inline #end public function getOrder():Int {
-        return data.order;
-    }
-
     /** The bones that will be modified by this transform constraint. */
     #if !spine_no_inline inline #end public function getBones():Array<Bone> {
         return bones;
@@ -303,6 +301,7 @@ class TransformConstraint implements Constraint {
     }
 
     #if !spine_no_inline inline #end public function setTarget(target:Bone):Void {
+        if (target == null) throw new IllegalArgumentException("target cannot be null.");
         this.target = target;
     }
 
@@ -340,6 +339,10 @@ class TransformConstraint implements Constraint {
 
     #if !spine_no_inline inline #end public function setShearMix(shearMix:Float):Void {
         this.shearMix = shearMix;
+    }
+
+    #if !spine_no_inline inline #end public function isActive():Bool {
+        return active;
     }
 
     /** The transform constraint's setup pose data. */

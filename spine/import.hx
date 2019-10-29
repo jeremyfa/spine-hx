@@ -1,5 +1,6 @@
 
 import spine.support.error.*;
+import spine.support.utils.FastCast.*;
 import spine.support.utils.BooleanArray;
 import spine.support.utils.Short;
 import spine.support.utils.ShortArray;

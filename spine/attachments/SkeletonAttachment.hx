@@ -48,4 +48,10 @@ class SkeletonAttachment extends Attachment {
     #if !spine_no_inline inline #end public function setSkeleton(skeleton:Skeleton):Void {
         this.skeleton = skeleton;
     }
+
+    override #if !spine_no_inline inline #end public function copy():Attachment {
+        var copy:SkeletonAttachment = new SkeletonAttachment(name);
+        copy.skeleton = skeleton;
+        return copy;
+    }
 }

@@ -55,7 +55,7 @@ class Bone implements Updatable {
     public var a:Float = 0; public var b:Float = 0; public var worldX:Float = 0;
     public var c:Float = 0; public var d:Float = 0; public var worldY:Float = 0;
 
-    public var sorted:Bool = false;
+    public var sorted:Bool = false; public var active:Bool = false;
 
     /** @param parent May be null. */
     public function new(data:BoneData, skeleton:Skeleton, parent:Bone) {
@@ -85,14 +85,14 @@ class Bone implements Updatable {
     }*/
 
     /** Same as {@link #updateWorldTransform()}. This method exists for Bone to implement {@link Updatable}. */
-    public function update():Void {
+    #if !spine_no_inline inline #end public function update():Void {
         updateWorldTransformWithData(x, y, rotation, scaleX, scaleY, shearX, shearY);
     }
 
     /** Computes the world transform using the parent bone and this bone's local transform.
      * <p>
      * See {@link #updateWorldTransformWithData(float, float, float, float, float, float, float)}. */
-    public function updateWorldTransform():Void {
+    #if !spine_no_inline inline #end public function updateWorldTransform():Void {
         updateWorldTransformWithData(x, y, rotation, scaleX, scaleY, shearX, shearY);
     }
 
@@ -115,8 +115,8 @@ class Bone implements Updatable {
             var skeleton:Skeleton = this.skeleton;
             var rotationY:Float = rotation + 90 + shearY; var sx:Float = skeleton.scaleX; var sy:Float = skeleton.scaleY;
             a = cosDeg(rotation + shearX) * scaleX * sx;
-            b = cosDeg(rotationY) * scaleY * sy;
-            c = sinDeg(rotation + shearX) * scaleX * sx;
+            b = cosDeg(rotationY) * scaleY * sx;
+            c = sinDeg(rotation + shearX) * scaleX * sy;
             d = sinDeg(rotationY) * scaleY * sy;
             worldX = x * sx + skeleton.x;
             worldY = y * sy + skeleton.y;
@@ -177,11 +177,11 @@ class Bone implements Updatable {
             var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
             var za:Float = (pa * cos + pb * sin) / skeleton.scaleX;
             var zc:Float = (pc * cos + pd * sin) / skeleton.scaleY;
-            var s:Float = cast(Math.sqrt(za * za + zc * zc), Float);
+            var s:Float = Math.sqrt(za * za + zc * zc);
             if (s > 0.00001) s = 1 / s;
             za *= s;
             zc *= s;
-            s = cast(Math.sqrt(za * za + zc * zc), Float);
+            s = Math.sqrt(za * za + zc * zc);
             if (data.transformMode == TransformMode.noScale
                 && (pa * pd - pb * pc < 0) != ((skeleton.scaleX < 0) != (skeleton.scaleY < 0))) s = -s;
             var r:Float = PI / 2 + atan2(zc, za);
@@ -201,11 +201,11 @@ class Bone implements Updatable {
             var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
             var za:Float = (pa * cos + pb * sin) / skeleton.scaleX;
             var zc:Float = (pc * cos + pd * sin) / skeleton.scaleY;
-            var s:Float = cast(Math.sqrt(za * za + zc * zc), Float);
+            var s:Float = Math.sqrt(za * za + zc * zc);
             if (s > 0.00001) s = 1 / s;
             za *= s;
             zc *= s;
-            s = cast(Math.sqrt(za * za + zc * zc), Float);
+            s = Math.sqrt(za * za + zc * zc);
             if (data.transformMode == TransformMode.noScale
                 && (pa * pd - pb * pc < 0) != ((skeleton.scaleX < 0) != (skeleton.scaleY < 0))) s = -s;
             var r:Float = PI / 2 + atan2(zc, za);
@@ -260,6 +260,12 @@ class Bone implements Updatable {
         return children;
     }
 
+    /** Returns false when the bone has not been computed because {@link BoneData#getSkinRequired()} is true and the
+     * {@link Skeleton#getSkin() active skin} does not {@link Skin#getBones() contain} this bone. */
+    #if !spine_no_inline inline #end public function isActive():Bool {
+        return active;
+    }
+
     // -- Local transform
 
     /** The local x translation. */
@@ -285,7 +291,7 @@ class Bone implements Updatable {
         this.y = y;
     }
 
-    /** The local rotation. */
+    /** The local rotation in degrees, counter clockwise. */
     #if !spine_no_inline inline #end public function getRotation():Float {
         return rotation;
     }
@@ -360,7 +366,7 @@ class Bone implements Updatable {
         this.ay = ay;
     }
 
-    /** The applied local rotation. */
+    /** The applied local rotation in degrees, counter clockwise. */
     #if !spine_no_inline inline #end public function getARotation():Float {
         return arotation;
     }
@@ -430,8 +436,8 @@ class Bone implements Updatable {
             ax = worldX;
             ay = worldY;
             arotation = atan2(c, a) * radDeg;
-            ascaleX = cast(Math.sqrt(a * a + c * c), Float);
-            ascaleY = cast(Math.sqrt(b * b + d * d), Float);
+            ascaleX = Math.sqrt(a * a + c * c);
+            ascaleY = Math.sqrt(b * b + d * d);
             ashearX = 0;
             ashearY = atan2(a * b + c * d, a * d - b * c) * radDeg;
             return;
@@ -450,7 +456,7 @@ class Bone implements Updatable {
         var rc:Float = id * c - ic * a;
         var rd:Float = id * d - ic * b;
         ashearX = 0;
-        ascaleX = cast(Math.sqrt(ra * ra + rc * rc), Float);
+        ascaleX = Math.sqrt(ra * ra + rc * rc);
         if (ascaleX > 0.0001) {
             var det:Float = ra * rd - rb * rc;
             ascaleY = det / ascaleX;
@@ -458,7 +464,7 @@ class Bone implements Updatable {
             arotation = atan2(rc, ra) * radDeg;
         } else {
             ascaleX = 0;
-            ascaleY = cast(Math.sqrt(rb * rb + rd * rd), Float);
+            ascaleY = Math.sqrt(rb * rb + rd * rd);
             ashearY = 0;
             arotation = 90 - atan2(rd, rb) * radDeg;
         }
@@ -532,12 +538,12 @@ class Bone implements Updatable {
 
     /** The magnitude (always positive) of the world scale X, calculated using {@link #a} and {@link #c}. */
     #if !spine_no_inline inline #end public function getWorldScaleX():Float {
-        return cast(Math.sqrt(a * a + c * c), Float);
+        return Math.sqrt(a * a + c * c);
     }
 
     /** The magnitude (always positive) of the world scale Y, calculated using {@link #b} and {@link #d}. */
     #if !spine_no_inline inline #end public function getWorldScaleY():Float {
-        return cast(Math.sqrt(b * b + d * d), Float);
+        return Math.sqrt(b * b + d * d);
     }
 
     #if !spine_no_inline inline #end public function getWorldTransform(worldTransform:Matrix3):Matrix3 {
@@ -557,6 +563,7 @@ class Bone implements Updatable {
 
     /** Transforms a point from world coordinates to the bone's local coordinates. */
     #if !spine_no_inline inline #end public function worldToLocal(world:Vector2):Vector2 {
+        if (world == null) throw new IllegalArgumentException("world cannot be null.");
         var invDet:Float = 1 / (a * d - b * c);
         var x:Float = world.x - worldX; var y:Float = world.y - worldY;
         world.x = x * d * invDet - y * b * invDet;
@@ -566,6 +573,7 @@ class Bone implements Updatable {
 
     /** Transforms a point from the bone's local coordinates to world coordinates. */
     #if !spine_no_inline inline #end public function localToWorld(local:Vector2):Vector2 {
+        if (local == null) throw new IllegalArgumentException("local cannot be null.");
         var x:Float = local.x; var y:Float = local.y;
         local.x = x * a + y * b + worldX;
         local.y = x * c + y * d + worldY;

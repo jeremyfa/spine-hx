@@ -4,7 +4,7 @@ import spine.AnimationStateData.AnimationStateDataKey;
 
 abstract AnimationStateMap(Map<Int,Array<Entry<AnimationStateDataKey,Float>>>) {
 
-    inline public function new() {
+    inline public function new(initialCapacity:Int = 51, loadFactor:Float = 0.8) {
         this = new Map();
     }
 

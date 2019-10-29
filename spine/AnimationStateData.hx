@@ -35,7 +35,7 @@ import spine.AnimationState.TrackEntry;
 /** Stores mix (crossfade) durations to be applied when {@link AnimationState} animations are changed. */
 class AnimationStateData {
     public var skeletonData:SkeletonData;
-    public var animationToMixTime:AnimationStateMap = new AnimationStateMap();
+    public var animationToMixTime:AnimationStateMap = new AnimationStateMap(51, 0.8);
     public var tempAnimationStateDataKey:AnimationStateDataKey = new AnimationStateDataKey();
     public var defaultMix:Float = 0;
 
@@ -102,7 +102,7 @@ class AnimationStateDataKey {
     public function equals(obj:Dynamic):Bool {
         if (this == obj) return true;
         if (obj == null) return false;
-        var other:AnimationStateDataKey = cast(obj, AnimationStateDataKey);
+        var other:AnimationStateDataKey = fastCast(obj, AnimationStateDataKey);
         if (a1 == null) {
             if (other.a1 != null) return false;
         } else if (!a1.equals(other.a1)) return false;

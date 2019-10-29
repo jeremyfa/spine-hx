@@ -58,4 +58,12 @@ class ClippingAttachment extends VertexAttachment {
     #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
+
+    override #if !spine_no_inline inline #end public function copy():Attachment {
+        var copy:ClippingAttachment = new ClippingAttachment(name);
+        copyTo(copy);
+        copy.endSlot = endSlot;
+        copy.color.setColor(color);
+        return copy;
+    }
 }

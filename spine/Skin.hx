@@ -31,10 +31,8 @@ package spine;
 
 import spine.support.utils.Array;
 import spine.support.utils.AttachmentMap;
-import spine.support.utils.AttachmentMap.Entry;
-import spine.support.utils.Pool;
-
 import spine.attachments.Attachment;
+import spine.attachments.MeshAttachment;
 
 /** Stores attachments by slot index and attachment name.
  * <p>
@@ -43,76 +41,104 @@ import spine.attachments.Attachment;
 class Skin {
     public var name:String;
     public var attachments:AttachmentMap = new AttachmentMap();
-    private var lookup:Key = new Key();
-    public var keyPool:Pool<Key> = new KeyPool(64);
+    public var bones:Array<BoneData> = new Array();
+    public var constraints:Array<ConstraintData> = new Array();
+    private var lookup:SkinEntry = @:privateAccess new SkinEntry(0, "", null);
 
     public function new(name:String) {
         if (name == null) throw new IllegalArgumentException("name cannot be null.");
         this.name = name;
+        //this.attachments.orderedKeys().ordered = false;
     }
 
     /** Adds an attachment to the skin for the specified slot index and name. */
-    #if !spine_no_inline inline #end public function addAttachment(slotIndex:Int, name:String, attachment:Attachment):Void {
-        if (attachment == null) throw new IllegalArgumentException("attachment cannot be null.");
+    #if !spine_no_inline inline #end public function setAttachment(slotIndex:Int, name:String, attachment:Attachment):Void {
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
-        var key:Key = keyPool.obtain();
-        key.set(slotIndex, name);
-        attachments.put(key, attachment);
+        if (attachment == null) throw new IllegalArgumentException("attachment cannot be null.");
+        var newEntry:SkinEntry = @:privateAccess new SkinEntry(slotIndex, name, attachment);
+        var oldEntry:SkinEntry = attachments.put(newEntry, newEntry);
+        if (oldEntry != null) {
+            oldEntry.attachment = attachment;
+        }
     }
 
-    /** Adds all attachments from the specified skin to this skin. */
-    #if !spine_no_inline inline #end public function addAttachments(skin:Skin):Void {
-        for (entry in skin.attachments.entries()) {
-            addAttachment(entry.key.slotIndex, entry.key.name, entry.value); }
+    /** Adds all attachments, bones, and constraints from the specified skin to this skin. */
+    #if !spine_no_inline inline #end public function addSkin(skin:Skin):Void {
+        if (skin == null) throw new IllegalArgumentException("skin cannot be null.");
+
+        for (data in skin.bones) {
+            if (!bones.contains(data, true)) bones.add(data); }
+
+        for (data in skin.constraints) {
+            if (!constraints.contains(data, true)) constraints.add(data); }
+
+        for (entry in skin.attachments.keys()) {
+            setAttachment(entry.slotIndex, entry.name, entry.attachment); }
+    }
+
+    /** Adds all bones and constraints and copies of all attachments from the specified skin to this skin. Mesh attachments are not
+     * copied, instead a new linked mesh is created. The attachment copies can be modified without affecting the originals. */
+    #if !spine_no_inline inline #end public function copySkin(skin:Skin):Void {
+        if (skin == null) throw new IllegalArgumentException("skin cannot be null.");
+
+        for (data in skin.bones) {
+            if (!bones.contains(data, true)) bones.add(data); }
+
+        for (data in skin.constraints) {
+            if (!constraints.contains(data, true)) constraints.add(data); }
+
+        for (entry in skin.attachments.keys()) {
+            if (Std.is(entry.attachment, MeshAttachment))
+                setAttachment(entry.slotIndex, entry.name, (fastCast(entry.attachment, MeshAttachment)).newLinkedMesh());
+            else
+                setAttachment(entry.slotIndex, entry.name, entry.attachment != null ? entry.attachment.copy() : null);
+        }
     }
 
     /** Returns the attachment for the specified slot index and name, or null. */
     #if !spine_no_inline inline #end public function getAttachment(slotIndex:Int, name:String):Attachment {
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
         lookup.set(slotIndex, name);
-        return attachments.get(lookup);
+        var entry:SkinEntry = attachments.get(lookup);
+        return entry != null ? entry.attachment : null;
     }
 
     /** Removes the attachment in the skin for the specified slot index and name, if any. */
     #if !spine_no_inline inline #end public function removeAttachment(slotIndex:Int, name:String):Void {
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
-        var key:Key = keyPool.obtain();
-        key.set(slotIndex, name);
-        attachments.remove(key);
-        keyPool.free(key);
+        lookup.set(slotIndex, name);
+        attachments.remove(lookup);
     }
 
-    #if !spine_no_inline inline #end public function findNamesForSlot(slotIndex:Int, names:Array<String>):Void {
-        if (names == null) throw new IllegalArgumentException("names cannot be null.");
+    /** Returns all attachments in this skin. */
+    #if !spine_no_inline inline #end public function getAttachments():Array<SkinEntry> {
+        return attachments.orderedKeys();
+    }
+
+    /** Returns all attachments in this skin for the specified slot index. */
+    #if !spine_no_inline inline #end public function getAttachmentsInSkinForSlot(slotIndex:Int, attachments:Array<SkinEntry>):Void {
         if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
-        for (key in attachments.keys()) {
-            if (key.slotIndex == slotIndex) names.add(key.name); }
-    }
-
-    #if !spine_no_inline inline #end public function findAttachmentsForSlot(slotIndex:Int, attachments:Array<Attachment>):Void {
         if (attachments == null) throw new IllegalArgumentException("attachments cannot be null.");
-        if (slotIndex < 0) throw new IllegalArgumentException("slotIndex must be >= 0.");
-        for (entry in this.attachments.entries()) {
-            if (entry.key.slotIndex == slotIndex) attachments.add(entry.value); }
+        for (entry in this.attachments.keys()) {
+            if (entry.slotIndex == slotIndex) attachments.add(entry); }
     }
 
-    #if !spine_no_inline inline #end public function getAttachments(attachments:Array<Attachment>):Void {
-        if (attachments == null) throw new IllegalArgumentException("attachments cannot be null.");
-        for (attachment in this.attachments.values()) {
-            attachments.add(attachment); }
-    }
-
+    /** Clears all attachments, bones, and constraints. */
     #if !spine_no_inline inline #end public function clear():Void {
-        for (key in attachments.keys()) {
-            keyPool.free(key); }
         attachments.clear();
+        bones.clear();
+        constraints.clear();
     }
 
-    #if !spine_no_inline inline #end public function size():Int {
-        return attachments.size;
+    #if !spine_no_inline inline #end public function getBones():Array<BoneData> {
+        return bones;
     }
 
-    /** The skin's name, which is unique within the skeleton. */
+    #if !spine_no_inline inline #end public function getConstraints():Array<ConstraintData> {
+        return constraints;
+    }
+
+    /** The skin's name, which is unique across all skins in the skeleton. */
     #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
@@ -123,27 +149,51 @@ class Skin {
 
     /** Attach each attachment in this skin if the corresponding attachment in the old skin is currently attached. */
     #if !spine_no_inline inline #end public function attachAll(skeleton:Skeleton, oldSkin:Skin):Void {
-        for (entry in oldSkin.attachments.entries()) {
-            var slotIndex:Int = entry.key.slotIndex;
+        for (entry in oldSkin.attachments.keys()) {
+            var slotIndex:Int = entry.slotIndex;
             var slot:Slot = skeleton.slots.get(slotIndex);
-            if (slot.attachment == entry.value) {
-                var attachment:Attachment = getAttachment(slotIndex, entry.key.name);
+            if (slot.attachment == entry.attachment) {
+                var attachment:Attachment = getAttachment(slotIndex, entry.name);
                 if (attachment != null) slot.setAttachment(attachment);
             }
         }
     }
 }
 
-class Key {
+/** Stores an entry in the skin consisting of the slot index, name, and attachment **/
+class SkinEntry {
     public var slotIndex:Int = 0;
     public var name:String;
-    public var hashCode:Int = 0;
+    public var attachment:Attachment;
+    private var hashCode:Int = 0;
+
+    /*function new() {
+        set(0, "");
+    }*/
+
+    function new(slotIndex:Int, name:String, attachment:Attachment) {
+        set(slotIndex, name);
+        this.attachment = attachment;
+    }
 
     #if !spine_no_inline inline #end public function set(slotIndex:Int, name:String):Void {
         if (name == null) throw new IllegalArgumentException("name cannot be null.");
         this.slotIndex = slotIndex;
         this.name = name;
-        hashCode = name.getHashCode() + slotIndex * 37;
+        this.hashCode = name.getHashCode() + slotIndex * 37;
+    }
+
+    #if !spine_no_inline inline #end public function getSlotIndex():Int {
+        return slotIndex;
+    }
+
+    /** The name the attachment is associated with, equivalent to the skin placeholder name in the Spine editor. */
+    #if !spine_no_inline inline #end public function getName():String {
+        return name;
+    }
+
+    #if !spine_no_inline inline #end public function getAttachment():Attachment {
+        return attachment;
     }
 
     #if !spine_no_inline inline #end public function getHashCode():Int {
@@ -152,7 +202,7 @@ class Key {
 
     #if !spine_no_inline inline #end public function equals(object:Dynamic):Bool {
         if (object == null) return false;
-        var other:Key = cast(object, Key);
+        var other:SkinEntry = fastCast(object, SkinEntry);
         if (slotIndex != other.slotIndex) return false;
         if (!name.equals(other.name)) return false;
         return true;
@@ -161,16 +211,4 @@ class Key {
     #if !spine_no_inline inline #end public function toString():String {
         return slotIndex + ":" + name;
     }
-
-    public function new() {}
 }
-
-private class KeyPool extends Pool<Key> {
-    override public function new(initialCapacity:Int) {
-        super(initialCapacity, 999999999);
-    }
-    override function newObject() {
-        return new Key();
-    }
-}
-

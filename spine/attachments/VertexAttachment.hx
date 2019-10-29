@@ -29,14 +29,16 @@
 
 package spine.attachments;
 
+import spine.utils.SpineUtils.*;
+
+import spine.support.utils.FloatArray;
+
 import spine.Bone;
 import spine.Skeleton;
 import spine.Slot;
 
-import spine.support.utils.FloatArray;
-
 /** Base class for an attachment with vertices that are transformed by one or more bones and can be deformed by a slot's
- * {@link Slot#getAttachmentVertices()}. */
+ * {@link Slot#getDeform()}. */
 class VertexAttachment extends Attachment {
     private static var nextID:Int = 0;
 
@@ -44,13 +46,14 @@ class VertexAttachment extends Attachment {
     public var bones:IntArray;
     public var vertices:FloatArray;
     public var worldVerticesLength:Int = 0;
+    public var deformAttachment:VertexAttachment = this;
 
     public function new(name:String) {
         super(name);
     }
 
-    /** Transforms the attachment's local {@link #getVertices()} to world coordinates. If the slot has
-     * {@link Slot#getAttachmentVertices()}, they are used to deform the vertices.
+    /** Transforms the attachment's local {@link #getVertices()} to world coordinates. If the slot's {@link Slot#getDeform()} is
+     * not empty, it is used to deform the vertices.
      * <p>
      * See <a href="http://esotericsoftware.com/spine-runtime-skeletons#World-transforms">World transforms</a> in the Spine
      * Runtimes Guide.
@@ -63,7 +66,7 @@ class VertexAttachment extends Attachment {
     #if !spine_no_inline inline #end public function computeWorldVertices(slot:Slot, start:Int, count:Int, worldVertices:FloatArray, offset:Int, stride:Int):Void {
         count = offset + (count >> 1) * stride;
         var skeleton:Skeleton = slot.getSkeleton();
-        var deformArray:FloatArray = slot.getAttachmentVertices();
+        var deformArray:FloatArray = slot.getDeform();
         var vertices:FloatArray = this.vertices;
         var bones:IntArray = this.bones;
         if (bones == null) {
@@ -91,7 +94,7 @@ class VertexAttachment extends Attachment {
                 var n:Int = bones[v++];
                 n += v;
                 while (v < n) {
-                    var bone:Bone = cast(skeletonBones[bones[v]], Bone);
+                    var bone:Bone = fastCast(skeletonBones[bones[v]], Bone);
                     var vx:Float = vertices[b]; var vy:Float = vertices[b + 1]; var weight:Float = vertices[b + 2];
                     wx += (vx * bone.getA() + vy * bone.getB() + bone.getWorldX()) * weight;
                     wy += (vx * bone.getC() + vy * bone.getD() + bone.getWorldY()) * weight;
@@ -106,7 +109,7 @@ class VertexAttachment extends Attachment {
                 var n:Int = bones[v++];
                 n += v;
                 while (v < n) {
-                    var bone:Bone = cast(skeletonBones[bones[v]], Bone);
+                    var bone:Bone = fastCast(skeletonBones[bones[v]], Bone);
                     var vx:Float = vertices[b] + deform[f]; var vy:Float = vertices[b + 1] + deform[f + 1]; var weight:Float = vertices[b + 2];
                     wx += (vx * bone.getA() + vy * bone.getB() + bone.getWorldX()) * weight;
                     wy += (vx * bone.getC() + vy * bone.getD() + bone.getWorldY()) * weight;
@@ -117,10 +120,15 @@ class VertexAttachment extends Attachment {
         }
     }
 
-    /** Returns true if a deform originally applied to the specified attachment should be applied to this attachment. The default
-     * implementation returns true only when <code>sourceAttachment</code> is this attachment. */
-    public function applyDeform(sourceAttachment:VertexAttachment):Bool {
-        return this == sourceAttachment;
+    /** Deform keys for the deform attachment are also applied to this attachment.
+     * @return May be null if no deform keys should be applied. */
+    #if !spine_no_inline inline #end public function getDeformAttachment():VertexAttachment {
+        return deformAttachment;
+    }
+
+    /** @param deformAttachment May be null if no deform keys should be applied. */
+    #if !spine_no_inline inline #end public function setDeformAttachment(deformAttachment:VertexAttachment):Void {
+        this.deformAttachment = deformAttachment;
     }
 
     /** The bones which affect the {@link #getVertices()}. The array entries are, for each vertex, the number of bones affecting
@@ -159,6 +167,24 @@ class VertexAttachment extends Attachment {
     /** Returns a unique ID for this attachment. */
     #if !spine_no_inline inline #end public function getId():Int {
         return id;
+    }
+
+    /** Does not copy id (generated) or name (set on construction). **/
+    #if !spine_no_inline inline #end public function copyTo(attachment:VertexAttachment):Void {
+        if (bones != null) {
+            attachment.bones = IntArray.create(bones.length);
+            arraycopy(bones, 0, attachment.bones, 0, bones.length);
+        } else
+            attachment.bones = null;
+
+        if (vertices != null) {
+            attachment.vertices = FloatArray.create(vertices.length);
+            arraycopy(vertices, 0, attachment.vertices, 0, vertices.length);
+        } else
+            attachment.vertices = null;
+
+        attachment.worldVerticesLength = worldVerticesLength;
+        attachment.deformAttachment = deformAttachment;
     }
 
     #if !spine_no_inline inline #end private static function getNextID():Int {

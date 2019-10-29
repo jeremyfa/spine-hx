@@ -73,6 +73,7 @@ class Event {
     }
 
     #if !spine_no_inline inline #end public function setString(stringValue:String):Void {
+        if (stringValue == null) throw new IllegalArgumentException("stringValue cannot be null.");
         this.stringValue = stringValue;
     }
 

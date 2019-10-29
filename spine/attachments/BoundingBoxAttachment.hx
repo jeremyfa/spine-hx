@@ -50,4 +50,11 @@ class BoundingBoxAttachment extends VertexAttachment {
     #if !spine_no_inline inline #end public function getColor():Color {
         return color;
     }
+
+    override #if !spine_no_inline inline #end public function copy():Attachment {
+        var copy:BoundingBoxAttachment = new BoundingBoxAttachment(name);
+        copyTo(copy);
+        copy.color.setColor(color);
+        return copy;
+    }
 }

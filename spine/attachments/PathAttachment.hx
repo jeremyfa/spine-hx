@@ -29,7 +29,10 @@
 
 package spine.attachments;
 
+import spine.utils.SpineUtils.*;
+
 import spine.support.graphics.Color;
+
 import spine.PathConstraint;
 
 /** An attachment whose vertices make up a composite Bezier curve.
@@ -78,5 +81,16 @@ class PathAttachment extends VertexAttachment {
      * rendered at runtime. */
     #if !spine_no_inline inline #end public function getColor():Color {
         return color;
+    }
+
+    override #if !spine_no_inline inline #end public function copy():Attachment {
+        var copy:PathAttachment = new PathAttachment(name);
+        copyTo(copy);
+        copy.lengths = FloatArray.create(lengths.length);
+        arraycopy(lengths, 0, copy.lengths, 0, lengths.length);
+        copy.closed = closed;
+        copy.constantSpeed = constantSpeed;
+        copy.color.setColor(color);
+        return copy;
     }
 }

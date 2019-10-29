@@ -34,9 +34,7 @@ import spine.support.utils.Array;
 /** Stores the setup pose for a {@link PathConstraint}.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-path-constraints">Path constraints</a> in the Spine User Guide. */
-class PathConstraintData {
-    public var name:String;
-    public var order:Int = 0;
+class PathConstraintData extends ConstraintData {
     public var bones:Array<BoneData> = new Array();
     public var target:SlotData;
     public var positionMode:PositionMode;
@@ -46,22 +44,7 @@ class PathConstraintData {
     public var position:Float = 0; public var spacing:Float = 0; public var rotateMix:Float = 0; public var translateMix:Float = 0;
 
     public function new(name:String) {
-        if (name == null) throw new IllegalArgumentException("name cannot be null.");
-        this.name = name;
-    }
-
-    /** The path constraint's name, which is unique within the skeleton. */
-    #if !spine_no_inline inline #end public function getName():String {
-        return name;
-    }
-
-    /** See {@link Constraint#getOrder()}. */
-    #if !spine_no_inline inline #end public function getOrder():Int {
-        return order;
-    }
-
-    #if !spine_no_inline inline #end public function setOrder(order:Int):Void {
-        this.order = order;
+        super(name);
     }
 
     /** The bones that will be modified by this path constraint. */
@@ -75,6 +58,7 @@ class PathConstraintData {
     }
 
     #if !spine_no_inline inline #end public function setTarget(target:SlotData):Void {
+        if (target == null) throw new IllegalArgumentException("target cannot be null.");
         this.target = target;
     }
 
@@ -84,6 +68,7 @@ class PathConstraintData {
     }
 
     #if !spine_no_inline inline #end public function setPositionMode(positionMode:PositionMode):Void {
+////        if (positionMode == null) throw new IllegalArgumentException("positionMode cannot be null.");
         this.positionMode = positionMode;
     }
 
@@ -93,6 +78,7 @@ class PathConstraintData {
     }
 
     #if !spine_no_inline inline #end public function setSpacingMode(spacingMode:SpacingMode):Void {
+////        if (spacingMode == null) throw new IllegalArgumentException("spacingMode cannot be null.");
         this.spacingMode = spacingMode;
     }
 
@@ -102,6 +88,7 @@ class PathConstraintData {
     }
 
     #if !spine_no_inline inline #end public function setRotateMode(rotateMode:RotateMode):Void {
+////        if (rotateMode == null) throw new IllegalArgumentException("rotateMode cannot be null.");
         this.rotateMode = rotateMode;
     }
 
@@ -148,10 +135,6 @@ class PathConstraintData {
 
     #if !spine_no_inline inline #end public function setTranslateMix(translateMix:Float):Void {
         this.translateMix = translateMix;
-    }
-
-    #if !spine_no_inline inline #end public function toString():String {
-        return name;
     }
 }
 

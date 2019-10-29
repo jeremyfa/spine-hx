@@ -34,9 +34,7 @@ import spine.support.utils.Array;
 /** Stores the setup pose for a {@link TransformConstraint}.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-transform-constraints">Transform constraints</a> in the Spine User Guide. */
-class TransformConstraintData {
-    public var name:String;
-    public var order:Int = 0;
+class TransformConstraintData extends ConstraintData {
     public var bones:Array<BoneData> = new Array();
     public var target:BoneData;
     public var rotateMix:Float = 0; public var translateMix:Float = 0; public var scaleMix:Float = 0; public var shearMix:Float = 0;
@@ -44,22 +42,7 @@ class TransformConstraintData {
     public var relative:Bool = false; public var local:Bool = false;
 
     public function new(name:String) {
-        if (name == null) throw new IllegalArgumentException("name cannot be null.");
-        this.name = name;
-    }
-
-    /** The transform constraint's name, which is unique within the skeleton. */
-    #if !spine_no_inline inline #end public function getName():String {
-        return name;
-    }
-
-    /** See {@link Constraint#getOrder()}. */
-    #if !spine_no_inline inline #end public function getOrder():Int {
-        return order;
-    }
-
-    #if !spine_no_inline inline #end public function setOrder(order:Int):Void {
-        this.order = order;
+        super(name);
     }
 
     /** The bones that will be modified by this transform constraint. */
@@ -181,9 +164,5 @@ class TransformConstraintData {
 
     #if !spine_no_inline inline #end public function setLocal(local:Bool):Void {
         this.local = local;
-    }
-
-    #if !spine_no_inline inline #end public function toString():String {
-        return name;
     }
 }

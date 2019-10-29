@@ -35,8 +35,8 @@ import spine.support.utils.Pool;
 import spine.attachments.Attachment;
 import spine.attachments.BoundingBoxAttachment;
 
-/** Collects each {@link BoundingBoxAttachment} that is visible and computes the world vertices for its polygon. The polygon
- * vertices are provided along with convenience methods for doing hit detection. */
+/** Collects each visible {@link BoundingBoxAttachment} and computes the world vertices for its polygon. The polygon vertices are
+ * provided along with convenience methods for doing hit detection. */
 class SkeletonBounds {
     private var minX:Float = 0; private var minY:Float = 0; private var maxX:Float = 0; private var maxY:Float = 0;
     private var boundingBoxes:Array<BoundingBoxAttachment> = new Array();
@@ -60,9 +60,10 @@ class SkeletonBounds {
 
         var i:Int = 0; while (i < slotCount) {
             var slot:Slot = slots.get(i);
+            if (!slot.bone.active) { i++; continue; }
             var attachment:Attachment = slot.attachment;
             if (Std.is(attachment, BoundingBoxAttachment)) {
-                var boundingBox:BoundingBoxAttachment = cast(attachment, BoundingBoxAttachment);
+                var boundingBox:BoundingBoxAttachment = fastCast(attachment, BoundingBoxAttachment);
                 boundingBoxes.add(boundingBox);
 
                 var polygon:FloatArray = polygonPool.obtain();
@@ -130,6 +131,7 @@ class SkeletonBounds {
 
     /** Returns true if the axis aligned bounding box intersects the axis aligned bounding box of the specified bounds. */
     #if !spine_no_inline inline #end public function aabbIntersectsSkeleton(bounds:SkeletonBounds):Bool {
+        if (bounds == null) throw new IllegalArgumentException("bounds cannot be null.");
         return minX < bounds.maxX && maxX > bounds.minX && minY < bounds.maxY && maxY > bounds.minY;
     }
 
@@ -144,6 +146,7 @@ class SkeletonBounds {
 
     /** Returns true if the polygon contains the point. */
     #if !spine_no_inline inline #end public function polygonContainsPoint(polygon:FloatArray, x:Float, y:Float):Bool {
+        if (polygon == null) throw new IllegalArgumentException("polygon cannot be null.");
         var vertices:FloatArray = polygon.items;
         var nn:Int = polygon.size;
 
@@ -173,6 +176,7 @@ class SkeletonBounds {
 
     /** Returns true if the polygon contains any part of the line segment. */
     public function polygonIntersectsSegment(polygon:FloatArray, x1:Float, y1:Float, x2:Float, y2:Float):Bool {
+        if (polygon == null) throw new IllegalArgumentException("polygon cannot be null.");
         var vertices:FloatArray = polygon.items;
         var nn:Int = polygon.size;
 

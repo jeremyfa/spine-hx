@@ -142,8 +142,8 @@ class SkeletonClipping {
                     clipOutputCount--;
                     var ii:Int = 1; while (ii < clipOutputCount) {
                         clippedTrianglesItems[s] = index;
-                        clippedTrianglesItems[s + 1] = cast((index + ii), Short);
-                        clippedTrianglesItems[s + 2] = cast((index + ii + 1), Short);
+                        clippedTrianglesItems[s + 1] = Std.int((index + ii));
+                        clippedTrianglesItems[s + 2] = Std.int((index + ii + 1));
                         s += 3;
                     ii++; } if (_gotoLabel_outer == 2) break; if (_gotoLabel_outer >= 1) break;
                     index += clipOutputCount + 1;
@@ -191,8 +191,8 @@ class SkeletonClipping {
                     s = clippedTriangles.size;
                     var clippedTrianglesItems:ShortArray = clippedTriangles.setSize(s + 3);
                     clippedTrianglesItems[s] = index;
-                    clippedTrianglesItems[s + 1] = cast((index + 1), Short);
-                    clippedTrianglesItems[s + 2] = cast((index + 2), Short);
+                    clippedTrianglesItems[s + 1] = Std.int((index + 1));
+                    clippedTrianglesItems[s + 2] = Std.int((index + 2));
                     index += 3;
                     { p++; _gotoLabel_outer = 2; break; }
                 }

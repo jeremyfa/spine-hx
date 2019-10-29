@@ -29,10 +29,13 @@
 
 package spine.attachments;
 
+import spine.utils.SpineUtils.*;
+
 import spine.support.graphics.Color;
 import spine.support.graphics.TextureAtlas.AtlasRegion;
 import spine.support.graphics.TextureRegion;
 import spine.support.math.MathUtils;
+
 import spine.Bone;
 
 /** An attachment that displays a textured quadrilateral.
@@ -68,7 +71,7 @@ class RegionAttachment extends Attachment {
         var localX:Float = -localX2;
         var localY:Float = -localY2;
         if (Std.is(region, AtlasRegion)) {
-            var region:AtlasRegion = cast(this.region, AtlasRegion);
+            var region:AtlasRegion = fastCast(this.region, AtlasRegion);
             localX += region.offsetX / region.originalWidth * width;
             localY += region.offsetY / region.originalHeight * height;
             if (region.rotate) {
@@ -86,8 +89,8 @@ class RegionAttachment extends Attachment {
         localX2 *= scaleX;
         localY2 *= scaleY;
         var rotation:Float = getRotation();
-        var cos:Float = cast(Math.cos(MathUtils.degRad * rotation), Float);
-        var sin:Float = cast(Math.sin(MathUtils.degRad * rotation), Float);
+        var cos:Float = Math.cos(MathUtils.degRad * rotation);
+        var sin:Float = Math.sin(MathUtils.degRad * rotation);
         var x:Float = getX();
         var y:Float = getY();
         var localXCos:Float = localX * cos + x;
@@ -113,7 +116,7 @@ class RegionAttachment extends Attachment {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         this.region = region;
         var uvs:FloatArray = this.uvs;
-        if (Std.is(region, AtlasRegion) && (cast(region, AtlasRegion)).rotate) {
+        if (Std.is(region, AtlasRegion) && (fastCast(region, AtlasRegion)).rotate) {
             uvs[URX] = region.getU();
             uvs[URY] = region.getV2();
             uvs[BRX] = region.getU();
@@ -262,5 +265,22 @@ class RegionAttachment extends Attachment {
 
     #if !spine_no_inline inline #end public function setPath(path:String):Void {
         this.path = path;
+    }
+
+    override #if !spine_no_inline inline #end public function copy():Attachment {
+        var copy:RegionAttachment = new RegionAttachment(name);
+        copy.region = region;
+        copy.path = path;
+        copy.x = x;
+        copy.y = y;
+        copy.scaleX = scaleX;
+        copy.scaleY = scaleY;
+        copy.rotation = rotation;
+        copy.width = width;
+        copy.height = height;
+        arraycopy(uvs, 0, copy.uvs, 0, 8);
+        arraycopy(offset, 0, copy.offset, 0, 8);
+        copy.color.setColor(color);
+        return copy;
     }
 }

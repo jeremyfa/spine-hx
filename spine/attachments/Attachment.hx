@@ -44,6 +44,9 @@ class Attachment {
     }
 
     #if !spine_no_inline inline #end public function toString():String {
-        return getName();
+        return name;
     }
+
+    /** Returns a copy of the attachment. **/
+    public function copy():Attachment { return null; }
 }

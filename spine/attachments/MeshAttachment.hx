@@ -29,11 +29,11 @@
 
 package spine.attachments;
 
+import spine.utils.SpineUtils.*;
+
 import spine.support.graphics.Color;
 import spine.support.graphics.TextureAtlas.AtlasRegion;
 import spine.support.graphics.TextureRegion;
-
-import spine.Animation.DeformTimeline;
 
 /** An attachment that displays a textured mesh. A mesh has hull vertices and internal vertices within the hull. Holes are not
  * supported. Each vertex has UVs (texture coordinates) and triangles are used to map an image on to the mesh.
@@ -47,7 +47,6 @@ class MeshAttachment extends VertexAttachment {
     private var color:Color = new Color(1, 1, 1, 1);
     private var hullLength:Int = 0;
     private var parentMesh:MeshAttachment;
-    private var inheritDeform:Bool = false;
 
     // Nonessential.
     private var edges:ShortArray;
@@ -73,23 +72,47 @@ class MeshAttachment extends VertexAttachment {
         var regionUVs:FloatArray = this.regionUVs;
         if (this.uvs == null || this.uvs.length != regionUVs.length) this.uvs = FloatArray.create(regionUVs.length);
         var uvs:FloatArray = this.uvs;
+        var n:Int = uvs.length;
         var u:Float = 0; var v:Float = 0; var width:Float = 0; var height:Float = 0;
         if (Std.is(region, AtlasRegion)) {
-            var region:AtlasRegion = cast(this.region, AtlasRegion);
+            u = region.getU();
+            v = region.getV();
+            var region:AtlasRegion = fastCast(this.region, AtlasRegion);
             var textureWidth:Float = region.getTexture().getWidth(); var textureHeight:Float = region.getTexture().getHeight();
-            if (region.rotate) {
-                u = region.getU() - (region.originalHeight - region.offsetY - region.packedWidth) / textureWidth;
-                v = region.getV() - (region.originalWidth - region.offsetX - region.packedHeight) / textureHeight;
+            var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (region.degrees); {
+            if (_switchCond0 == 90) {
+                u -= (region.originalHeight - region.offsetY - region.packedWidth) / textureWidth;
+                v -= (region.originalWidth - region.offsetX - region.packedHeight) / textureHeight;
                 width = region.originalHeight / textureWidth;
                 height = region.originalWidth / textureHeight;
-                var i:Int = 0; var n:Int = uvs.length; while (i < n) {
+                var i:Int = 0; while (i < n) {
                     uvs[i] = u + regionUVs[i + 1] * width;
-                    uvs[i + 1] = v + height - regionUVs[i] * height;
+                    uvs[i + 1] = v + (1 - regionUVs[i]) * height;
                 i += 2; }
                 return;
-            }
-            u = region.getU() - region.offsetX / textureWidth;
-            v = region.getV() - (region.originalHeight - region.offsetY - region.packedHeight) / textureHeight;
+            } else if (_switchCond0 == 180) {
+                u -= (region.originalWidth - region.offsetX - region.packedWidth) / textureWidth;
+                v -= region.offsetY / textureHeight;
+                width = region.originalWidth / textureWidth;
+                height = region.originalHeight / textureHeight;
+                var i:Int = 0; while (i < n) {
+                    uvs[i] = u + (1 - regionUVs[i]) * width;
+                    uvs[i + 1] = v + (1 - regionUVs[i + 1]) * height;
+                i += 2; }
+                return;
+            } else if (_switchCond0 == 270) {
+                u -= region.offsetY / textureWidth;
+                v -= region.offsetX / textureHeight;
+                width = region.originalHeight / textureWidth;
+                height = region.originalWidth / textureHeight;
+                var i:Int = 0; while (i < n) {
+                    uvs[i] = u + (1 - regionUVs[i + 1]) * width;
+                    uvs[i + 1] = v + regionUVs[i] * height;
+                i += 2; }
+                return;
+            } } break; }
+            u -= region.offsetX / textureWidth;
+            v -= (region.originalHeight - region.offsetY - region.packedHeight) / textureHeight;
             width = region.originalWidth / textureWidth;
             height = region.originalHeight / textureHeight;
         } else if (region == null) {
@@ -101,16 +124,10 @@ class MeshAttachment extends VertexAttachment {
             width = region.getU2() - u;
             height = region.getV2() - v;
         }
-        var i:Int = 0; var n:Int = uvs.length; while (i < n) {
+        var i:Int = 0; while (i < n) {
             uvs[i] = u + regionUVs[i] * width;
             uvs[i + 1] = v + regionUVs[i + 1] * height;
         i += 2; }
-    }
-
-    /** Returns true if the <code>sourceAttachment</code> is this mesh, else returns true if {@link #inheritDeform} is true and the
-     * the <code>sourceAttachment</code> is the {@link #parentMesh}. */
-    override public function applyDeform(sourceAttachment:VertexAttachment):Bool {
-        return this == sourceAttachment || (inheritDeform && parentMesh == sourceAttachment);
     }
 
     /** Triplets of vertex indices which describe the mesh's triangulation. */
@@ -217,15 +234,42 @@ class MeshAttachment extends VertexAttachment {
         }
     }
 
-    /** When this is a linked mesh (see {@link #parentMesh}), if true, any {@link DeformTimeline} for the {@link #parentMesh} is
-     * also applied to this mesh. If false, this linked mesh may have its own deform timelines.
-     * <p>
-     * See {@link #applyDeform(VertexAttachment)}. */
-    #if !spine_no_inline inline #end public function getInheritDeform():Bool {
-        return inheritDeform;
+    override #if !spine_no_inline inline #end public function copy():Attachment {
+        if (parentMesh != null) return newLinkedMesh();
+
+        var copy:MeshAttachment = new MeshAttachment(name);
+        copy.region = region;
+        copy.path = path;
+        copy.color.setColor(color);
+
+        copyTo(copy);
+        copy.regionUVs = FloatArray.create(regionUVs.length);
+        arraycopy(regionUVs, 0, copy.regionUVs, 0, regionUVs.length);
+        copy.uvs = FloatArray.create(uvs.length);
+        arraycopy(uvs, 0, copy.uvs, 0, uvs.length);
+        copy.triangles = ShortArray.create(triangles.length);
+        arraycopy(triangles, 0, copy.triangles, 0, triangles.length);
+        copy.hullLength = hullLength;
+
+        // Nonessential.
+        if (edges != null) {
+            copy.edges = ShortArray.create(edges.length);
+            arraycopy(edges, 0, copy.edges, 0, edges.length);
+        }
+        copy.width = width;
+        copy.height = height;
+        return copy;
     }
 
-    #if !spine_no_inline inline #end public function setInheritDeform(inheritDeform:Bool):Void {
-        this.inheritDeform = inheritDeform;
+    /** Returns a new mesh with the {@link #parentMesh} set to this mesh's parent mesh, if any, else to this mesh. **/
+    #if !spine_no_inline inline #end public function newLinkedMesh():MeshAttachment {
+        var mesh:MeshAttachment = new MeshAttachment(name);
+        mesh.region = region;
+        mesh.path = path;
+        mesh.color.setColor(color);
+        mesh.deformAttachment = deformAttachment;
+        mesh.setParentMesh(parentMesh != null ? parentMesh : this);
+        mesh.updateUVs();
+        return mesh;
     }
 }

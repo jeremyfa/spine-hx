@@ -31,6 +31,7 @@ package spine;
 
 import spine.support.graphics.Color;
 import spine.support.utils.FloatArray;
+
 import spine.Animation.DeformTimeline;
 import spine.attachments.Attachment;
 import spine.attachments.VertexAttachment;
@@ -44,7 +45,7 @@ class Slot {
     public var color:Color = new Color(); public var darkColor:Color = null;
     public var attachment:Attachment;
     private var attachmentTime:Float = 0;
-    private var attachmentVertices:FloatArray = new FloatArray();
+    private var deform:FloatArray = new FloatArray();
 
     public function new(data:SlotData, bone:Bone) {
         if (data == null) throw new IllegalArgumentException("data cannot be null.");
@@ -65,6 +66,7 @@ class Slot {
         darkColor = slot.darkColor == null ? null : new Color(slot.darkColor);
         attachment = slot.attachment;
         attachmentTime = slot.attachmentTime;
+        deform.addAll(slot.deform);
     }*/
 
     /** The slot's setup pose data. */
@@ -99,14 +101,13 @@ class Slot {
         return attachment;
     }
 
-    /** Sets the slot's attachment and, if the attachment changed, resets {@link #attachmentTime} and clears
-     * {@link #attachmentVertices}.
+    /** Sets the slot's attachment and, if the attachment changed, resets {@link #attachmentTime} and clears {@link #deform}.
      * @param attachment May be null. */
     #if !spine_no_inline inline #end public function setAttachment(attachment:Attachment):Void {
         if (this.attachment == attachment) return;
         this.attachment = attachment;
         attachmentTime = bone.skeleton.time;
-        attachmentVertices.clear();
+        deform.clear();
     }
 
     /** The time that has elapsed since the last time the attachment was set or cleared. Relies on Skeleton
@@ -119,17 +120,17 @@ class Slot {
         attachmentTime = bone.skeleton.time - time;
     }
 
-    /** Vertices to deform the slot's attachment. For an unweighted mesh, the entries are local positions for each vertex. For a
+    /** Values to deform the slot's attachment. For an unweighted mesh, the entries are local positions for each vertex. For a
      * weighted mesh, the entries are an offset for each vertex which will be added to the mesh's local vertex positions.
      * <p>
      * See {@link VertexAttachment#computeWorldVertices(Slot, int, int, float[], int, int)} and {@link DeformTimeline}. */
-    #if !spine_no_inline inline #end public function getAttachmentVertices():FloatArray {
-        return attachmentVertices;
+    #if !spine_no_inline inline #end public function getDeform():FloatArray {
+        return deform;
     }
 
-    #if !spine_no_inline inline #end public function setAttachmentVertices(attachmentVertices:FloatArray):Void {
-        if (attachmentVertices == null) throw new IllegalArgumentException("attachmentVertices cannot be null.");
-        this.attachmentVertices = attachmentVertices;
+    #if !spine_no_inline inline #end public function setDeform(deform:FloatArray):Void {
+        if (deform == null) throw new IllegalArgumentException("deform cannot be null.");
+        this.deform = deform;
     }
 
     /** Sets this slot to the setup pose. */

@@ -29,7 +29,9 @@
 
 package spine.attachments;
 
-import spine.support.math.MathUtils.*;
+import spine.support.math.MathUtils.cosDeg;
+import spine.support.math.MathUtils.radDeg;
+import spine.support.math.MathUtils.sinDeg;
 
 import spine.support.graphics.Color;
 import spine.support.math.Vector2;
@@ -90,6 +92,15 @@ class PointAttachment extends Attachment {
         var cos:Float = cosDeg(rotation); var sin:Float = sinDeg(rotation);
         var x:Float = cos * bone.getA() + sin * bone.getB();
         var y:Float = cos * bone.getC() + sin * bone.getD();
-        return cast(Math.atan2(y, x) * radDeg, Float);
+        return Math.atan2(y, x) * radDeg;
+    }
+
+    override #if !spine_no_inline inline #end public function copy():Attachment {
+        var copy:PointAttachment = new PointAttachment(name);
+        copy.x = x;
+        copy.y = y;
+        copy.rotation = rotation;
+        copy.color.setColor(color);
+        return copy;
     }
 }

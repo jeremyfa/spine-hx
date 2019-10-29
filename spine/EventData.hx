@@ -65,6 +65,7 @@ class EventData {
     }
 
     #if !spine_no_inline inline #end public function setString(stringValue:String):Void {
+        if (stringValue == null) throw new IllegalArgumentException("stringValue cannot be null.");
         this.stringValue = stringValue;
     }
 
@@ -73,6 +74,7 @@ class EventData {
     }
 
     #if !spine_no_inline inline #end public function setAudioPath(audioPath:String):Void {
+        if (audioPath == null) throw new IllegalArgumentException("audioPath cannot be null.");
         this.audioPath = audioPath;
     }
 
@@ -92,7 +94,7 @@ class EventData {
         this.balance = balance;
     }
 
-    /** The name of the event, which is unique within the skeleton. */
+    /** The name of the event, which is unique across all events in the skeleton. */
     #if !spine_no_inline inline #end public function getName():String {
         return name;
     }

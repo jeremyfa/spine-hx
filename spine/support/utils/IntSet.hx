@@ -12,6 +12,10 @@ abstract IntSet(Map<Int,Bool>) {
         return true;
     }
 
+    inline public function contains(val:Int) {
+        return this.exists(val);
+    }
+
     inline public function clear() {
         var keys = [];
         for (key in this.keys()) keys.push(key);

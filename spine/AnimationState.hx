@@ -29,10 +29,7 @@
 
 package spine;
 
-import spine.Animation.RotateTimeline.ENTRIES;
-import spine.Animation.RotateTimeline.PREV_ROTATION;
-import spine.Animation.RotateTimeline.PREV_TIME;
-import spine.Animation.RotateTimeline.ROTATION;
+import spine.Animation.RotateTimeline.*;
 
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
@@ -40,8 +37,10 @@ import spine.support.utils.IntArray;
 import spine.support.utils.IntSet;
 import spine.support.utils.Pool;
 import spine.support.utils.Pool.Poolable;
+
 import spine.Animation.AttachmentTimeline;
 import spine.Animation.DrawOrderTimeline;
+import spine.Animation.EventTimeline;
 import spine.Animation.MixBlend;
 import spine.Animation.MixBlend_enum;
 import spine.Animation.MixDirection;
@@ -80,6 +79,12 @@ class AnimationState {
      * (which affects B and C). Without using D to mix out, A would be applied fully until mixing completes, then snap into
      * place. */
     inline private static var HOLD_MIX:Int = 3;
+    /** 1) An attachment timeline in a subsequent track entry sets the attachment for the same slot as this attachment
+     * timeline.<br>
+     * Result: This attachment timeline will not use MixDirection.directionOut, which would otherwise show the setup mode attachment (or
+     * none if not visible in setup mode). This allows deform timelines to be applied for the subsequent entry to mix from, rather
+     * than mixing from the setup pose. */
+    inline private static var NOT_LAST:Int = 4;
 
     private var data:AnimationStateData;
     public var tracks:Array<TrackEntry> = new Array();
@@ -130,7 +135,7 @@ class AnimationState {
                 var nextTime:Float = current.trackLast - next.delay;
                 if (nextTime >= 0) {
                     next.delay = 0;
-                    next.trackTime = current.timeScale == 0 ? 0 : (nextTime / current.timeScale + delta) * next.timeScale;
+                    next.trackTime += current.timeScale == 0 ? 0 : (nextTime / current.timeScale + delta) * next.timeScale;
                     current.trackTime += currentDelta;
                     setCurrent(i, next, true);
                     while (next.mixingFrom != null) {
@@ -220,7 +225,7 @@ class AnimationState {
             var timelines = current.animation.timelines.items;
             if ((i == 0 && mix == 1) || blend == MixBlend.add) {
                 var ii:Int = 0; while (ii < timelineCount) {
-                    (cast(timelines[ii], Timeline)).apply(skeleton, animationLast, animationTime, events, mix, blend, MixDirection.directionIn); ii++; }
+                    (fastCast(timelines[ii], Timeline)).apply(skeleton, animationLast, animationTime, events, mix, blend, MixDirection.directionIn); ii++; }
             } else {
                 var timelineMode:IntArray = current.timelineMode.items;
 
@@ -229,10 +234,10 @@ class AnimationState {
                 var timelinesRotation:FloatArray = current.timelinesRotation.items;
 
                 var ii:Int = 0; while (ii < timelineCount) {
-                    var timeline:Timeline = cast(timelines[ii], Timeline);
-                    var timelineBlend:MixBlend = timelineMode[ii] == SUBSEQUENT ? blend : MixBlend.setup;
+                    var timeline:Timeline = fastCast(timelines[ii], Timeline);
+                    var timelineBlend:MixBlend = (timelineMode[ii] & NOT_LAST - 1) == SUBSEQUENT ? blend : MixBlend.setup;
                     if (Std.is(timeline, RotateTimeline)) {
-                        applyRotateTimeline(cast(timeline, RotateTimeline), skeleton, animationTime, mix, timelineBlend, timelinesRotation,
+                        applyRotateTimeline(fastCast(timeline, RotateTimeline), skeleton, animationTime, mix, timelineBlend, timelinesRotation,
                             ii << 1, firstFrame);
                     } else
                         timeline.apply(skeleton, animationLast, animationTime, events, mix, timelineBlend, MixDirection.directionIn);
@@ -271,7 +276,7 @@ class AnimationState {
 
         if (blend == MixBlend.add) {
             var i:Int = 0; while (i < timelineCount) {
-                (cast(timelines[i], Timeline)).apply(skeleton, animationLast, animationTime, events, alphaMix, blend, MixDirection.directionOut); i++; }
+                (fastCast(timelines[i], Timeline)).apply(skeleton, animationLast, animationTime, events, alphaMix, blend, MixDirection.directionOut); i++; }
         } else {
             var timelineMode:IntArray = from.timelineMode.items;
             var timelineHoldMix = from.timelineHoldMix.items;
@@ -282,15 +287,18 @@ class AnimationState {
 
             from.totalAlpha = 0;
             var i:Int = 0; while (i < timelineCount) {
-                var timeline:Timeline = cast(timelines[i], Timeline);
+                var timeline:Timeline = fastCast(timelines[i], Timeline);
                 var direction:MixDirection = MixDirection.directionOut;
                 var timelineBlend:MixBlend = 0;
                 var alpha:Float = 0;
-                var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (timelineMode[i]); {
+                var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (timelineMode[i] & NOT_LAST - 1); {
                 if (_switchCond0 == SUBSEQUENT) {
-                    if (!attachments && Std.is(timeline, AttachmentTimeline)) { _continueAfterSwitch0 = true; break; }
-                    if (!drawOrder && Std.is(timeline, DrawOrderTimeline)) { _continueAfterSwitch0 = true; break; }
                     timelineBlend = blend;
+                    if (!attachments && Std.is(timeline, AttachmentTimeline)) {
+                        if ((timelineMode[i] & NOT_LAST) == NOT_LAST) { _continueAfterSwitch0 = true; break; }
+                        timelineBlend = MixBlend.setup;
+                    }
+                    if (!drawOrder && Std.is(timeline, DrawOrderTimeline)) { _continueAfterSwitch0 = true; break; }
                     alpha = alphaMix;
                     break;
                 } else if (_switchCond0 == FIRST) {
@@ -303,18 +311,18 @@ class AnimationState {
                     break;
                 } else {
                     timelineBlend = MixBlend.setup;
-                    var holdMix:TrackEntry = cast(timelineHoldMix[i], TrackEntry);
+                    var holdMix:TrackEntry = fastCast(timelineHoldMix[i], TrackEntry);
                     alpha = alphaHold * MathUtils.max(0, Std.int(1 - holdMix.mixTime / holdMix.mixDuration));
                     break;
                 } } break; } if (_continueAfterSwitch0) { i++; continue; }
                 from.totalAlpha += alpha;
                 if (Std.is(timeline, RotateTimeline)) {
-                    applyRotateTimeline(cast(timeline, RotateTimeline), skeleton, animationTime, alpha, timelineBlend, timelinesRotation,
+                    applyRotateTimeline(fastCast(timeline, RotateTimeline), skeleton, animationTime, alpha, timelineBlend, timelinesRotation,
                         i << 1, firstFrame);
                 } else {
                     if (timelineBlend == MixBlend.setup) {
                         if (Std.is(timeline, AttachmentTimeline)) {
-                            if (attachments) direction = MixDirection.directionIn;
+                            if (attachments || (timelineMode[i] & NOT_LAST) == NOT_LAST) direction = MixDirection.directionIn;
                         } else if (Std.is(timeline, DrawOrderTimeline)) {
                             if (drawOrder) direction = MixDirection.directionIn;
                         }
@@ -342,6 +350,7 @@ class AnimationState {
         }
 
         var bone:Bone = skeleton.bones.get(timeline.boneIndex);
+        if (!bone.active) return;
         var frames:FloatArray = timeline.frames;
         var r1:Float = 0; var r2:Float = 0;
         if (time < frames[0]) { // Time is before first frame.
@@ -459,6 +468,7 @@ class AnimationState {
      * It may be desired to use {@link AnimationState#setEmptyAnimation(int, float)} to mix the skeletons back to the setup pose,
      * rather than leaving them in their current pose. */
     #if !spine_no_inline inline #end public function clearTrack(trackIndex:Int):Void {
+        if (trackIndex < 0) throw new IllegalArgumentException("trackIndex must be >= 0.");
         if (trackIndex >= tracks.size) return;
         var current:TrackEntry = tracks.get(trackIndex);
         if (current == null) return;
@@ -518,6 +528,7 @@ class AnimationState {
      * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
      *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
     #if !spine_no_inline inline #end public function setAnimation(trackIndex:Int, animation:Animation, loop:Bool):TrackEntry {
+        if (trackIndex < 0) throw new IllegalArgumentException("trackIndex must be >= 0.");
         if (animation == null) throw new IllegalArgumentException("animation cannot be null.");
         var interrupt:Bool = true;
         var current:TrackEntry = expandToIndex(trackIndex);
@@ -557,6 +568,7 @@ class AnimationState {
      * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
      *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
     #if !spine_no_inline inline #end public function addAnimation(trackIndex:Int, animation:Animation, loop:Bool, delay:Float):TrackEntry {
+        if (trackIndex < 0) throw new IllegalArgumentException("trackIndex must be >= 0.");
         if (animation == null) throw new IllegalArgumentException("animation cannot be null.");
 
         var last:TrackEntry = expandToIndex(trackIndex);
@@ -689,25 +701,34 @@ class AnimationState {
         entry.next = null;
     }
 
-    #if !spine_no_inline inline #end private function handleAnimationsChanged():Void {
+    #if !spine_no_inline inline #end public function handleAnimationsChanged():Void {
         animationsChanged = false;
 
+        // Process in the order that animations are applied.
         propertyIDs.clear();
-
         var i:Int = 0; var n:Int = tracks.size; while (i < n) {
             var entry:TrackEntry = tracks.get(i);
             if (entry == null) { i++; continue; }
-            // Move to last entry, then iterate in reverse (the order animations are applied).
-            while (entry.mixingFrom != null) {
+            while (entry.mixingFrom != null) { // Move to last entry, then iterate in reverse.
                 entry = entry.mixingFrom; }
             do {
-                if (entry.mixingTo == null || entry.mixBlend != MixBlend.add) setTimelineModes(entry);
+                if (entry.mixingTo == null || entry.mixBlend != MixBlend.add) computeHold(entry);
                 entry = entry.mixingTo;
             } while (entry != null);
         i++; }
+
+        // Process in the reverse order that animations are applied.
+        propertyIDs.clear();
+        var i:Int = tracks.size - 1; while (i >= 0) {
+            var entry:TrackEntry = tracks.get(i);
+            while (entry != null) {
+                computeNotLast(entry);
+                entry = entry.mixingFrom;
+            }
+        i--; }
     }
 
-    #if !spine_no_inline inline #end private function setTimelineModes(entry:TrackEntry):Void {
+    #if !spine_no_inline inline #end private function computeHold(entry:TrackEntry):Void {
         var to:TrackEntry = entry.mixingTo;
         var timelines = entry.animation.timelines.items;
         var timelinesCount:Int = entry.animation.timelines.size;
@@ -718,7 +739,7 @@ class AnimationState {
 
         if (to != null && to.holdPrevious) {
             var i:Int = 0; while (i < timelinesCount) {
-                propertyIDs.add((cast(timelines[i], Timeline)).getPropertyId());
+                propertyIDs.add((fastCast(timelines[i], Timeline)).getPropertyId());
                 timelineMode[i] = HOLD;
             i++; }
             return;
@@ -726,14 +747,16 @@ class AnimationState {
 
         var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
         var i:Int = 0; while (i < timelinesCount) {
-            var id:Int = (cast(timelines[i], Timeline)).getPropertyId();
+            var timeline:Timeline = fastCast(timelines[i], Timeline);
+            var id:Int = timeline.getPropertyId();
             if (!propertyIDs.add(id))
                 timelineMode[i] = SUBSEQUENT;
-            else if (to == null || !hasTimeline(to, id))
+            else if (to == null || Std.is(timeline, AttachmentTimeline) || Std.is(timeline, DrawOrderTimeline)
+                || Std.is(timeline, EventTimeline) || !to.animation.hasTimeline(id)) {
                 timelineMode[i] = FIRST;
-            else {
+            } else {
                 var next:TrackEntry = to.mixingTo; while (next != null) {
-                    if (hasTimeline(next, id)) { next = next.mixingTo; continue; }
+                    if (next.animation.hasTimeline(id)) { next = next.mixingTo; continue; }
                     if (next.mixDuration > 0) {
                         timelineMode[i] = HOLD_MIX;
                         timelineHoldMix[i] = next;
@@ -746,15 +769,23 @@ class AnimationState {
         i++; } if (_gotoLabel_outer == 0) break; }
     }
 
-    private function hasTimeline(entry:TrackEntry, id:Int):Bool {
+    #if !spine_no_inline inline #end private function computeNotLast(entry:TrackEntry):Void {
         var timelines = entry.animation.timelines.items;
-        var i:Int = 0; var n:Int = entry.animation.timelines.size; while (i < n) {
-            if ((cast(timelines[i], Timeline)).getPropertyId() == id) return true; i++; }
-        return false;
+        var timelinesCount:Int = entry.animation.timelines.size;
+        var timelineMode:IntArray = entry.timelineMode.items;
+        var propertyIDs:IntSet = this.propertyIDs;
+
+        var i:Int = 0; while (i < timelinesCount) {
+            if (Std.is(timelines[i], AttachmentTimeline)) {
+                var timeline:AttachmentTimeline = fastCast(timelines[i], AttachmentTimeline);
+                if (!propertyIDs.add(timeline.slotIndex)) timelineMode[i] |= NOT_LAST;
+            }
+        i++; }
     }
 
     /** Returns the track entry for the animation currently playing on the track, or null if no animation is currently playing. */
     #if !spine_no_inline inline #end public function getCurrent(trackIndex:Int):TrackEntry {
+        if (trackIndex < 0) throw new IllegalArgumentException("trackIndex must be >= 0.");
         if (trackIndex >= tracks.size) return null;
         return tracks.get(trackIndex);
     }
@@ -865,6 +896,7 @@ class TrackEntry implements Poolable {
     }
 
     #if !spine_no_inline inline #end public function setAnimation(animation:Animation):Void {
+        if (animation == null) throw new IllegalArgumentException("animation cannot be null.");
         this.animation = animation;
     }
 
@@ -1068,6 +1100,9 @@ class TrackEntry implements Poolable {
     /** Seconds for mixing from the previous animation to this animation. Defaults to the value provided by AnimationStateData
      * {@link AnimationStateData#getMix(Animation, Animation)} based on the animation before this animation (if any).
      * <p>
+     * A mix duration of 0 still mixes out over one frame to provide the track entry being mixed out a chance to revert the
+     * properties it was animating.
+     * <p>
      * The <code>mixDuration</code> can be set manually rather than use the value from
      * {@link AnimationStateData#getMix(Animation, Animation)}. In that case, the <code>mixDuration</code> can be set for a new
      * track entry only before {@link AnimationState#update(float)} is first called.
@@ -1094,6 +1129,7 @@ class TrackEntry implements Poolable {
     }
 
     #if !spine_no_inline inline #end public function setMixBlend(mixBlend:MixBlend):Void {
+        if (mixBlend == 0) throw new IllegalArgumentException("mixBlend cannot be null.");
         this.mixBlend = mixBlend;
     }
 
@@ -1191,8 +1227,8 @@ class EventQueue {
         var objects:Array<Dynamic> = this.objects;
         var listeners:Array<AnimationStateListener> = AnimationState_this.listeners;
         var i:Int = 0; while (i < objects.size) {
-            var type:EventType = cast(objects.get(i), EventType);
-            var entry:TrackEntry = cast(objects.get(i + 1), TrackEntry);
+            var type:EventType = cast objects.get(i);
+            var entry:TrackEntry = fastCast(objects.get(i + 1), TrackEntry);
             var _continueAfterSwitch2 = false; while(true) { var _switchCond2 = (type); {
             if (_switchCond2 == spine.EventType.start) {
                 if (entry.listener != null) entry.listener.start(entry);
@@ -1226,7 +1262,7 @@ class EventQueue {
                     listeners.get(ii).complete(entry); ii++; }
                 break;
             } else if (_switchCond2 == spine.EventType.event) {
-                var event:Event = cast(objects.get(i++ + 2), Event);
+                var event:Event = fastCast(objects.get(i++ + 2), Event);
                 if (entry.listener != null) entry.listener.event(entry, event);
                 var ii:Int = 0; while (ii < listeners.size) {
                     listeners.get(ii).event(entry, event); ii++; }

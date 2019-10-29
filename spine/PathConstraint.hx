@@ -45,7 +45,7 @@ import spine.utils.SpineUtils;
  * constrained bones so they follow a {@link PathAttachment}.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-path-constraints">Path constraints</a> in the Spine User Guide. */
-class PathConstraint implements Constraint {
+class PathConstraint implements Updatable {
     inline private static var NONE:Int = -1; inline private static var BEFORE:Int = -2; inline private static var AFTER:Int = -3;
     private static var epsilon:Float = 0.00001;
 
@@ -53,6 +53,8 @@ class PathConstraint implements Constraint {
     public var bones:Array<Bone>;
     public var target:Slot;
     public var position:Float = 0; public var spacing:Float = 0; public var rotateMix:Float = 0; public var translateMix:Float = 0;
+
+    public var active:Bool = false;
 
     private var spaces:FloatArray = new FloatArray(); private var positions:FloatArray = new FloatArray();
     private var world:FloatArray = new FloatArray(); private var curves:FloatArray = new FloatArray(); private var lengths:FloatArray = new FloatArray();
@@ -88,7 +90,7 @@ class PathConstraint implements Constraint {
     }*/
 
     /** Applies the constraint to the constrained bones. */
-    public function apply():Void {
+    public function applyNoArgs():Void {
         update();
     }
 
@@ -113,7 +115,7 @@ class PathConstraint implements Constraint {
             if (scale) lengths = this.lengths.setSize(boneCount);
             var lengthSpacing:Bool = data.spacingMode == SpacingMode.length;
             var i:Int = 0; var n:Int = spacesCount - 1; while (i < n) {
-                var bone:Bone = cast(bones[i], Bone);
+                var bone:Bone = fastCast(bones[i], Bone);
                 var setupLength:Float = bone.data.length;
                 if (setupLength < epsilon) {
                     if (scale) lengths[i] = 0;
@@ -121,13 +123,13 @@ class PathConstraint implements Constraint {
                 } else if (percentSpacing) {
                     if (scale) {
                         var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
-                        var length:Float = cast(Math.sqrt(x * x + y * y), Float);
+                        var length:Float = Math.sqrt(x * x + y * y);
                         lengths[i] = length;
                     }
                     spaces[++i] = spacing;
                 } else {
                     var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
-                    var length:Float = cast(Math.sqrt(x * x + y * y), Float);
+                    var length:Float = Math.sqrt(x * x + y * y);
                     if (scale) lengths[i] = length;
                     spaces[++i] = (lengthSpacing ? setupLength + spacing : spacing) * length / setupLength;
                 }
@@ -137,7 +139,7 @@ class PathConstraint implements Constraint {
                 spaces[i] = spacing; i++; }
         }
 
-        var positions:FloatArray = computeWorldPositions(cast(attachment, PathAttachment), spacesCount, tangents,
+        var positions:FloatArray = computeWorldPositions(fastCast(attachment, PathAttachment), spacesCount, tangents,
             data.positionMode == PositionMode.percent, percentSpacing);
         var boneX:Float = positions[0]; var boneY:Float = positions[1]; var offsetRotation:Float = data.offsetRotation;
         var tip:Bool = false;
@@ -149,14 +151,14 @@ class PathConstraint implements Constraint {
             offsetRotation *= p.a * p.d - p.b * p.c > 0 ? SpineUtils.degRad : -SpineUtils.degRad;
         }
         var i:Int = 0; var p:Int = 3; while (i < boneCount) {
-            var bone:Bone = cast(bones[i], Bone);
+            var bone:Bone = fastCast(bones[i], Bone);
             bone.worldX += (boneX - bone.worldX) * translateMix;
             bone.worldY += (boneY - bone.worldY) * translateMix;
             var x:Float = positions[p]; var y:Float = positions[p + 1]; var dx:Float = x - boneX; var dy:Float = y - boneY;
             if (scale) {
                 var length:Float = lengths[i];
                 if (length >= epsilon) {
-                    var s:Float = (cast(Math.sqrt(dx * dx + dy * dy) / length - 1, Float)) * rotateMix + 1;
+                    var s:Float = (Math.sqrt(dx * dx + dy * dy) / length - 1) * rotateMix + 1;
                     bone.a *= s;
                     bone.c *= s;
                 }
@@ -170,11 +172,11 @@ class PathConstraint implements Constraint {
                 else if (spaces[i + 1] < epsilon)
                     r = positions[p + 2];
                 else
-                    r = cast(Math.atan2(dy, dx), Float);
-                r -= cast(Math.atan2(c, a), Float);
+                    r = Math.atan2(dy, dx);
+                r -= Math.atan2(c, a);
                 if (tip) {
-                    cos = cast(Math.cos(r), Float);
-                    sin = cast(Math.sin(r), Float);
+                    cos = Math.cos(r);
+                    sin = Math.sin(r);
                     var length:Float = bone.data.length;
                     boneX += (length * (cos * a - sin * c) - dx) * rotateMix;
                     boneY += (length * (sin * a + cos * c) - dy) * rotateMix;
@@ -185,8 +187,8 @@ class PathConstraint implements Constraint {
                 else if (r < -SpineUtils.PI) //
                     r += SpineUtils.PI2;
                 r *= rotateMix;
-                cos = cast(Math.cos(r), Float);
-                sin = cast(Math.sin(r), Float);
+                cos = Math.cos(r);
+                sin = Math.sin(r);
                 bone.a = cos * a - sin * c;
                 bone.b = cos * b - sin * d;
                 bone.c = sin * a + cos * c;
@@ -299,18 +301,18 @@ class PathConstraint implements Constraint {
             ddfy = tmpy * 2 + dddfy;
             dfx = (cx1 - x1) * 0.75 + tmpx + dddfx * 0.16666667;
             dfy = (cy1 - y1) * 0.75 + tmpy + dddfy * 0.16666667;
-            pathLength += cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+            pathLength += Math.sqrt(dfx * dfx + dfy * dfy);
             dfx += ddfx;
             dfy += ddfy;
             ddfx += dddfx;
             ddfy += dddfy;
-            pathLength += cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+            pathLength += Math.sqrt(dfx * dfx + dfy * dfy);
             dfx += ddfx;
             dfy += ddfy;
-            pathLength += cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+            pathLength += Math.sqrt(dfx * dfx + dfy * dfy);
             dfx += ddfx + dddfx;
             dfy += ddfy + dddfy;
-            pathLength += cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+            pathLength += Math.sqrt(dfx * dfx + dfy * dfy);
             curves[i] = pathLength;
             x1 = x2;
             y1 = y2;
@@ -376,23 +378,23 @@ class PathConstraint implements Constraint {
                 ddfy = tmpy * 2 + dddfy;
                 dfx = (cx1 - x1) * 0.3 + tmpx + dddfx * 0.16666667;
                 dfy = (cy1 - y1) * 0.3 + tmpy + dddfy * 0.16666667;
-                curveLength = cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+                curveLength = Math.sqrt(dfx * dfx + dfy * dfy);
                 segments[0] = curveLength;
                 ii = 1; while (ii < 8) {
                     dfx += ddfx;
                     dfy += ddfy;
                     ddfx += dddfx;
                     ddfy += dddfy;
-                    curveLength += cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+                    curveLength += Math.sqrt(dfx * dfx + dfy * dfy);
                     segments[ii] = curveLength;
                 ii++; }
                 dfx += ddfx;
                 dfy += ddfy;
-                curveLength += cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+                curveLength += Math.sqrt(dfx * dfx + dfy * dfy);
                 segments[8] = curveLength;
                 dfx += ddfx + dddfx;
                 dfy += ddfy + dddfy;
-                curveLength += cast(Math.sqrt(dfx * dfx + dfy * dfy), Float);
+                curveLength += Math.sqrt(dfx * dfx + dfy * dfy);
                 segments[9] = curveLength;
                 segment = 0;
             }
@@ -416,16 +418,16 @@ class PathConstraint implements Constraint {
     }
 
     #if !spine_no_inline inline #end private function addBeforePosition(p:Float, temp:FloatArray, i:Int, out:FloatArray, o:Int):Void {
-        var x1:Float = temp[i]; var y1:Float = temp[i + 1]; var dx:Float = temp[i + 2] - x1; var dy:Float = temp[i + 3] - y1; var r:Float = cast(Math.atan2(dy, dx), Float);
-        out[o] = x1 + p * cast(Math.cos(r), Float);
-        out[o + 1] = y1 + p * cast(Math.sin(r), Float);
+        var x1:Float = temp[i]; var y1:Float = temp[i + 1]; var dx:Float = temp[i + 2] - x1; var dy:Float = temp[i + 3] - y1; var r:Float = Math.atan2(dy, dx);
+        out[o] = x1 + p * Math.cos(r);
+        out[o + 1] = y1 + p * Math.sin(r);
         out[o + 2] = r;
     }
 
     #if !spine_no_inline inline #end private function addAfterPosition(p:Float, temp:FloatArray, i:Int, out:FloatArray, o:Int):Void {
-        var x1:Float = temp[i + 2]; var y1:Float = temp[i + 3]; var dx:Float = x1 - temp[i]; var dy:Float = y1 - temp[i + 1]; var r:Float = cast(Math.atan2(dy, dx), Float);
-        out[o] = x1 + p * cast(Math.cos(r), Float);
-        out[o + 1] = y1 + p * cast(Math.sin(r), Float);
+        var x1:Float = temp[i + 2]; var y1:Float = temp[i + 3]; var dx:Float = x1 - temp[i]; var dy:Float = y1 - temp[i + 1]; var r:Float = Math.atan2(dy, dx);
+        out[o] = x1 + p * Math.cos(r);
+        out[o + 1] = y1 + p * Math.sin(r);
         out[o + 2] = r;
     }
 
@@ -433,7 +435,7 @@ class PathConstraint implements Constraint {
         if (p < epsilon || Math.isNaN(p)) {
             out[o] = x1;
             out[o + 1] = y1;
-            out[o + 2] = cast(Math.atan2(cy1 - y1, cx1 - x1), Float);
+            out[o + 2] = Math.atan2(cy1 - y1, cx1 - x1);
             return;
         }
         var tt:Float = p * p; var ttt:Float = tt * p; var u:Float = 1 - p; var uu:Float = u * u; var uuu:Float = uu * u;
@@ -443,14 +445,10 @@ class PathConstraint implements Constraint {
         out[o + 1] = y;
         if (tangents) {
             if (p < 0.001)
-                out[o + 2] = cast(Math.atan2(cy1 - y1, cx1 - x1), Float);
+                out[o + 2] = Math.atan2(cy1 - y1, cx1 - x1);
             else
-                out[o + 2] = cast(Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt)), Float);
+                out[o + 2] = Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt));
         }
-    }
-
-    #if !spine_no_inline inline #end public function getOrder():Int {
-        return data.order;
     }
 
     /** The position along the path. */
@@ -500,7 +498,12 @@ class PathConstraint implements Constraint {
     }
 
     #if !spine_no_inline inline #end public function setTarget(target:Slot):Void {
+        if (target == null) throw new IllegalArgumentException("target cannot be null.");
         this.target = target;
+    }
+
+    #if !spine_no_inline inline #end public function isActive():Bool {
+        return active;
     }
 
     /** The path constraint's setup pose data. */

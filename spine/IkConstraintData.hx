@@ -34,32 +34,15 @@ import spine.support.utils.Array;
 /** Stores the setup pose for an {@link IkConstraint}.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-ik-constraints">IK constraints</a> in the Spine User Guide. */
-class IkConstraintData {
-    public var name:String;
-    public var order:Int = 0;
+class IkConstraintData extends ConstraintData {
     public var bones:Array<BoneData> = new Array();
     public var target:BoneData;
     public var bendDirection:Int = 1;
     public var compress:Bool = false; public var stretch:Bool = false; public var uniform:Bool = false;
-    public var mix:Float = 1;
+    public var mix:Float = 1; public var softness:Float = 0;
 
     public function new(name:String) {
-        if (name == null) throw new IllegalArgumentException("name cannot be null.");
-        this.name = name;
-    }
-
-    /** The IK constraint's name, which is unique within the skeleton. */
-    #if !spine_no_inline inline #end public function getName():String {
-        return name;
-    }
-
-    /** See {@link Constraint#getOrder()}. */
-    #if !spine_no_inline inline #end public function getOrder():Int {
-        return order;
-    }
-
-    #if !spine_no_inline inline #end public function setOrder(order:Int):Void {
-        this.order = order;
+        super(name);
     }
 
     /** The bones that are constrained by this IK constraint. */
@@ -84,6 +67,15 @@ class IkConstraintData {
 
     #if !spine_no_inline inline #end public function setMix(mix:Float):Void {
         this.mix = mix;
+    }
+
+    /** For two bone IK, the distance from the maximum reach of the bones that rotation will slow. */
+    #if !spine_no_inline inline #end public function getSoftness():Float {
+        return softness;
+    }
+
+    #if !spine_no_inline inline #end public function setSoftness(softness:Float):Void {
+        this.softness = softness;
     }
 
     /** Controls the bend direction of the IK bones, either 1 or -1. */
@@ -122,9 +114,5 @@ class IkConstraintData {
 
     #if !spine_no_inline inline #end public function setUniform(uniform:Bool):Void {
         this.uniform = uniform;
-    }
-
-    #if !spine_no_inline inline #end public function toString():String {
-        return name;
     }
 }

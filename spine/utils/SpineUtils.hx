@@ -38,23 +38,36 @@ class SpineUtils {
     public static var degRad:Float = degreesToRadians;
 
     #if !spine_no_inline inline #end public static function cosDeg(angle:Float):Float {
-        return cast(Math.cos(angle * degRad), Float);
+        return Math.cos(angle * degRad);
     }
 
     #if !spine_no_inline inline #end public static function sinDeg(angle:Float):Float {
-        return cast(Math.sin(angle * degRad), Float);
+        return Math.sin(angle * degRad);
     }
 
     #if !spine_no_inline inline #end public static function cos(angle:Float):Float {
-        return cast(Math.cos(angle), Float);
+        return Math.cos(angle);
     }
 
     #if !spine_no_inline inline #end public static function sin(angle:Float):Float {
-        return cast(Math.sin(angle), Float);
+        return Math.sin(angle);
     }
 
     #if !spine_no_inline inline #end public static function atan2(y:Float, x:Float):Float {
-        return cast(Math.atan2(y, x), Float);
+        return Math.atan2(y, x);
+    }
+
+    #if !spine_no_inline inline #end public static function arraycopy(src:Dynamic, srcPos:Int, dest:Dynamic, destPos:Int, length:Int):Void {
+        if (src == null) throw new IllegalArgumentException("src cannot be null.");
+        if (dest == null) throw new IllegalArgumentException("dest cannot be null.");
+        try {
+            spine.support.utils.Array.copy(src, srcPos, dest, destPos, length);
+        } catch (ex:Dynamic) {
+            throw new ArrayIndexOutOfBoundsException( //
+                "Src: " + spine.support.utils.Array.getLengthOf(src) + ", " + srcPos //
+                    + ", dest: " + spine.support.utils.Array.getLengthOf(dest) + ", " + destPos //
+                    + ", count: " + length);
+        }
     }
 
     public function new() {}
