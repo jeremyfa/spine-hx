@@ -800,8 +800,10 @@ using StringTools;
                 else if (c == '(' && RE_CAST.match(after)) {
                     var castType = convertType(RE_CAST.matched(1));
 
-                    if (castType == 'Int') {
+                    if (castType == 'Int' || castType == 'Short') {
                         haxe += 'Std.int(' + RE_CAST.matched(2).ltrim();
+                    } else if (castType == 'Float') {
+                        haxe += RE_CAST.matched(2).ltrim();
                     } else {
                         haxe += 'cast(' + RE_CAST.matched(2).ltrim();
                     }
@@ -816,8 +818,10 @@ using StringTools;
                     haxe = haxe.substring(0, index);
                     cleanedHaxe = cleanedHaxe.substring(0, haxe.length);
 
-                    if (castType == 'Int') {
+                    if (castType == 'Int' || castType == 'Short') {
                         haxe += castPart + ')';
+                    } else if (castType == 'Float') {
+                        haxe += castPart;
                     } else {
                         haxe += castPart + ', ' + castType + ')';
                     }
@@ -889,7 +893,7 @@ using StringTools;
                         i += RE_NUMBER.matched(0).length;
                         haxe += RE_NUMBER.matched(1);
                     }
-                    else if (RE_LABEL.match(after) && haxe.indexOf('case ', cast Math.max(0, haxe.lastIndexOf("\n"))) == -1) {
+                    else if (RE_LABEL.match(after) && haxe.indexOf('case ', Std.int(Math.max(0, haxe.lastIndexOf("\n")))) == -1) {
                         i += RE_LABEL.matched(0).length;
                         var flagName = '_gotoLabel_' + RE_LABEL.matched(1);
                         haxe += 'var ' + flagName + ':Int; while (true) { ' + flagName + ' = 0; ';
@@ -1149,7 +1153,7 @@ using StringTools;
                             consumeExpression({ until: ']' });
                             part1 = haxe.substring(index, haxe.length - 1);
                             haxe = haxe.substring(0, index);
-                            cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
+                            cleanedHaxe = cleanedHaxe.substring(0, Std.int(Math.min(cleanedHaxe.length, haxe.length)));
                             c = java.charAt(i);
                             while (c.trim() == '') {
                                 haxe += c;
@@ -1164,7 +1168,7 @@ using StringTools;
                                 consumeExpression({ until: ']' });
                                 part2 = haxe.substring(index, haxe.length - 1);
                                 haxe = haxe.substring(0, index);
-                                cleanedHaxe = cleanedHaxe.substring(0, cast Math.min(cleanedHaxe.length, haxe.length));
+                                cleanedHaxe = cleanedHaxe.substring(0, Std.int(Math.min(cleanedHaxe.length, haxe.length)));
                             }
 
                             if (part1 == '') part1 = '0';
