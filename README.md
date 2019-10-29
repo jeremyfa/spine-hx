@@ -10,9 +10,9 @@ The Spine Runtimes are developed with the intent to be used with data exported f
 
 ## Spine version
 
-spine-hx works with data exported from Spine 3.7.xx.
+spine-hx works with data exported from Spine 3.8.xx.
 
-spine-hx supports all Spine features until 3.7.xx.
+spine-hx supports all Spine features until 3.8.xx.
 
 spine-hx does support loading the binary format.
 

@@ -1,17 +1,16 @@
 package spine.support.utils;
 
-import spine.Skin.Key;
-import spine.attachments.Attachment;
+import spine.Skin.SkinEntry;
 
-abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
+abstract SkinEntryMap(Map<Int,Array<SkinEntryMapEntry<SkinEntry,SkinEntry>>>) {
 
     inline public function new() {
         this = new Map();
     }
 
-    #if !spine_no_inline inline #end public function get(key:Key, defaultValue:Attachment = null):Attachment {
+    #if !spine_no_inline inline #end public function get(key:SkinEntry, defaultValue:SkinEntry = null):SkinEntry {
         var entries = this.get(key.getHashCode());
-        var result:Attachment = defaultValue;
+        var result:SkinEntry = defaultValue;
         if (entries != null) {
             for (i in 0...entries.length) {
                 var entry = entries.unsafeGet(i);
@@ -30,7 +29,7 @@ abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
         for (key in keys) this.remove(key);
     }
 
-    public function put(key:Key, value:Attachment):Void {
+    public function put(key:SkinEntry, value:SkinEntry):Void {
         var hashCode = key.getHashCode();
         var entries = this.get(hashCode);
         if (entries == null) {
@@ -49,11 +48,11 @@ abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
             i++;
         }
         if (!didSet) {
-            entries.push(new Entry(key, value));
+            entries.push(new SkinEntryMapEntry(key, value));
         }
     }
 
-    inline public function remove(key:Key):Void {
+    inline public function remove(key:SkinEntry):Void {
         this.remove(key.getHashCode());
     }
 
@@ -100,15 +99,15 @@ abstract AttachmentMap(Map<Int,Array<Entry<Key,Attachment>>>) {
 
 }
 
-@:allow(spine.support.utils.AttachmentMap)
+@:allow(spine.support.utils.SkinEntryMap)
 @:structInit
-class Entry<Key,Attachment> {
+class SkinEntryMapEntry<K,V> {
 
-    public var key(default,null):Key;
+    public var key(default,null):K;
 
-    public var value(default,null):Attachment;
+    public var value(default,null):V;
 
-    public function new(key:Key, value:Attachment) {
+    public function new(key:K, value:V) {
         this.key = key;
         this.value = value;
     }

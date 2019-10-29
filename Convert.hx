@@ -27,7 +27,7 @@ class Convert {
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            command('git', ['clone', '-b', '3.7', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['clone', '-b', '3.8', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
@@ -158,6 +158,7 @@ using StringTools;
 
         // Perform some replaces to facilitate parsing
         java = java.replace('ObjectMap<Key, ', 'ObjectMap<Key,');
+        java = java.replace('OrderedMap<SkinEntry, ', 'OrderedMap<SkinEntry,');
 
         var haxe = '';
         var cleanedJava = cleanedCode(java);
@@ -807,7 +808,7 @@ using StringTools;
                     i += RE_CAST.matched(0).length;
 
                     var index = haxe.length;
-                    var aStop = consumeExpression({ until: ');,' });
+                    var aStop = consumeExpression({ until: ');,:' });
                     var castPart = haxe.substring(index, haxe.length - 1);
 
                     if (aStop == ')') openParens++;
@@ -871,7 +872,7 @@ using StringTools;
                         break;
                     }
                 }
-                else if ((c == ',' || c == ';') && openParens == openParensStart) {
+                else if ((c == ',' || c == ';' || c == ':') && openParens == openParensStart) {
                     haxe += c;
                     i++;
                     if (until.indexOf(c) != -1) {
@@ -2262,8 +2263,7 @@ using StringTools;
             haxe = haxe.replace('System.arraycopy(lastVertices', 'Array.copyFloats(lastVertices');
         }
         else if (rootType == 'spine.Skeleton') {
-            haxe = haxe.replace('ObjectMap<Key,Attachment>', 'AttachmentMap');
-            haxe = haxe.replace('ObjectMap', 'AttachmentMap');
+            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'SkinEntryMap');
             haxe = haxe.replace('updateCache', 'cache');
             haxe = haxe.replace('cache()', 'updateCache()');
             haxe = haxe.replace('sortPathConstraintAttachment(skin:Skin, slotIndex:Int, slotBone:Bone)', 'sortPathConstraintAttachmentWithSkin(skin:Skin, slotIndex:Int, slotBone:Bone)');
@@ -2275,8 +2275,15 @@ using StringTools;
             haxe = haxe.replace('sortPathConstraintAttachment(data.skins.', 'sortPathConstraintAttachmentWithSkin(data.skins.');
         }
         else if (rootType == 'spine.IkConstraint') {
+            haxe = haxe.replace('function apply()', 'function applyNoArgs()');
             haxe = haxe.replace('apply(bone:Bone, targetX:Float, targetY:Float, compress:Bool, stretch:Bool, uniform:Bool, alpha:Float)', 'applyOne(bone:Bone, targetX:Float, targetY:Float, compress:Bool, stretch:Bool, uniform:Bool, alpha:Float)');
             haxe = haxe.replace('apply(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, stretch:Bool, alpha:Float)', 'applyTwo(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, stretch:Bool, alpha:Float)');
+        }
+        else if (rootType == 'spine.PathConstraint') {
+            haxe = haxe.replace('function apply()', 'function applyNoArgs()');
+        }
+        else if (rootType == 'spine.TransformConstraint') {
+            haxe = haxe.replace('function apply()', 'function applyNoArgs()');
         }
         else if (rootType == 'spine.Bone') {
             haxe = haxe.replace('updateWorldTransform(', 'updateWorldTransformWithData(');
@@ -2302,8 +2309,9 @@ using StringTools;
             haxe = haxe.replace('import spine.support.graphics.GL20;', '');
         }
         else if (rootType == 'spine.Skin') {
-            haxe = haxe.replace('ObjectMap<Key,Attachment>', 'AttachmentMap');
-            haxe = haxe.replace('ObjectMap', 'AttachmentMap');
+            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'SkinEntryMap');
+            haxe = haxe.replace('OrderedMap', 'SkinEntryMap');
+            haxe = haxe.replace('getAttachments(slotIndex:Int, attachments:Array<SkinEntry>', 'getAttachmentsInSkinForSlot(slotIndex:Int, attachments:Array<SkinEntry>');
             haxe = haxe.replace('hashCode = 31 * (31 + name.hashCode()) + slotIndex;', 'hashCode = Std.int(31 * (31 + name.hashCode()) + slotIndex);');
         }
         else if (rootType == 'spine.attachments.VertexAttachment') {
@@ -3202,7 +3210,7 @@ using StringTools;
                 }
             }"
         },
-        'spine.Skin.Pool' => {
+        /*'spine.Skin.Pool' => {
             replaceWithClass: 'KeyPool',
             classBody: "
             private class KeyPool extends Pool<Key> {
@@ -3213,7 +3221,7 @@ using StringTools;
                     return new Key();
                 }
             }"
-        },
+        },*/
         'spine.SkeletonBounds.Pool' => {
             replaceWithClass: 'PolygonPool',
             classBody: "
@@ -3250,6 +3258,7 @@ using StringTools;
         'utils/SkeletonActor.java' => true,
         'utils/SkeletonActorPool.java' => true,
         'utils/SkeletonDrawable.java' => true,
+        'utils/SkeletonDataLoader.java' => true,
         'utils/TwoColorPolygonBatch.java' => true,
         'vertexeffects/JitterEffect.java' => true,
         'vertexeffects/SwirlEffect.java' => true
@@ -3261,6 +3270,7 @@ using StringTools;
 
     static var skippedConstructors:Map<String,String> = [
         'spine.AnimationState' => '', // Empty animation state
+        'spine.Skin' => '', // Empty skin
         'spine.Slot' => 'Slot slot,Bone bone', // Copy constructor
         'spine.Skeleton' => 'Skeleton skeleton', // Copy constructor
         'spine.TransformConstraint' => 'TransformConstraint constraint,Skeleton skeleton', // Copy constructor
@@ -3288,7 +3298,7 @@ using StringTools;
     static var RE_IMPORT = ~/^import\s+(static\s+)?([^;\s]+)\s*;/;
     static var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic|volatile)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
     static var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
-    static var RE_METHOD = ~/^((?:(?:public|private|protected|static|final|synchronized)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
+    static var RE_METHOD = ~/^((?:(?:public|private|protected|static|final|synchronized|abstract)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
     static var RE_VAR = ~/^(?:([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+)?([a-zA-Z0-9_]+)\s*(;|=|,)/;
     static var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_]+)*)*)\s*{/;
     static var RE_HAXE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract|@:enum)\s+)+)?(enum|interface|class|abstract)\s+([a-zA-Z0-9,<>\[\]_]+)/;
