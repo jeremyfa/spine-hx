@@ -3307,7 +3307,7 @@ using StringTools;
     static var RE_SWITCH = ~/^switch\s*\(/;
     static var RE_ELSE = ~/^(\s*)else((\s+if\s*)\([^{]+\))?/;
     static var RE_CASE = ~/^(case|default)\s*(?:([^:]+)\s*)?:\s*/;
-    static var RE_INSTANCEOF = ~/^([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+instanceof\s+([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
+    static var RE_INSTANCEOF = ~/^((?:[a-zA-Z0-9_\[\]]+\.)?[a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s+instanceof\s+([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
     static var RE_CAST = ~/^\(\s*([a-zA-Z0-9_\[\]]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s*\)\s*((?:[a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)|(?:\([^\(\)]+\)))/;
     static var RE_CALL = ~/^([a-zA-Z0-9\[\]_]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)\s*\(/;
     static var RE_NUMBER = ~/^((?:[0-9]+)\.?(?:[0-9]+)?)(f|F|d|D)/;
