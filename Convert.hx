@@ -2325,6 +2325,9 @@ using StringTools;
         }
         else if (rootType == 'spine.attachments.VertexAttachment') {
             haxe = haxe.replace('nextID()', 'getNextID()');
+            haxe = haxe.replace('public var deformAttachment:VertexAttachment = this;', '@:isVar public var deformAttachment(get,set):VertexAttachment = null;
+    inline function get_deformAttachment():VertexAttachment { return (deformAttachment != null ? deformAttachment : this); }
+    inline function set_deformAttachment(deformAttachment:VertexAttachment):VertexAttachment { return this.deformAttachment = deformAttachment; }');
         }
         else if (rootType == 'spine.utils.SpineUtils') {
             haxe = haxe.replace('System.arraycopy(', 'spine.support.utils.Array.copy(');

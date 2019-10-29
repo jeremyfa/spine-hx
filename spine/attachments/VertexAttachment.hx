@@ -46,7 +46,9 @@ class VertexAttachment extends Attachment {
     public var bones:IntArray;
     public var vertices:FloatArray;
     public var worldVerticesLength:Int = 0;
-    public var deformAttachment:VertexAttachment = this;
+    @:isVar public var deformAttachment(get,set):VertexAttachment = null;
+    inline function get_deformAttachment():VertexAttachment { return (deformAttachment != null ? deformAttachment : this); }
+    inline function set_deformAttachment(deformAttachment:VertexAttachment):VertexAttachment { return this.deformAttachment = deformAttachment; }
 
     public function new(name:String) {
         super(name);
