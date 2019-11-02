@@ -2321,7 +2321,7 @@ using StringTools;
             haxe = haxe.replace('OrderedMap', 'AttachmentMap');
             haxe = haxe.replace('this.attachments.orderedKeys().ordered = false;', '//this.attachments.orderedKeys().ordered = false;');
             haxe = haxe.replace('getAttachments(slotIndex:Int, attachments:Array<SkinEntry>', 'getAttachmentsInSkinForSlot(slotIndex:Int, attachments:Array<SkinEntry>');
-            haxe = haxe.replace('hashCode = 31 * (31 + name.hashCode()) + slotIndex;', 'hashCode = Std.int(31 * (31 + name.hashCode()) + slotIndex);');
+            haxe = haxe.replace('hashCode = name.hashCode() + slotIndex * 37;', 'hashCode = Std.int(name.hashCode() + slotIndex * 37);');
         }
         else if (rootType == 'spine.attachments.VertexAttachment') {
             haxe = haxe.replace('nextID()', 'getNextID()');

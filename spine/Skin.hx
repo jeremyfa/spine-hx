@@ -180,7 +180,7 @@ class SkinEntry {
         if (name == null) throw new IllegalArgumentException("name cannot be null.");
         this.slotIndex = slotIndex;
         this.name = name;
-        this.hashCode = name.getHashCode() + slotIndex * 37;
+        this.hashCode = Std.int(name.getHashCode() + slotIndex * 37);
     }
 
     #if !spine_no_inline inline #end public function getSlotIndex():Int {
