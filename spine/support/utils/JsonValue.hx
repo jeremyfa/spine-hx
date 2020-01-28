@@ -40,7 +40,7 @@ interface JsonValue {
 
     var child(get,never):JsonValue;
 
-} //JsonValue
+}
 
 class JsonDynamic implements JsonValue {
 
@@ -176,7 +176,7 @@ class JsonDynamic implements JsonValue {
         }
     }
 
-} //JsonDynamic
+}
 
 class JsonChild implements JsonValue {
 
@@ -312,4 +312,4 @@ class JsonChild implements JsonValue {
         return (data:std.Array<Dynamic>)[index];
     }
 
-} //JsonChild
+}

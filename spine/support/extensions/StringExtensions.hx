@@ -18,4 +18,4 @@ class StringExtensions {
         return hash;
     }
 
-} //StringExtensions
+}

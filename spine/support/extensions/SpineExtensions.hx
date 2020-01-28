@@ -12,4 +12,4 @@ class SpineExtensions {
         return @:privateAccess anim.hashCode;
     }
 
-} //SpineExtensions
+}

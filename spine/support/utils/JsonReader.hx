@@ -12,6 +12,6 @@ class JsonReader {
 
         return new JsonDynamic(Json.parse(file.getContent()));
 
-    } //parse
+    }
 
-} //JsonReader
+}

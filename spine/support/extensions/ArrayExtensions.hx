@@ -31,7 +31,7 @@ class ArrayExtensions<T> {
 #else
         return array[index];
 #end
-    } //unsafeGet
+    }
 
     #if !debug inline #end public static function unsafeSet<T>(array:Array<T>, index:Int, value:T):Void {
 #if debug
@@ -42,6 +42,6 @@ class ArrayExtensions<T> {
 #else
         array[index] = value;
 #end
-    } //unsafeSet
+    }
 
-} //ArrayExtensions
+}

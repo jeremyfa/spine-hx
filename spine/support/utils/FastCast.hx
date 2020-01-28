@@ -7,4 +7,4 @@ class FastCast {
         return result;
     }
 
-} //FastCast
+}

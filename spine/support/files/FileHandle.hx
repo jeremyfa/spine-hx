@@ -6,4 +6,4 @@ interface FileHandle {
 
     public function getContent():String;
 
-} //FileHandle
+}

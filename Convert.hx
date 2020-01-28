@@ -72,7 +72,7 @@ using StringTools;
 
         fixCompilerErrors(ctx);
 
-    } //main
+    }
 
 /// Convert
 
@@ -139,7 +139,7 @@ using StringTools;
             convert(ctx, true, true);
         }
 
-    } //convert
+    }
 
     static function javaToHaxe(java:String, filePath:String, rootType:String, haxeDir:String, ctx:ConvertContext):String {
 
@@ -330,7 +330,7 @@ using StringTools;
                 }
             }
 
-        } //computeCleanedHaxe
+        }
 
         function computeLastSeparator() {
 
@@ -350,7 +350,7 @@ using StringTools;
                 i--;
             }
 
-        } //computeLastSeparator
+        }
 
         function nextIteration() {
 
@@ -380,7 +380,7 @@ using StringTools;
                 word = '';
             }
 
-        } //nextIteration
+        }
 
         function convertModifiers(inModifiers:String):Map<String,Bool> {
 
@@ -397,7 +397,7 @@ using StringTools;
 
             return modifiers;
 
-        } //convertModifiers
+        }
 
         function convertType(inType:String):String {
 
@@ -433,7 +433,7 @@ using StringTools;
             usedTypes.set(type, true);
             return type;
 
-        } //convertType
+        }
 
         function convertArgs(inArgs:String):Array<{name:String, type:String}> {
 
@@ -495,7 +495,7 @@ using StringTools;
 
             return args;
 
-        } //convertArgs
+        }
 
         function convertDeclExtras(inExtras:String):{interfaces:Array<String>, classes:Array<String>} {
 
@@ -535,7 +535,7 @@ using StringTools;
 
             return extras;
 
-        } //convertDeclExtras
+        }
 
         function consumeCommentOrString(loop:Bool = false):Bool {
 
@@ -586,7 +586,7 @@ using StringTools;
 
             return true;
 
-        } //consumeCommentOrString
+        }
 
         function consumeBrace():Bool {
 
@@ -699,7 +699,7 @@ using StringTools;
 
             return true;
 
-        } //consumeBrace
+        }
 
         function consumeParen():Bool {
 
@@ -719,7 +719,7 @@ using StringTools;
 
             return true;
 
-        } //consumeParen
+        }
 
         function consumeBracket():Bool {
 
@@ -739,7 +739,7 @@ using StringTools;
 
             return true;
 
-        } //consumeBracket
+        }
 
         function toTypePath(inType:String):String {
 
@@ -756,7 +756,7 @@ using StringTools;
 
             return rootType.substring(0, rootType.lastIndexOf('.')) + '.' + inType;
 
-        } //toTypePath
+        }
 
         consumeExpression = function(?options:{
             ?varType:String,
@@ -1771,7 +1771,7 @@ using StringTools;
 
             return stopToken;
 
-        } //consumeExpression
+        }
 
         while (i < java.length) {
 
@@ -2408,7 +2408,7 @@ using StringTools;
 
         return haxe;
 
-    } //javaToHaxe
+    }
 
     static function moveTopLevelDecls(haxe:String):String {
 
@@ -2461,7 +2461,7 @@ using StringTools;
 
         return mainLines.join("\n") + subLines.join("\n");
 
-    } //moveTopLevelDecls
+    }
 
 /// Compiler
 
@@ -2973,7 +2973,7 @@ using StringTools;
             File.saveContent(path, data);
         }
 
-    } //fixCompilerErrors
+    }
 
     /** Parse haxe compiler output and extract info */
     public static function parseCompilerOutput(output:String, ?options:ParseCompilerOutputOptions):Array<HaxeCompilerOutputElement> {
@@ -3067,7 +3067,7 @@ using StringTools;
 
         return info;
 
-    } //parseCompilerOutput
+    }
 
 /// Utils
 
@@ -3079,7 +3079,7 @@ using StringTools;
 
         return str;
 
-    } //replaceStart
+    }
 
     static function deleteRecursive(path:String, ?except:Array<String>) {
 
@@ -3102,7 +3102,7 @@ using StringTools;
             FileSystem.deleteFile(path);
         }
 
-    } //deleteRecursive
+    }
 
     static function cleanedCode(code:String, ?options: { ?cleanSpaces:Bool, ?canBeInComment:Bool }) {
 
@@ -3176,7 +3176,7 @@ using StringTools;
 
         return result;
 
-    } //cleanedCode
+    }
 
     static function splitCode(code:String, splitTokens:Array<String>, deep:Bool = false) {
 
@@ -3268,7 +3268,7 @@ using StringTools;
 
         return parts;
 
-    } //splitCode
+    }
 
 /// Contextual classes info
 
@@ -3404,7 +3404,7 @@ using StringTools;
     static var RE_ERROR_FIELD_OVERRIDE = ~/^Field ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?) should be declared with 'override' since it is inherited from superclass ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
     static var RE_ERROR_SHOULD_BE = ~/should be ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;
 
-} //Convert
+}
 
 typedef ConvertContext = {
     javaDir:String,
