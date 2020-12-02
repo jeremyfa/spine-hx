@@ -3,6 +3,25 @@ package spine.support.utils;
 @:forward(iterator, length, push, pop, shift, unshift, splice)
 abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
+    #if cs
+
+    public static function copy(src:std.Array<Dynamic>, srcPos:Int, dest:std.Array<Dynamic>, destPos:Int, length:Int) {
+        // This could probably be improved by avoiding boxing/unboxing
+        var val;
+        var srcIndex = srcPos;
+        var destIndex = destPos;
+        var end = length + srcPos;
+        while (srcIndex < end) {
+            //dest[i + destPos] = src[i + srcPos];
+            val = src.unsafeGet(srcIndex);
+            dest.unsafeSet(destIndex, val);
+            srcIndex++;
+            destIndex++;
+        }
+    }
+
+    #else
+
     public static function copy<T>(src:std.Array<T>, srcPos:Int, dest:std.Array<T>, destPos:Int, length:Int) {
         var val;
         var srcIndex = srcPos;
@@ -16,6 +35,8 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
             destIndex++;
         }
     }
+
+    #end
 
     public static function copyFloats(src:std.Array<Float>, srcPos:Int, dest:std.Array<Float>, destPos:Int, length:Int) {
         var val:Float;
