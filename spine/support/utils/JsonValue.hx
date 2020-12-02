@@ -112,11 +112,21 @@ class JsonDynamic implements JsonValue {
     }
 
     public function asFloatArray():FloatArray {
+        #if cs
+        var array:std.Array<Dynamic> = data;
+        return cast array;
+        #else
         return data;
+        #end
     }
 
     public function asShortArray():ShortArray {
+        #if cs
+        var array:std.Array<Dynamic> = data;
+        return cast array;
+        #else
         return data;
+        #end
     }
 
     public function asFloat():Float {
@@ -300,11 +310,21 @@ class JsonChild implements JsonValue {
     }
 
     public function asFloatArray():FloatArray {
+        #if cs
+        var array:std.Array<Dynamic> = data[index];
+        return cast array;
+        #else
         return data[index];
+        #end
     }
 
     public function asShortArray():ShortArray {
+        #if cs
+        var array:std.Array<Dynamic> = data[index];
+        return cast array;
+        #else
         return data[index];
+        #end
     }
 
     private inline function getByIndex():Dynamic
