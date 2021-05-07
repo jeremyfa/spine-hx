@@ -1650,7 +1650,7 @@ using StringTools;
                         i += word.length;
                     }
                     else if (RE_INSTANCEOF.match(after)) {
-                        haxe += 'Std.is(' + RE_INSTANCEOF.matched(1) + ', ' + convertType(RE_INSTANCEOF.matched(2)) + ')';
+                        haxe += 'Std.isOfType(' + RE_INSTANCEOF.matched(1) + ', ' + convertType(RE_INSTANCEOF.matched(2)) + ')';
                         i += RE_INSTANCEOF.matched(0).length;
                     }
                     else if (!controls.exists(word) && !inCall && (lastSeparator == '' || lastSeparator == ':' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || lastSeparator == ')' || inFor) && RE_VAR.match(after)) {

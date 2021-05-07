@@ -97,7 +97,7 @@ class PathConstraint implements Updatable {
     @SuppressWarnings("null")
     #if !spine_no_inline inline #end public function update():Void {
         var attachment:Attachment = target.attachment;
-        if (!(Std.is(attachment, PathAttachment))) return;
+        if (!(Std.isOfType(attachment, PathAttachment))) return;
 
         var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix;
         var translate:Bool = translateMix > 0; var rotate:Bool = rotateMix > 0;

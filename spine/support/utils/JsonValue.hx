@@ -63,7 +63,7 @@ class JsonDynamic implements JsonValue {
     }
 
     public function get(key:String):JsonValue {
-        if (/*/*Std.is(data, Array) || */Std.is(data, std.Array)) {
+        if (/*/*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array)) {
             return null;
         } else {
             return Reflect.hasField(data, key) ? new JsonDynamic(Reflect.field(data, key)) : null;
@@ -87,8 +87,8 @@ class JsonDynamic implements JsonValue {
     }
 
     public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
-        if (Std.is(key, Int)) {
-            if (/*Std.is(data, Array) || */Std.is(data, std.Array)) {
+        if (Std.isOfType(key, Int)) {
+            if (/*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array)) {
                 return data[key];
             } else {
                 return defaultValue;
@@ -138,11 +138,11 @@ class JsonDynamic implements JsonValue {
     }
 
     public function isString():Bool {
-        return Std.is(data, String);
+        return Std.isOfType(data, String);
     }
 
     public function isArray():Bool{
-        return /*Std.is(data, Array) || */Std.is(data, std.Array);
+        return /*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array);
     }
 
     public var next(get,never):JsonValue;
@@ -157,7 +157,7 @@ class JsonDynamic implements JsonValue {
 
     public var size(get,never):Int;
     function get_size():Int {
-        if (/*Std.is(data, Array) || */Std.is(data, std.Array)) {
+        if (/*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array)) {
             return data.length;
         }
         return Reflect.fields(data).length;
@@ -169,7 +169,7 @@ class JsonDynamic implements JsonValue {
         if (item == null) {
             return null;
         }
-        else if (/*Std.is(item, Array) || */Std.is(item, std.Array)) {
+        else if (/*Std.isOfType(item, Array) || */Std.isOfType(item, std.Array)) {
             return new JsonChild(item, 0);
         }
         else {
@@ -227,8 +227,8 @@ class JsonChild implements JsonValue {
     }
 
     public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
-        if (Std.is(key, Int)) {
-            if (Std.is(data[index], std.Array)) {
+        if (Std.isOfType(key, Int)) {
+            if (Std.isOfType(data[index], std.Array)) {
                 return getByIndex()[key];
             } else {
                 return 0;
@@ -260,11 +260,11 @@ class JsonChild implements JsonValue {
     }
 
     public function isString():Bool {
-        return Std.is(data[index], String);
+        return Std.isOfType(data[index], String);
     }
 
     public function isArray():Bool{
-        return Std.is(data[index], std.Array);
+        return Std.isOfType(data[index], std.Array);
     }
 
     public var next(get,never):JsonValue;
@@ -291,7 +291,7 @@ class JsonChild implements JsonValue {
     public function get_child():JsonValue {
         var item:Dynamic = data[index];
         if (item == null) return null;
-        else if (Std.is(item, std.Array)) {
+        else if (Std.isOfType(item, std.Array)) {
             return new JsonChild(item, 0);
         }
         else {

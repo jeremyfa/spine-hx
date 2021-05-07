@@ -70,7 +70,7 @@ class RegionAttachment extends Attachment {
         var localY2:Float = height / 2;
         var localX:Float = -localX2;
         var localY:Float = -localY2;
-        if (Std.is(region, AtlasRegion)) {
+        if (Std.isOfType(region, AtlasRegion)) {
             var region:AtlasRegion = fastCast(this.region, AtlasRegion);
             localX += region.offsetX / region.originalWidth * width;
             localY += region.offsetY / region.originalHeight * height;
@@ -116,7 +116,7 @@ class RegionAttachment extends Attachment {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         this.region = region;
         var uvs:FloatArray = this.uvs;
-        if (Std.is(region, AtlasRegion) && (fastCast(region, AtlasRegion)).rotate) {
+        if (Std.isOfType(region, AtlasRegion) && (fastCast(region, AtlasRegion)).rotate) {
             uvs[URX] = region.getU();
             uvs[URY] = region.getV2();
             uvs[BRX] = region.getU();

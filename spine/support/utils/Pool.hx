@@ -25,7 +25,7 @@ class Pool<T> {
     /** Called when an object is freed to clear the state of the object for possible later reuse. The default implementation calls
      * {@link Poolable#reset()} if the object is {@link Poolable}. */
     public function reset(object:T):Void {
-        if (Std.is(object, Poolable)) (cast(object, Poolable)).reset();
+        if (Std.isOfType(object, Poolable)) (cast(object, Poolable)).reset();
     }
 
     /** Puts the specified objects in the pool. Null objects within the array are silently ignored.

@@ -88,7 +88,7 @@ class Skin {
             if (!constraints.contains(data, true)) constraints.add(data); }
 
         for (entry in skin.attachments.keys()) {
-            if (Std.is(entry.attachment, MeshAttachment))
+            if (Std.isOfType(entry.attachment, MeshAttachment))
                 setAttachment(entry.slotIndex, entry.name, (fastCast(entry.attachment, MeshAttachment)).newLinkedMesh());
             else
                 setAttachment(entry.slotIndex, entry.name, entry.attachment != null ? entry.attachment.copy() : null);

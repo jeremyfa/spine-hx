@@ -250,7 +250,7 @@ class Skeleton {
             sortPathConstraintAttachmentWithSkin(data.defaultSkin, slotIndex, slotBone);
 
         var attachment:Attachment = slot.attachment;
-        if (Std.is(attachment, PathAttachment)) sortPathConstraintAttachment(attachment, slotBone);
+        if (Std.isOfType(attachment, PathAttachment)) sortPathConstraintAttachment(attachment, slotBone);
 
         var constrained:Array<Bone> = constraint.bones;
         var boneCount:Int = constrained.size;
@@ -299,7 +299,7 @@ class Skeleton {
     }
 
     #if !spine_no_inline inline #end private function sortPathConstraintAttachment(attachment:Attachment, slotBone:Bone):Void {
-        if (!(Std.is(attachment, PathAttachment))) return;
+        if (!(Std.isOfType(attachment, PathAttachment))) return;
         var pathBones:IntArray = (fastCast(attachment, PathAttachment)).getBones();
         if (pathBones == null)
             sortBone(slotBone);
@@ -674,11 +674,11 @@ class Skeleton {
             var verticesLength:Int = 0;
             var vertices:FloatArray = null;
             var attachment:Attachment = slot.attachment;
-            if (Std.is(attachment, RegionAttachment)) {
+            if (Std.isOfType(attachment, RegionAttachment)) {
                 verticesLength = 8;
                 vertices = temp.setSize(8);
                 (fastCast(attachment, RegionAttachment)).computeWorldVertices(slot.getBone(), vertices, 0, 2);
-            } else if (Std.is(attachment, MeshAttachment)) {
+            } else if (Std.isOfType(attachment, MeshAttachment)) {
                 var mesh:MeshAttachment = fastCast(attachment, MeshAttachment);
                 verticesLength = mesh.getWorldVerticesLength();
                 vertices = temp.setSize(verticesLength);

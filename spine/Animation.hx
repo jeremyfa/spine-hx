@@ -1121,7 +1121,7 @@ class DeformTimeline extends CurveTimeline implements SlotTimeline {
         var slot:Slot = skeleton.slots.get(slotIndex);
         if (!slot.bone.active) return;
         var slotAttachment:Attachment = slot.attachment;
-        if (!(Std.is(slotAttachment, VertexAttachment))
+        if (!(Std.isOfType(slotAttachment, VertexAttachment))
             || (fastCast(slotAttachment, VertexAttachment)).getDeformAttachment() != attachment) return;
 
         var deformArray:FloatArray = slot.getDeform();
