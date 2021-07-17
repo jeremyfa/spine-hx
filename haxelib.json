@@ -4,7 +4,7 @@
     "license": "BSD",
     "tags": [ "spine", "animation", "mesh" ],
     "description": "Spine runtime for Haxe automatically converted from the official Java/libgdx runtime",
-    "version": "3.8.1",
+    "version": "4.0.2",
     "releasenote": "Fix int hashCode issue when using js target",
     "contributors": [ "jeremyfa" ],
     "dependencies": {}

@@ -26,6 +26,10 @@ abstract IntArray(std.Array<Int>) from std.Array<Int> to std.Array<Int> {
         return this.length;
     }
 
+    inline public function first():Int {
+        return this[0];
+    }
+
     inline public function shrink():IntArray {
         return this;
     }

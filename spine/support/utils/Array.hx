@@ -1,6 +1,6 @@
 package spine.support.utils;
 
-@:forward(iterator, length, push, pop, shift, unshift, splice)
+@:forward(iterator, length, push, pop, shift, unshift, splice, remove)
 abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
     #if cs
@@ -100,6 +100,14 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
     public var items(get,never):Array<T>;
     inline function get_items():Array<T> {
         return this;
+    }
+
+    public var ordered(get,set):Bool;
+    inline function get_ordered():Bool {
+        return false;
+    }
+    inline function set_ordered(ordered:Bool):Bool {
+        return ordered;
     }
 
     public var size(get,set):Int;

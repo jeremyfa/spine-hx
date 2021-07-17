@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,16 +15,16 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
@@ -35,6 +35,7 @@ import spine.utils.SpineUtils.*;
 import spine.support.math.Matrix3;
 import spine.support.math.Vector2;
 import spine.support.utils.Array;
+
 
 import spine.BoneData.TransformMode;
 import spine.BoneData.TransformMode_enum;
@@ -51,13 +52,11 @@ class Bone implements Updatable {
     public var children:Array<Bone> = new Array();
     public var x:Float = 0; public var y:Float = 0; public var rotation:Float = 0; public var scaleX:Float = 0; public var scaleY:Float = 0; public var shearX:Float = 0; public var shearY:Float = 0;
     public var ax:Float = 0; public var ay:Float = 0; public var arotation:Float = 0; public var ascaleX:Float = 0; public var ascaleY:Float = 0; public var ashearX:Float = 0; public var ashearY:Float = 0;
-    public var appliedValid:Bool = false;
     public var a:Float = 0; public var b:Float = 0; public var worldX:Float = 0;
     public var c:Float = 0; public var d:Float = 0; public var worldY:Float = 0;
 
     public var sorted:Bool = false; public var active:Bool = false;
 
-    /** @param parent May be null. */
     public function new(data:BoneData, skeleton:Skeleton, parent:Bone) {
         if (data == null) throw new IllegalArgumentException("data cannot be null.");
         if (skeleton == null) throw new IllegalArgumentException("skeleton cannot be null.");
@@ -67,8 +66,7 @@ class Bone implements Updatable {
         setToSetupPose();
     }
 
-    /** Copy constructor. Does not copy the children bones.
-     * @param parent May be null. */
+    /** Copy constructor. Does not copy the {@link #getChildren()} bones. */
     /*public function new(bone:Bone, skeleton:Skeleton, parent:Bone) {
         if (bone == null) throw new IllegalArgumentException("bone cannot be null.");
         if (skeleton == null) throw new IllegalArgumentException("skeleton cannot be null.");
@@ -84,9 +82,9 @@ class Bone implements Updatable {
         shearY = bone.shearY;
     }*/
 
-    /** Same as {@link #updateWorldTransform()}. This method exists for Bone to implement {@link Updatable}. */
+    /** Computes the world transform using the parent bone and this bone's local applied transform. */
     #if !spine_no_inline inline #end public function update():Void {
-        updateWorldTransformWithData(x, y, rotation, scaleX, scaleY, shearX, shearY);
+        updateWorldTransformWithData(ax, ay, arotation, ascaleX, ascaleY, ashearX, ashearY);
     }
 
     /** Computes the world transform using the parent bone and this bone's local transform.
@@ -96,7 +94,8 @@ class Bone implements Updatable {
         updateWorldTransformWithData(x, y, rotation, scaleX, scaleY, shearX, shearY);
     }
 
-    /** Computes the world transform using the parent bone and the specified local transform. Child bones are not updated.
+    /** Computes the world transform using the parent bone and the specified local transform. The applied transform is set to the
+     * specified local transform. Child bones are not updated.
      * <p>
      * See <a href="http://esotericsoftware.com/spine-runtime-skeletons#World-transforms">World transforms</a> in the Spine
      * Runtimes Guide. */
@@ -108,7 +107,6 @@ class Bone implements Updatable {
         ascaleY = scaleY;
         ashearX = shearX;
         ashearY = shearY;
-        appliedValid = true;
 
         var parent:Bone = this.parent;
         if (parent == null) { // Root bone.
@@ -152,6 +150,8 @@ class Bone implements Updatable {
             var s:Float = pa * pa + pc * pc; var prx:Float = 0;
             if (s > 0.0001) {
                 s = Math.abs(pa * pd - pb * pc) / s;
+                pa /= skeleton.scaleX;
+                pc /= skeleton.scaleY;
                 pb = pc * s;
                 pd = pa * s;
                 prx = atan2(pc, pa) * radDeg;
@@ -411,30 +411,20 @@ class Bone implements Updatable {
         this.ashearY = ashearY;
     }
 
-    /** If true, the applied transform matches the world transform. If false, the world transform has been modified since it was
-     * computed and {@link #updateAppliedTransform()} must be called before accessing the applied transform. */
-    #if !spine_no_inline inline #end public function isAppliedValid():Bool {
-        return appliedValid;
-    }
-
-    #if !spine_no_inline inline #end public function setAppliedValid(appliedValid:Bool):Void {
-        this.appliedValid = appliedValid;
-    }
-
-    /** Computes the applied transform values from the world transform. This allows the applied transform to be accessed after the
-     * world transform has been modified (by a constraint, {@link #rotateWorld(float)}, etc).
+    /** Computes the applied transform values from the world transform.
      * <p>
-     * If {@link #updateWorldTransform()} has been called for a bone and {@link #isAppliedValid()} is false, then
-     * {@link #updateAppliedTransform()} must be called before accessing the applied transform.
+     * If the world transform is modified (by a constraint, {@link #rotateWorld(float)}, etc) then this method should be called so
+     * the applied transform matches the world transform. The applied transform may be needed by other code (eg to apply another
+     * constraint).
      * <p>
      * Some information is ambiguous in the world transform, such as -1,-1 scale versus 180 rotation. The applied transform after
-     * calling this method is equivalent to the local tranform used to compute the world transform, but may not be identical. */
+     * calling this method is equivalent to the local transform used to compute the world transform, but may not be identical. */
     #if !spine_no_inline inline #end public function updateAppliedTransform():Void {
-        appliedValid = true;
         var parent:Bone = this.parent;
         if (parent == null) {
             ax = worldX;
             ay = worldY;
+            var a:Float = this.a; var b:Float = this.b; var c:Float = this.c; var d:Float = this.d;
             arotation = atan2(c, a) * radDeg;
             ascaleX = Math.sqrt(a * a + c * c);
             ascaleY = Math.sqrt(b * b + d * d);
@@ -472,7 +462,7 @@ class Bone implements Updatable {
 
     // -- World transform
 
-    /** Part of the world transform matrix for the X axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
+    /** Part of the world transform matrix for the X axis. If changed, {@link #updateAppliedTransform()} should be called. */
     #if !spine_no_inline inline #end public function getA():Float {
         return a;
     }
@@ -481,7 +471,7 @@ class Bone implements Updatable {
         this.a = a;
     }
 
-    /** Part of the world transform matrix for the Y axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
+    /** Part of the world transform matrix for the Y axis. If changed, {@link #updateAppliedTransform()} should be called. */
     #if !spine_no_inline inline #end public function getB():Float {
         return b;
     }
@@ -490,7 +480,7 @@ class Bone implements Updatable {
         this.b = b;
     }
 
-    /** Part of the world transform matrix for the X axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
+    /** Part of the world transform matrix for the X axis. If changed, {@link #updateAppliedTransform()} should be called. */
     #if !spine_no_inline inline #end public function getC():Float {
         return c;
     }
@@ -499,7 +489,7 @@ class Bone implements Updatable {
         this.c = c;
     }
 
-    /** Part of the world transform matrix for the Y axis. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
+    /** Part of the world transform matrix for the Y axis. If changed, {@link #updateAppliedTransform()} should be called. */
     #if !spine_no_inline inline #end public function getD():Float {
         return d;
     }
@@ -508,7 +498,7 @@ class Bone implements Updatable {
         this.d = d;
     }
 
-    /** The world X position. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
+    /** The world X position. If changed, {@link #updateAppliedTransform()} should be called. */
     #if !spine_no_inline inline #end public function getWorldX():Float {
         return worldX;
     }
@@ -517,7 +507,7 @@ class Bone implements Updatable {
         this.worldX = worldX;
     }
 
-    /** The world Y position. If changed, {@link #setAppliedValid(boolean)} should be set to false. */
+    /** The world Y position. If changed, {@link #updateAppliedTransform()} should be called. */
     #if !spine_no_inline inline #end public function getWorldY():Float {
         return worldY;
     }
@@ -564,10 +554,10 @@ class Bone implements Updatable {
     /** Transforms a point from world coordinates to the bone's local coordinates. */
     #if !spine_no_inline inline #end public function worldToLocal(world:Vector2):Vector2 {
         if (world == null) throw new IllegalArgumentException("world cannot be null.");
-        var invDet:Float = 1 / (a * d - b * c);
+        var det:Float = a * d - b * c;
         var x:Float = world.x - worldX; var y:Float = world.y - worldY;
-        world.x = x * d * invDet - y * b * invDet;
-        world.y = y * a * invDet - x * c * invDet;
+        world.x = (x * d - y * b) / det;
+        world.y = (y * a - x * c) / det;
         return world;
     }
 
@@ -593,15 +583,16 @@ class Bone implements Updatable {
         return atan2(cos * c + sin * d, cos * a + sin * b) * radDeg;
     }
 
-    /** Rotates the world transform the specified amount and sets {@link #isAppliedValid()} to false.
-     * {@link #updateWorldTransform()} will need to be called on any child bones, recursively, and any constraints reapplied. */
+    /** Rotates the world transform the specified amount.
+     * <p>
+     * After changes are made to the world transform, {@link #updateAppliedTransform()} should be called and {@link #update()} will
+     * need to be called on any child bones, recursively. */
     #if !spine_no_inline inline #end public function rotateWorld(degrees:Float):Void {
         var cos:Float = cosDeg(degrees); var sin:Float = sinDeg(degrees);
         a = cos * a - sin * c;
         b = cos * b - sin * d;
         c = sin * a + cos * c;
         d = sin * b + cos * d;
-        appliedValid = false;
     }
 
     // ---

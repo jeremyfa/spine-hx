@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,16 +15,16 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
@@ -41,7 +41,7 @@ class PathConstraintData extends ConstraintData {
     public var spacingMode:SpacingMode;
     public var rotateMode:RotateMode;
     public var offsetRotation:Float = 0;
-    public var position:Float = 0; public var spacing:Float = 0; public var rotateMix:Float = 0; public var translateMix:Float = 0;
+    public var position:Float = 0; public var spacing:Float = 0; public var mixRotate:Float = 0; public var mixX:Float = 0; public var mixY:Float = 0;
 
     public function new(name:String) {
         super(name);
@@ -119,22 +119,31 @@ class PathConstraintData extends ConstraintData {
         this.spacing = spacing;
     }
 
-    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    #if !spine_no_inline inline #end public function getRotateMix():Float {
-        return rotateMix;
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotation. */
+    #if !spine_no_inline inline #end public function getMixRotate():Float {
+        return mixRotate;
     }
 
-    #if !spine_no_inline inline #end public function setRotateMix(rotateMix:Float):Void {
-        this.rotateMix = rotateMix;
+    #if !spine_no_inline inline #end public function setMixRotate(mixRotate:Float):Void {
+        this.mixRotate = mixRotate;
     }
 
-    /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    #if !spine_no_inline inline #end public function getTranslateMix():Float {
-        return translateMix;
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained translation X. */
+    #if !spine_no_inline inline #end public function getMixX():Float {
+        return mixX;
     }
 
-    #if !spine_no_inline inline #end public function setTranslateMix(translateMix:Float):Void {
-        this.translateMix = translateMix;
+    #if !spine_no_inline inline #end public function setMixX(mixX:Float):Void {
+        this.mixX = mixX;
+    }
+
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained translation Y. */
+    #if !spine_no_inline inline #end public function getMixY():Float {
+        return mixY;
+    }
+
+    #if !spine_no_inline inline #end public function setMixY(mixY:Float):Void {
+        this.mixY = mixY;
     }
 }
 
@@ -151,7 +160,7 @@ class PathConstraintData extends ConstraintData {
  * <p>
  * See <a href="http://esotericsoftware.com/spine-path-constraints#Spacing-mode">Spacing mode</a> in the Spine User Guide. */
 @:enum abstract SpacingMode(Int) from Int to Int {
-    var length = 0; var fixed = 1; var percent = 2;
+    var length = 0; var fixed = 1; var percent = 2; var proportional = 3;
 
     //public static var values:SpacingMode[] = SpacingMode.values();
 }
@@ -188,16 +197,19 @@ class SpacingMode_enum {
     public inline static var length_value = 0;
     public inline static var fixed_value = 1;
     public inline static var percent_value = 2;
+    public inline static var proportional_value = 3;
 
     public inline static var length_name = "length";
     public inline static var fixed_name = "fixed";
     public inline static var percent_name = "percent";
+    public inline static var proportional_name = "proportional";
 
     public inline static function valueOf(value:String):SpacingMode {
         return switch (value) {
             case "length": SpacingMode.length;
             case "fixed": SpacingMode.fixed;
             case "percent": SpacingMode.percent;
+            case "proportional": SpacingMode.proportional;
             default: SpacingMode.length;
         };
     }

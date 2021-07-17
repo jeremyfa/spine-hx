@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,23 +15,25 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
 
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
+
 import spine.support.utils.Pool;
+
 import spine.attachments.Attachment;
 import spine.attachments.BoundingBoxAttachment;
 
@@ -51,18 +53,18 @@ class SkeletonBounds {
         if (skeleton == null) throw new IllegalArgumentException("skeleton cannot be null.");
         var boundingBoxes:Array<BoundingBoxAttachment> = this.boundingBoxes;
         var polygons:FloatArray2D = this.polygons;
-        var slots:Array<Slot> = skeleton.slots;
-        var slotCount:Int = slots.size;
+        var slots = skeleton.slots.items;
+        var slotCount:Int = skeleton.slots.size;
 
         boundingBoxes.clear();
         polygonPool.freeAll(polygons);
         polygons.clear();
 
         var i:Int = 0; while (i < slotCount) {
-            var slot:Slot = slots.get(i);
+            var slot:Slot = fastCast(slots[i], Slot);
             if (!slot.bone.active) { i++; continue; }
             var attachment:Attachment = slot.attachment;
-            if (Std.isOfType(attachment, BoundingBoxAttachment)) {
+            if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(attachment, BoundingBoxAttachment)) {
                 var boundingBox:BoundingBoxAttachment = fastCast(attachment, BoundingBoxAttachment);
                 boundingBoxes.add(boundingBox);
 
@@ -85,9 +87,9 @@ class SkeletonBounds {
 
     #if !spine_no_inline inline #end private function aabbCompute():Void {
         var minX:Float = 999999999; var minY:Float = 999999999; var maxX:Float = -999999999; var maxY:Float = -999999999;
-        var polygons:FloatArray2D = this.polygons;
-        var i:Int = 0; var n:Int = polygons.size; while (i < n) {
-            var polygon:FloatArray = polygons.get(i);
+        var polygons = this.polygons.items;
+        var i:Int = 0; var n:Int = this.polygons.size; while (i < n) {
+            var polygon:FloatArray = polygons[i];
             var vertices:FloatArray = polygon.items;
             var ii:Int = 0; var nn:Int = polygon.size; while (ii < nn) {
                 var x:Float = vertices[ii];
@@ -138,9 +140,9 @@ class SkeletonBounds {
     /** Returns the first bounding box attachment that contains the point, or null. When doing many checks, it is usually more
      * efficient to only call this method if {@link #aabbContainsPoint(float, float)} returns true. */
     #if !spine_no_inline inline #end public function containsPoint(x:Float, y:Float):BoundingBoxAttachment {
-        var polygons:FloatArray2D = this.polygons;
-        var i:Int = 0; var n:Int = polygons.size; while (i < n) {
-            if (polygonContainsPoint(polygons.get(i), x, y)) return boundingBoxes.get(i); i++; }
+        var polygons = this.polygons.items;
+        var i:Int = 0; var n:Int = this.polygons.size; while (i < n) {
+            if (polygonContainsPoint(polygons[i], x, y)) return boundingBoxes.get(i); i++; }
         return null;
     }
 
@@ -168,9 +170,9 @@ class SkeletonBounds {
      * is usually more efficient to only call this method if {@link #aabbIntersectsSegment(float, float, float, float)} returns
      * true. */
     #if !spine_no_inline inline #end public function intersectsSegment(x1:Float, y1:Float, x2:Float, y2:Float):BoundingBoxAttachment {
-        var polygons:FloatArray2D = this.polygons;
-        var i:Int = 0; var n:Int = polygons.size; while (i < n) {
-            if (polygonIntersectsSegment(polygons.get(i), x1, y1, x2, y2)) return boundingBoxes.get(i); i++; }
+        var polygons = this.polygons.items;
+        var i:Int = 0; var n:Int = this.polygons.size; while (i < n) {
+            if (polygonIntersectsSegment(polygons[i], x1, y1, x2, y2)) return boundingBoxes.get(i); i++; }
         return null;
     }
 

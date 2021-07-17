@@ -13,6 +13,11 @@ class Convert {
 
 /// Convert script
 
+// Note:
+//  This is all pretty messy, but smart enough to convert a spine runtime from java/libgdx to haxe.
+//  When new versions of spine are released, updating this converter is usually a much quicker option
+//  than trying to keep up with every single spine runtime change manually.
+
     public static function main() {
 
         // Get better source map support
@@ -27,7 +32,7 @@ class Convert {
         }
         else {
             println('Clone official spine-runtimes repository\u2026');
-            command('git', ['clone', '-b', '3.8', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
+            command('git', ['clone', '-b', '4.0', 'https://github.com/EsotericSoftware/spine-runtimes.git']);
         }
 
         // Delete previously converted files
@@ -60,6 +65,7 @@ import spine.support.utils.FloatArray;
 import spine.support.utils.FloatArray2D;
 import spine.support.utils.StringArray;
 import spine.support.utils.StringBuilder;
+import spine.support.utils.StdEx;
 import spine.support.math.MathUtils;
 import spine.BlendMode;
 
@@ -157,9 +163,14 @@ using StringTools;
             java = java.replace('polygonIndicesPool = new Pool()', 'polygonIndicesPool = new Pool2()');
         }
 
-        // Perform some replaces to facilitate parsing
+        // Remove @Null metadatas
+        java = java.replace('@Null ', '');
+
+        // Perform some other replaces to facilitate parsing
         java = java.replace('ObjectMap<Key, ', 'ObjectMap<Key,');
         java = java.replace('OrderedMap<SkinEntry, ', 'OrderedMap<SkinEntry,');
+        java = java.replace('Integer.toString(', 'Std.string(');
+        java = java.replace('Integer.parseInt(', 'Std.parseInt(');
 
         var haxe = '';
         var cleanedJava = cleanedCode(java);
@@ -411,6 +422,7 @@ using StringTools;
                 case 'float[][]': 'FloatArray2D';
                 case 'Array<FloatArray>': 'FloatArray2D';
                 case 'String[]': 'StringArray';
+                case 'String...': 'StringArray';
                 case 'short[]': 'ShortArray';
                 case 'Array<ShortArray>': 'ShortArray2D';
                 case 'short': 'Short';
@@ -1650,7 +1662,7 @@ using StringTools;
                         i += word.length;
                     }
                     else if (RE_INSTANCEOF.match(after)) {
-                        haxe += 'Std.isOfType(' + RE_INSTANCEOF.matched(1) + ', ' + convertType(RE_INSTANCEOF.matched(2)) + ')';
+                        haxe += '#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(' + RE_INSTANCEOF.matched(1) + ', ' + convertType(RE_INSTANCEOF.matched(2)) + ')';
                         i += RE_INSTANCEOF.matched(0).length;
                     }
                     else if (!controls.exists(word) && !inCall && (lastSeparator == '' || lastSeparator == ':' || lastSeparator == ';' || lastSeparator == '{' || lastSeparator == '}' || lastSeparator == ')' || inFor) && RE_VAR.match(after)) {
@@ -2043,8 +2055,9 @@ using StringTools;
                         var name = RE_METHOD.matched(3);
                         var type = convertType(RE_METHOD.matched(2));
                         var args = convertArgs(RE_METHOD.matched(4));
+                        var className = inClassInfo != null ? inClassInfo.name : null;
 
-                        if (skippedNames.exists(name) || inEnum) {
+                        if (shouldSkipMethod(className, name, args) || skippedNames.exists(name) || inEnum) {
                             inSkippedMethod = true;
                             haxe += '/*';
                         }
@@ -2168,8 +2181,10 @@ using StringTools;
                     }
                 }
 
-                // Add import
-                haxe += 'import ' + pack + ';';
+                // Add import (if not skipped)
+                if (shouldKeepImport(pack)) {
+                    haxe += 'import ' + pack + ';';
+                }
                 i += RE_IMPORT.matched(0).length;
             }
             // Class modifiers we don't want to keep
@@ -2264,12 +2279,13 @@ using StringTools;
             haxe = haxe.replace('fastCast(objects.get(i), EventType)', 'cast objects.get(i)');
         }
         else if (rootType == 'spine.Animation') {
+            haxe = haxe.replace('search(frames:FloatArray, time:Float, step:Int)', 'searchWithStep(frames:FloatArray, time:Float, step:Int)');
             haxe = haxe.replace('binarySearch(values:FloatArray, target:Float, step:Int)', 'binarySearchWithStep(values:FloatArray, target:Float, step:Int)');
             haxe = haxe.replace('class Animation {', 'class Animation {\n    private var hashCode = Std.int(Math.random() * 99999999);\n');
             haxe = haxe.replace('System.arraycopy(lastVertices', 'Array.copyFloats(lastVertices');
+            haxe = haxe.replace('private var propertyIds:StringArray;', 'private var _propertyIds:StringArray;');
         }
         else if (rootType == 'spine.Skeleton') {
-            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'AttachmentMap');
             haxe = haxe.replace('updateCache', 'cache');
             haxe = haxe.replace('cache()', 'updateCache()');
             haxe = haxe.replace('sortPathConstraintAttachment(skin:Skin, slotIndex:Int, slotBone:Bone)', 'sortPathConstraintAttachmentWithSkin(skin:Skin, slotIndex:Int, slotBone:Bone)');
@@ -2279,6 +2295,7 @@ using StringTools;
             haxe = haxe.replace('sortPathConstraintAttachment(skin,', 'sortPathConstraintAttachmentWithSkin(skin,');
             haxe = haxe.replace('sortPathConstraintAttachment(data.defaultSkin,', 'sortPathConstraintAttachmentWithSkin(data.defaultSkin,');
             haxe = haxe.replace('sortPathConstraintAttachment(data.skins.', 'sortPathConstraintAttachmentWithSkin(data.skins.');
+            haxe = haxe.replace('setColor(r:Float, g:Float, b:Float, a:Float)', 'setColorWithRGBA(r:Float, g:Float, b:Float, a:Float)');
         }
         else if (rootType == 'spine.IkConstraint') {
             haxe = haxe.replace('function apply()', 'function applyNoArgs()');
@@ -2317,9 +2334,9 @@ using StringTools;
         else if (rootType == 'spine.Skin') {
             haxe = haxe.replace('new SkinEntry()', 'new SkinEntry(0, "", null)');
             haxe = haxe.replace('new SkinEntry(', '@:privateAccess new SkinEntry(');
-            haxe = haxe.replace('OrderedMap<SkinEntry,SkinEntry>', 'AttachmentMap');
-            haxe = haxe.replace('OrderedMap', 'AttachmentMap');
-            haxe = haxe.replace('this.attachments.orderedKeys().ordered = false;', '//this.attachments.orderedKeys().ordered = false;');
+            haxe = haxe.replace('OrderedSet<SkinEntry>', 'AttachmentSet');
+            haxe = haxe.replace('OrderedSet', 'AttachmentSet');
+            haxe = haxe.replace('this.attachments.orderedItems().ordered = false;', '//this.attachments.orderedItems().ordered = false;');
             haxe = haxe.replace('getAttachments(slotIndex:Int, attachments:Array<SkinEntry>', 'getAttachmentsInSkinForSlot(slotIndex:Int, attachments:Array<SkinEntry>');
             haxe = haxe.replace('hashCode = name.hashCode() + slotIndex * 37;', 'hashCode = Std.int(name.hashCode() + slotIndex * 37);');
         }
@@ -2332,6 +2349,13 @@ using StringTools;
         else if (rootType == 'spine.utils.SpineUtils') {
             haxe = haxe.replace('System.arraycopy(', 'spine.support.utils.Array.copy(');
             haxe = haxe.replace('java.lang.reflect.Array.getLength(', 'spine.support.utils.Array.getLengthOf(');
+        }
+        else if (rootType == 'spine.SkeletonLoader') {
+            haxe = haxe.replace('#if !spine_no_inline inline #end public function readSkeletonData(file:FileHandle):SkeletonData;', '');
+            haxe = haxe.replace('#if !spine_no_inline inline #end public function readSkeletonData(input:InputStream):SkeletonData;', '');
+        }
+        else if (rootType == 'spine.SkeletonJson') {
+            haxe = haxe.replace('readTimeline(keyMap:JsonValue, timeline:CurveTimeline2,', 'readTimeline2(keyMap:JsonValue, timeline:CurveTimeline2,');
         }
 
         // Convert enums valueOf() / name() / ordinal()
@@ -2410,6 +2434,32 @@ using StringTools;
 
     }
 
+    static function shouldSkipMethod(className:String, methodName:String, args:Array<{name:String,type:String}>):Bool {
+
+        switch [className, methodName] {
+            default:
+            case ['SkeletonJson', 'readSkeletonData']:
+                if (args[0].type == 'InputStream' || args[0].type == 'FileHandle')
+                    return true;
+        }
+
+        return false;
+
+    }
+
+    static function shouldKeepImport(pack:String):Bool {
+
+        return switch pack {
+            default: true;
+            case 'spine.support.utils.Null': false;
+            case 'spine.support.graphics.GL20': false;
+            case 'spine.support.graphics.Batch': false;
+            case 'spine.support.Arrays': false;
+            case 'java.io.InputStream': false;
+        }
+
+    }
+
     static function moveTopLevelDecls(haxe:String):String {
 
         var lines = haxe.split("\n");
@@ -2471,7 +2521,7 @@ using StringTools;
     static function fixCompilerErrors(ctx:ConvertContext):Void {
 
         var pass = 1;
-        var maxPass = 8;
+        var maxPass = 32;
         var filesCache:Map<String,String> = new Map();
 
         function getFile(path:String) {
@@ -2567,6 +2617,195 @@ using StringTools;
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
                     }
+                    else if (item.message.startsWith('Bool should be Int')) {
+
+                        var file = getFile(item.filePath);
+                        var lines = file.split("\n");
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
+
+                        var snippet = 'new Array(false, ';
+                        var index = line.indexOf(snippet);
+
+                        if (index != -1) {
+                            numFixed++;
+
+                            var newLine = line.substring(0, index) + 'new Array(' + line.substring(index + snippet.length);
+                            lines[lineIndex] = newLine;
+
+                            // Add new change
+                            lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                            // Save modified file
+                            saveFile(item.filePath, lines.join("\n"));
+                        }
+                        
+                    }
+                    else if (item.message.startsWith('Int should be String') && item.message.endsWith("For function argument 'key'")) {
+
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+
+                        // Edit line
+                        var newLine = line.replace('curve.get(', 'curve.getAtIndex(');
+                        lines[item.line - 1] = newLine;
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+
+                    }
+                    else if (item.message.indexOf(' should be spine.CurveTimeline1') != -1) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+
+                        // Edit line
+                        var newLine = line.replace('readTimeline(', 'readTimeline2(');
+                        lines[item.line - 1] = newLine;
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+
+                    }
+                    else if (item.message.startsWith('Unknown identifier : search')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = 'Timeline.' + snippet;
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('Not enough arguments, expected identity:Bool')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = snippet.substring(0, snippet.length - 1) + ', false)';
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('Current class does not have a super')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+                        var lines = file.split("\n");
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
+                        var newLine = line.replace('super();', '');
+                        var newLine = newLine.replace('super.toString()', 'Type.getClassName(Type.getClass(this))');
+                        lines[lineIndex] = newLine;
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+
+                    }
+                    else if (item.message.indexOf('should be spine.support.utils.ShortArray') != -1) {
+
+                        var file = getFile(item.filePath);
+                        var lines = file.split("\n");
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
+
+                        var snippet = 'fastCast(';
+                        var index = line.indexOf(snippet);
+
+                        if (index != -1) {
+                            var snippet2 = ', ShortArray)';
+                            var index2 = line.indexOf(snippet2, index);
+                            if (index2 != -1) {
+                                numFixed++;
+
+                                var newLine =
+                                    line.substring(0, index) +
+                                    '' +
+                                    line.substring(index + snippet.length, index2) +
+                                    '' +
+                                    line.substring(index2 + snippet2.length);
+
+                                lines[lineIndex] = newLine;
+
+                                // Add new change
+                                lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                                // Save modified file
+                                saveFile(item.filePath, lines.join("\n"));
+                            }
+                        }
+
+                    }
+                    else if (item.message.indexOf('should be spine.support.utils.FloatArray') != -1) {
+
+                        var file = getFile(item.filePath);
+                        var lines = file.split("\n");
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
+
+                        var snippet = 'fastCast(';
+                        var index = line.indexOf(snippet);
+
+                        if (index != -1) {
+                            var snippet2 = ', FloatArray)';
+                            var index2 = line.indexOf(snippet2, index);
+                            if (index2 != -1) {
+                                numFixed++;
+
+                                var newLine =
+                                    line.substring(0, index) +
+                                    '' +
+                                    line.substring(index + snippet.length, index2) +
+                                    '' +
+                                    line.substring(index2 + snippet2.length);
+
+                                lines[lineIndex] = newLine;
+
+                                // Add new change
+                                lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                                // Save modified file
+                                saveFile(item.filePath, lines.join("\n"));
+                            }
+                        }
+
+                    }
                     else if (item.message == 'Unknown identifier : binarySearch') {
                         numFixed++;
 
@@ -2600,6 +2839,26 @@ using StringTools;
 
                         // Edit line
                         lines[item.line - 1] = newLine;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('Unknown identifier : propertyIds')) {
+                        numFixed++;
+                        
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = '_' + snippet;
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[item.line - 1] = line;
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
@@ -2640,10 +2899,15 @@ using StringTools;
                         var lines = file.split("\n");
                         var line = lines[item.line - 1];
                         
-                        var newLine = line.replace('applyOne(', 'applyTwo(');
+                        var newLine = line;
+                        newLine = newLine.replace('applyOne(', 'applyTwo(');
                         newLine = newLine.replace('apply(', 'applyOne(');
+                        newLine = newLine.replace('search(', 'searchWithStep(');
                         newLine = newLine.replace('.clear(1024)', '.clear()');
+                        newLine = newLine.replace('.clear(n)', '.clear()');
                         newLine = newLine.replace('.clear(2048)', '.clear()');
+                        newLine = newLine.replace('Std.parseInt(', 'StdEx.parseInt(');
+                        newLine = newLine.replace('Color.valueOf(', 'Color.valueOfIntoColor(');
                         newLine = newLine.replace('Animation.binarySearch(', 'Animation.binarySearchWithStep(');
 
                         // Add new change
@@ -2655,6 +2919,84 @@ using StringTools;
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
                     }
+                    else if (item.message.indexOf('spine.Timeline has no field propertyIds (Suggestion: _propertyIds)') != -1) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+
+                        if (line.indexOf('this.propertyIds') != -1) {
+                            line = line.replace('this.propertyIds', 'this._propertyIds');
+                        }
+
+                        // Edit line
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+
+                    }
+                    else if (item.message.startsWith('spine.support.utils._FloatArray.FloatArray_Impl_ should be Float')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+
+                        // Edit line
+                        var newLine = line.replace('fastCast(polygons[i], FloatArray)', 'polygons[i]');
+                        lines[item.line - 1] = newLine;
+
+                        // Add new change
+                        lineChanges.push({ start: 0, end: item.end, add: newLine.length - line.length });
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('String should be spine.support.utils.StringArray')) {
+                        numFixed++;
+                        
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = '[' + snippet;
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+
+                    }
+                    else if (item.message.startsWith('Unexpected )')) {
+                        numFixed++;
+                        
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+                        var snippet = line.substring(item.start, item.end);
+                        var newSnippet = '])';
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newSnippet.length - snippet.length });
+
+                        // Edit line
+                        line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
+                        lines[item.line - 1] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    } 
                     else if (item.message.startsWith('Float should be spine.Bone')) {
                         numFixed++;
 
@@ -2691,6 +3033,26 @@ using StringTools;
                         // Edit line
                         line = line.substring(0, item.start) + newSnippet + line.substring(item.end);
                         lines[lineIndex] = line;
+
+                        // Save modified file
+                        saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message.startsWith('Type not found : Arrays')) {
+                        numFixed++;
+
+                        var file = getFile(item.filePath);
+
+                        var lines = file.split("\n");
+                        var lineIndex = item.line - 1;
+                        var line = lines[lineIndex];
+
+                        var newLine = line.replace('Arrays.fill(', 'FloatArray.fill(');
+
+                        // Add new change
+                        lineChanges.push({ start: item.start, end: item.end, add: newLine.length - line.length });
+
+                        // Edit line
+                        lines[lineIndex] = newLine;
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
@@ -2858,7 +3220,10 @@ using StringTools;
                         var snippet = line.substring(item.start, item.end);
                         var newSnippet = snippet;
 
-                        if (newSnippet.endsWith(';')) {
+                        if (newSnippet.endsWith(':Void;')) {
+                            newSnippet = newSnippet.substring(0, newSnippet.length - 1) + ' { }';
+                        }
+                        else if (newSnippet.endsWith(';')) {
                             newSnippet = newSnippet.substring(0, newSnippet.length - 1) + ' { return null; }';
                         }
 
@@ -2872,6 +3237,39 @@ using StringTools;
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
+                    }
+                    else if (item.message == 'Missing ;') {
+
+                        var file = getFile(item.filePath);
+                        var lines = file.split("\n");
+                        var line = lines[item.line - 1];
+
+                        var snippet = ':StringArray = {';
+                        var index = line.indexOf(snippet);
+                        if (index != -1) {
+                            numFixed++;
+                            var newLine = line.substring(0, index);
+                            newLine += snippet.substring(0, snippet.length - 1);
+                            newLine += '[';
+                            var n = index + snippet.length;
+                            var foundRt = false;
+                            while (n < line.length) {
+                                var c = line.charAt(n);
+                                if (!foundRt && c == '}') {
+                                    foundRt = true;
+                                    newLine += ']';
+                                }
+                                else {
+                                    newLine += c;
+                                }
+                                n++;
+                            }
+                            lines[item.line - 1] = newLine;
+
+                            // Save modified file
+                            saveFile(item.filePath, lines.join("\n"));
+                        }
+
                     }
 
                 } else if (item.location == 'lines') {
@@ -3354,6 +3752,7 @@ using StringTools;
         'spine.PathConstraint' => 'PathConstraint constraint,Skeleton skeleton', // Copy constructor
         'spine.Bone' => 'Bone bone,Skeleton skeleton,Bone parent', // Copy constructor
         'spine.BoneData' => 'BoneData bone,BoneData parent', // Copy constructor
+        'spine.SkeletonLoader' => 'TextureAtlas atlas', // Can use new(new AtlasAttachmentLoader(atlas)) instead
         'spine.SkeletonJson' => 'TextureAtlas atlas', // Can use new(new AtlasAttachmentLoader(atlas)) instead
         'spine.utils.SkeletonPool' => 'SkeletonData skeletonData', // Optional constructor
         'spine.utils.SkeletonPool#2' => 'SkeletonData skeletonData,int initialCapacity' // Optional constructor

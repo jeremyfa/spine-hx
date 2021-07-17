@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,16 +15,16 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine.attachments;
@@ -34,7 +34,6 @@ import spine.utils.SpineUtils.*;
 import spine.support.graphics.Color;
 import spine.support.graphics.TextureAtlas.AtlasRegion;
 import spine.support.graphics.TextureRegion;
-import spine.support.math.MathUtils;
 
 import spine.Bone;
 
@@ -70,11 +69,11 @@ class RegionAttachment extends Attachment {
         var localY2:Float = height / 2;
         var localX:Float = -localX2;
         var localY:Float = -localY2;
-        if (Std.isOfType(region, AtlasRegion)) {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(region, AtlasRegion)) {
             var region:AtlasRegion = fastCast(this.region, AtlasRegion);
             localX += region.offsetX / region.originalWidth * width;
             localY += region.offsetY / region.originalHeight * height;
-            if (region.rotate) {
+            if (region.degrees == 90) {
                 localX2 -= (region.originalWidth - region.offsetX - region.packedHeight) / region.originalWidth * width;
                 localY2 -= (region.originalHeight - region.offsetY - region.packedWidth) / region.originalHeight * height;
             } else {
@@ -89,8 +88,8 @@ class RegionAttachment extends Attachment {
         localX2 *= scaleX;
         localY2 *= scaleY;
         var rotation:Float = getRotation();
-        var cos:Float = Math.cos(MathUtils.degRad * rotation);
-        var sin:Float = Math.sin(MathUtils.degRad * rotation);
+        var cos:Float = Math.cos(degRad * rotation);
+        var sin:Float = Math.sin(degRad * rotation);
         var x:Float = getX();
         var y:Float = getY();
         var localXCos:Float = localX * cos + x;
@@ -116,7 +115,7 @@ class RegionAttachment extends Attachment {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         this.region = region;
         var uvs:FloatArray = this.uvs;
-        if (Std.isOfType(region, AtlasRegion) && (fastCast(region, AtlasRegion)).rotate) {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(region, AtlasRegion) && (fastCast(region, AtlasRegion)).degrees == 90) {
             uvs[URX] = region.getU();
             uvs[URY] = region.getV2();
             uvs[BRX] = region.getU();

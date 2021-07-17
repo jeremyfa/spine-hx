@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,22 +15,25 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
 
+
+
 import spine.support.utils.Array;
 import spine.support.utils.FloatArray;
+
 import spine.PathConstraintData.PositionMode;
 import spine.PathConstraintData.PositionMode_enum;
 import spine.PathConstraintData.RotateMode;
@@ -52,7 +55,7 @@ class PathConstraint implements Updatable {
     public var data:PathConstraintData;
     public var bones:Array<Bone>;
     public var target:Slot;
-    public var position:Float = 0; public var spacing:Float = 0; public var rotateMix:Float = 0; public var translateMix:Float = 0;
+    public var position:Float = 0; public var spacing:Float = 0; public var mixRotate:Float = 0; public var mixX:Float = 0; public var mixY:Float = 0;
 
     public var active:Bool = false;
 
@@ -70,8 +73,9 @@ class PathConstraint implements Updatable {
         target = skeleton.findSlot(data.target.name);
         position = data.position;
         spacing = data.spacing;
-        rotateMix = data.rotateMix;
-        translateMix = data.translateMix;
+        mixRotate = data.mixRotate;
+        mixX = data.mixX;
+        mixY = data.mixY;
     }
 
     /** Copy constructor. */
@@ -85,47 +89,71 @@ class PathConstraint implements Updatable {
         target = skeleton.slots.get(constraint.target.data.index);
         position = constraint.position;
         spacing = constraint.spacing;
-        rotateMix = constraint.rotateMix;
-        translateMix = constraint.translateMix;
+        mixRotate = constraint.mixRotate;
+        mixX = constraint.mixX;
+        mixY = constraint.mixY;
     }*/
 
     /** Applies the constraint to the constrained bones. */
-    public function applyNoArgs():Void {
-        update();
-    }
-
-    @SuppressWarnings("null")
     #if !spine_no_inline inline #end public function update():Void {
         var attachment:Attachment = target.attachment;
-        if (!(Std.isOfType(attachment, PathAttachment))) return;
+        if (!(#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(attachment, PathAttachment))) return;
 
-        var rotateMix:Float = this.rotateMix; var translateMix:Float = this.translateMix;
-        var translate:Bool = translateMix > 0; var rotate:Bool = rotateMix > 0;
-        if (!translate && !rotate) return;
+        var mixRotate:Float = this.mixRotate; var mixX:Float = this.mixX; var mixY:Float = this.mixY;
+        if (mixRotate == 0 && mixX == 0 && mixY == 0) return;
 
         var data:PathConstraintData = this.data;
-        var percentSpacing:Bool = data.spacingMode == SpacingMode.percent;
-        var rotateMode:RotateMode = data.rotateMode;
-        var tangents:Bool = rotateMode == RotateMode.tangent; var scale:Bool = rotateMode == RotateMode.chainScale;
+        var tangents:Bool = data.rotateMode == RotateMode.tangent; var scale:Bool = data.rotateMode == RotateMode.chainScale;
         var boneCount:Int = this.bones.size; var spacesCount:Int = tangents ? boneCount : boneCount + 1;
         var bones = this.bones.items;
-        var spaces:FloatArray = this.spaces.setSize(spacesCount); var lengths:FloatArray = null;
+        var spaces:FloatArray = this.spaces.setSize(spacesCount); var lengths:FloatArray = scale ? this.lengths.setSize(boneCount) : null;
         var spacing:Float = this.spacing;
-        if (scale || !percentSpacing) {
-            if (scale) lengths = this.lengths.setSize(boneCount);
+
+        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (data.spacingMode); {
+        if (_switchCond0 == percent) {
+            if (scale) {
+                var i:Int = 0; var n:Int = spacesCount - 1; while (i < n) {
+                    var bone:Bone = fastCast(bones[i], Bone);
+                    var setupLength:Float = bone.data.length;
+                    if (setupLength < epsilon)
+                        lengths[i] = 0;
+                    else {
+                        var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
+                        lengths[i] = Math.sqrt(x * x + y * y);
+                    }
+                i++; }
+            }
+            FloatArray.fill(spaces, 1, spacesCount, spacing);
+            break;
+        } else if (_switchCond0 == proportional) {
+            var sum:Float = 0;
+            var i:Int = 0; var n:Int = spacesCount - 1; while (i < n) {
+                var bone:Bone = fastCast(bones[i], Bone);
+                var setupLength:Float = bone.data.length;
+                if (setupLength < epsilon) {
+                    if (scale) lengths[i] = 0;
+                    spaces[++i] = spacing;
+                } else {
+                    var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
+                    var length:Float = Math.sqrt(x * x + y * y);
+                    if (scale) lengths[i] = length;
+                    spaces[++i] = length;
+                    sum += length;
+                }
+            }
+            if (sum > 0) {
+                sum = spacesCount / sum * spacing;
+                var i:Int = 1; while (i < spacesCount) {
+                    spaces[i] *= sum; i++; }
+            }
+            break;
+        } else {
             var lengthSpacing:Bool = data.spacingMode == SpacingMode.length;
             var i:Int = 0; var n:Int = spacesCount - 1; while (i < n) {
                 var bone:Bone = fastCast(bones[i], Bone);
                 var setupLength:Float = bone.data.length;
                 if (setupLength < epsilon) {
                     if (scale) lengths[i] = 0;
-                    spaces[++i] = 0;
-                } else if (percentSpacing) {
-                    if (scale) {
-                        var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
-                        var length:Float = Math.sqrt(x * x + y * y);
-                        lengths[i] = length;
-                    }
                     spaces[++i] = spacing;
                 } else {
                     var x:Float = setupLength * bone.a; var y:Float = setupLength * bone.c;
@@ -134,17 +162,13 @@ class PathConstraint implements Updatable {
                     spaces[++i] = (lengthSpacing ? setupLength + spacing : spacing) * length / setupLength;
                 }
             }
-        } else {
-            var i:Int = 1; while (i < spacesCount) {
-                spaces[i] = spacing; i++; }
-        }
+        } } break; }
 
-        var positions:FloatArray = computeWorldPositions(fastCast(attachment, PathAttachment), spacesCount, tangents,
-            data.positionMode == PositionMode.percent, percentSpacing);
+        var positions:FloatArray = computeWorldPositions(fastCast(attachment, PathAttachment), spacesCount, tangents);
         var boneX:Float = positions[0]; var boneY:Float = positions[1]; var offsetRotation:Float = data.offsetRotation;
         var tip:Bool = false;
         if (offsetRotation == 0)
-            tip = rotateMode == RotateMode.chain;
+            tip = data.rotateMode == RotateMode.chain;
         else {
             tip = false;
             var p:Bone = target.bone;
@@ -152,20 +176,20 @@ class PathConstraint implements Updatable {
         }
         var i:Int = 0; var p:Int = 3; while (i < boneCount) {
             var bone:Bone = fastCast(bones[i], Bone);
-            bone.worldX += (boneX - bone.worldX) * translateMix;
-            bone.worldY += (boneY - bone.worldY) * translateMix;
+            bone.worldX += (boneX - bone.worldX) * mixX;
+            bone.worldY += (boneY - bone.worldY) * mixY;
             var x:Float = positions[p]; var y:Float = positions[p + 1]; var dx:Float = x - boneX; var dy:Float = y - boneY;
             if (scale) {
                 var length:Float = lengths[i];
                 if (length >= epsilon) {
-                    var s:Float = (Math.sqrt(dx * dx + dy * dy) / length - 1) * rotateMix + 1;
+                    var s:Float = (Math.sqrt(dx * dx + dy * dy) / length - 1) * mixRotate + 1;
                     bone.a *= s;
                     bone.c *= s;
                 }
             }
             boneX = x;
             boneY = y;
-            if (rotate) {
+            if (mixRotate > 0) {
                 var a:Float = bone.a; var b:Float = bone.b; var c:Float = bone.c; var d:Float = bone.d; var r:Float = 0; var cos:Float = 0; var sin:Float = 0;
                 if (tangents)
                     r = positions[p - 1];
@@ -178,15 +202,15 @@ class PathConstraint implements Updatable {
                     cos = Math.cos(r);
                     sin = Math.sin(r);
                     var length:Float = bone.data.length;
-                    boneX += (length * (cos * a - sin * c) - dx) * rotateMix;
-                    boneY += (length * (sin * a + cos * c) - dy) * rotateMix;
+                    boneX += (length * (cos * a - sin * c) - dx) * mixRotate;
+                    boneY += (length * (sin * a + cos * c) - dy) * mixRotate;
                 } else
                     r += offsetRotation;
                 if (r > SpineUtils.PI)
                     r -= SpineUtils.PI2;
                 else if (r < -SpineUtils.PI) //
                     r += SpineUtils.PI2;
-                r *= rotateMix;
+                r *= mixRotate;
                 cos = Math.cos(r);
                 sin = Math.sin(r);
                 bone.a = cos * a - sin * c;
@@ -194,11 +218,11 @@ class PathConstraint implements Updatable {
                 bone.c = sin * a + cos * c;
                 bone.d = sin * b + cos * d;
             }
-            bone.appliedValid = false;
+            bone.updateAppliedTransform();
         i++; p += 3; }
     }
 
-    #if !spine_no_inline inline #end public function computeWorldPositions(path:PathAttachment, spacesCount:Int, tangents:Bool, percentPosition:Bool, percentSpacing:Bool):FloatArray {
+    #if !spine_no_inline inline #end public function computeWorldPositions(path:PathAttachment, spacesCount:Int, tangents:Bool):FloatArray {
         var target:Slot = this.target;
         var position:Float = this.position;
         var spaces:FloatArray = this.spaces.items; var out:FloatArray = this.positions.setSize(spacesCount * 3 + 2); var world:FloatArray = null;
@@ -209,14 +233,24 @@ class PathConstraint implements Updatable {
             var lengths:FloatArray = path.getLengths();
             curveCount -= closed ? 1 : 2;
             var pathLength:Float = lengths[curveCount];
-            if (percentPosition) position *= pathLength;
-            if (percentSpacing) {
-                var i:Int = 1; while (i < spacesCount) {
-                    spaces[i] *= pathLength; i++; }
-            }
+
+            if (data.positionMode == PositionMode.percent) position *= pathLength;
+
+            var multiplier:Float = 0;
+            var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (data.spacingMode); {
+            if (_switchCond1 == percent) {
+                multiplier = pathLength;
+                break;
+            } else if (_switchCond1 == proportional) {
+                multiplier = pathLength / spacesCount;
+                break;
+            } else {
+                multiplier = 1;
+            } } break; }
+
             world = this.world.setSize(8);
             var i:Int = 0; var o:Int = 0; var curve:Int = 0; while (i < spacesCount) {
-                var space:Float = spaces[i];
+                var space:Float = spaces[i] * multiplier;
                 position += space;
                 var p:Float = position;
 
@@ -317,19 +351,25 @@ class PathConstraint implements Updatable {
             x1 = x2;
             y1 = y2;
         i++; w += 6; }
-        if (percentPosition)
-            position *= pathLength;
-        else
-            position *= pathLength / path.getLengths()[curveCount - 1];
-        if (percentSpacing) {
-            var i:Int = 1; while (i < spacesCount) {
-                spaces[i] *= pathLength; i++; }
-        }
+
+        if (data.positionMode == PositionMode.percent) position *= pathLength;
+
+        var multiplier:Float = 0;
+        var _continueAfterSwitch2 = false; while(true) { var _switchCond2 = (data.spacingMode); {
+        if (_switchCond2 == percent) {
+            multiplier = pathLength;
+            break;
+        } else if (_switchCond2 == proportional) {
+            multiplier = pathLength / spacesCount;
+            break;
+        } else {
+            multiplier = 1;
+        } } break; }
 
         var segments:FloatArray = this.segments;
         var curveLength:Float = 0;
         var i:Int = 0; var o:Int = 0; var curve:Int = 0; var segment:Int = 0; while (i < spacesCount) {
-            var space:Float = spaces[i];
+            var space:Float = spaces[i] * multiplier;
             position += space;
             var p:Float = position;
 
@@ -469,22 +509,31 @@ class PathConstraint implements Updatable {
         this.spacing = spacing;
     }
 
-    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
-    #if !spine_no_inline inline #end public function getRotateMix():Float {
-        return rotateMix;
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotation. */
+    #if !spine_no_inline inline #end public function getMixRotate():Float {
+        return mixRotate;
     }
 
-    #if !spine_no_inline inline #end public function setRotateMix(rotateMix:Float):Void {
-        this.rotateMix = rotateMix;
+    #if !spine_no_inline inline #end public function setMixRotate(mixRotate:Float):Void {
+        this.mixRotate = mixRotate;
     }
 
-    /** A percentage (0-1) that controls the mix between the constrained and unconstrained translations. */
-    #if !spine_no_inline inline #end public function getTranslateMix():Float {
-        return translateMix;
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained translation X. */
+    #if !spine_no_inline inline #end public function getMixX():Float {
+        return mixX;
     }
 
-    #if !spine_no_inline inline #end public function setTranslateMix(translateMix:Float):Void {
-        this.translateMix = translateMix;
+    #if !spine_no_inline inline #end public function setMixX(mixX:Float):Void {
+        this.mixX = mixX;
+    }
+
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained translation Y. */
+    #if !spine_no_inline inline #end public function getMixY():Float {
+        return mixY;
+    }
+
+    #if !spine_no_inline inline #end public function setMixY(mixY:Float):Void {
+        this.mixY = mixY;
     }
 
     /** The bones that will be modified by this path constraint. */

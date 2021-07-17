@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,21 +15,23 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
 
 import spine.utils.SpineUtils.*;
+
+
 
 import spine.support.files.FileHandle;
 import spine.support.graphics.Color;
@@ -41,9 +43,11 @@ import spine.support.utils.JsonReader;
 import spine.support.utils.JsonValue;
 import spine.support.utils.SerializationException;
 
+import spine.Animation.AlphaTimeline;
 import spine.Animation.AttachmentTimeline;
-import spine.Animation.ColorTimeline;
 import spine.Animation.CurveTimeline;
+import spine.Animation.CurveTimeline1;
+import spine.Animation.CurveTimeline2;
 import spine.Animation.DeformTimeline;
 import spine.Animation.DrawOrderTimeline;
 import spine.Animation.EventTimeline;
@@ -51,13 +55,22 @@ import spine.Animation.IkConstraintTimeline;
 import spine.Animation.PathConstraintMixTimeline;
 import spine.Animation.PathConstraintPositionTimeline;
 import spine.Animation.PathConstraintSpacingTimeline;
+import spine.Animation.RGB2Timeline;
+import spine.Animation.RGBA2Timeline;
+import spine.Animation.RGBATimeline;
+import spine.Animation.RGBTimeline;
 import spine.Animation.RotateTimeline;
 import spine.Animation.ScaleTimeline;
+import spine.Animation.ScaleXTimeline;
+import spine.Animation.ScaleYTimeline;
 import spine.Animation.ShearTimeline;
+import spine.Animation.ShearXTimeline;
+import spine.Animation.ShearYTimeline;
 import spine.Animation.Timeline;
 import spine.Animation.TransformConstraintTimeline;
 import spine.Animation.TranslateTimeline;
-import spine.Animation.TwoColorTimeline;
+import spine.Animation.TranslateXTimeline;
+import spine.Animation.TranslateYTimeline;
 import spine.BoneData.TransformMode;
 import spine.BoneData.TransformMode_enum;
 import spine.PathConstraintData.PositionMode;
@@ -66,7 +79,6 @@ import spine.PathConstraintData.RotateMode;
 import spine.PathConstraintData.RotateMode_enum;
 import spine.PathConstraintData.SpacingMode;
 import spine.PathConstraintData.SpacingMode_enum;
-import spine.attachments.AtlasAttachmentLoader;
 import spine.attachments.Attachment;
 import spine.attachments.AttachmentLoader;
 import spine.attachments.AttachmentType;
@@ -80,52 +92,39 @@ import spine.attachments.VertexAttachment;
 
 /** Loads skeleton data in the Spine JSON format.
  * <p>
+ * JSON is human readable but the binary format is much smaller on disk and faster to load. See {@link SkeletonBinary}.
+ * <p>
  * See <a href="http://esotericsoftware.com/spine-json-format">Spine JSON format</a> and
  * <a href="http://esotericsoftware.com/spine-loading-skeleton-data#JSON-and-binary-data">JSON and binary data</a> in the Spine
  * Runtimes Guide. */
-class SkeletonJson {
-    private var attachmentLoader:AttachmentLoader;
-    private var scale:Float = 1;
-    private var linkedMeshes:Array<LinkedMesh> = new Array();
+class SkeletonJson extends SkeletonLoader {
+    public function new(attachmentLoader:AttachmentLoader) {
+        super(attachmentLoader);
+    }
 
     /*public function new(atlas:TextureAtlas) {
-        attachmentLoader = new AtlasAttachmentLoader(atlas);
+        super(atlas);
     }*/
 
-    public function new(attachmentLoader:AttachmentLoader) {
-        if (attachmentLoader == null) throw new IllegalArgumentException("attachmentLoader cannot be null.");
-        this.attachmentLoader = attachmentLoader;
-    }
-
-    /** Scales bone positions, image sizes, and translations as they are loaded. This allows different size images to be used at
-     * runtime than were used in Spine.
-     * <p>
-     * See <a href="http://esotericsoftware.com/spine-loading-skeleton-data#Scaling">Scaling</a> in the Spine Runtimes Guide. */
-    #if !spine_no_inline inline #end public function getScale():Float {
-        return scale;
-    }
-
-    #if !spine_no_inline inline #end public function setScale(scale:Float):Void {
-        if (scale == 0) throw new IllegalArgumentException("scale cannot be 0.");
-        this.scale = scale;
-    }
-
-    #if !spine_no_inline inline #end public function parse(file:FileHandle):JsonValue {
+    /*#if !spine_no_inline inline #end public function readSkeletonData(file:FileHandle):SkeletonData {
         if (file == null) throw new IllegalArgumentException("file cannot be null.");
-        return new JsonReader().parse(file);
-    }
+        var skeletonData:SkeletonData = readSkeletonData(new JsonReader().parse(file));
+        skeletonData.name = file.nameWithoutExtension();
+        return skeletonData;
+    }*/
 
-    #if !spine_no_inline inline #end public function readSkeletonData(file:FileHandle):SkeletonData {
-        if (file == null) throw new IllegalArgumentException("file cannot be null.");
+    /*#if !spine_no_inline inline #end public function readSkeletonData(input:InputStream):SkeletonData {
+        if (input == null) throw new IllegalArgumentException("dataInput cannot be null.");
+        return readSkeletonData(new JsonReader().parse(input));
+    }*/
+
+    public function readSkeletonData(root:JsonValue):SkeletonData {
+        if (root == null) throw new IllegalArgumentException("root cannot be null.");
 
         var scale:Float = this.scale;
 
-        var skeletonData:SkeletonData = new SkeletonData();
-        skeletonData.name = file.nameWithoutExtension();
-
-        var root:JsonValue = parse(file);
-
         // Skeleton.
+        var skeletonData:SkeletonData = new SkeletonData();
         var skeletonMap:JsonValue = root.get("skeleton");
         if (skeletonMap != null) {
             skeletonData.hash = skeletonMap.getString("hash", null);
@@ -160,7 +159,7 @@ class SkeletonJson {
             data.skinRequired = boneMap.getBoolean("skin", false);
 
             var color:String = boneMap.getString("color", null);
-            if (color != null) data.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, data.getColor());
 
             skeletonData.bones.add(data);
         boneMap = boneMap.next; }
@@ -174,7 +173,7 @@ class SkeletonJson {
             var data:SlotData = new SlotData(skeletonData.slots.size, slotName, boneData);
 
             var color:String = slotMap.getString("color", null);
-            if (color != null) data.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, data.getColor());
 
             var dark:String = slotMap.getString("dark", null);
             if (dark != null) data.setDarkColor(Color.valueOf(dark));
@@ -236,10 +235,12 @@ class SkeletonJson {
             data.offsetScaleY = constraintMap.getFloat("scaleY", 0);
             data.offsetShearY = constraintMap.getFloat("shearY", 0);
 
-            data.rotateMix = constraintMap.getFloat("rotateMix", 1);
-            data.translateMix = constraintMap.getFloat("translateMix", 1);
-            data.scaleMix = constraintMap.getFloat("scaleMix", 1);
-            data.shearMix = constraintMap.getFloat("shearMix", 1);
+            data.mixRotate = constraintMap.getFloat("mixRotate", 1);
+            data.mixX = constraintMap.getFloat("mixX", 1);
+            data.mixY = constraintMap.getFloat("mixY", data.mixX);
+            data.mixScaleX = constraintMap.getFloat("mixScaleX", 1);
+            data.mixScaleY = constraintMap.getFloat("mixScaleY", data.mixScaleX);
+            data.mixShearY = constraintMap.getFloat("mixShearY", 1);
 
             skeletonData.transformConstraints.add(data);
         constraintMap = constraintMap.next; }
@@ -268,8 +269,9 @@ class SkeletonJson {
             if (data.positionMode == PositionMode.fixed) data.position *= scale;
             data.spacing = constraintMap.getFloat("spacing", 0);
             if (data.spacingMode == SpacingMode.length || data.spacingMode == SpacingMode.fixed) data.spacing *= scale;
-            data.rotateMix = constraintMap.getFloat("rotateMix", 1);
-            data.translateMix = constraintMap.getFloat("translateMix", 1);
+            data.mixRotate = constraintMap.getFloat("mixRotate", 1);
+            data.mixX = constraintMap.getFloat("mixX", 1);
+            data.mixY = constraintMap.getFloat("mixY", 1);
 
             skeletonData.pathConstraints.add(data);
         constraintMap = constraintMap.next; }
@@ -282,6 +284,7 @@ class SkeletonJson {
                 if (bone == null) throw new SerializationException("Skin bone not found: " + entry);
                 skin.bones.add(bone);
             entry = entry.next; }
+            skin.bones.shrink();
             var entry:JsonValue = skinMap.getChild("ik"); while (entry != null) {
                 var constraint:IkConstraintData = skeletonData.findIkConstraint(entry.asString());
                 if (constraint == null) throw new SerializationException("Skin IK constraint not found: " + entry);
@@ -297,6 +300,7 @@ class SkeletonJson {
                 if (constraint == null) throw new SerializationException("Skin path constraint not found: " + entry);
                 skin.constraints.add(constraint);
             entry = entry.next; }
+            skin.constraints.shrink();
             var slotEntry:JsonValue = skinMap.getChild("attachments"); while (slotEntry != null) {
                 var slot:SlotData = skeletonData.findSlot(slotEntry.name);
                 if (slot == null) throw new SerializationException("Slot not found: " + slotEntry.name);
@@ -314,8 +318,9 @@ class SkeletonJson {
         skinMap = skinMap.next; }
 
         // Linked meshes.
+        var items = linkedMeshes.items;
         var i:Int = 0; var n:Int = linkedMeshes.size; while (i < n) {
-            var linkedMesh:LinkedMesh = linkedMeshes.get(i);
+            var linkedMesh:LinkedMesh = fastCast(items[i], LinkedMesh);
             var skin:Skin = linkedMesh.skin == null ? skeletonData.getDefaultSkin() : skeletonData.findSkin(linkedMesh.skin);
             if (skin == null) throw new SerializationException("Skin not found: " + linkedMesh.skin);
             var parent:Attachment = skin.getAttachment(linkedMesh.slotIndex, linkedMesh.parent);
@@ -362,9 +367,7 @@ class SkeletonJson {
         var scale:Float = this.scale;
         name = map.getString("name", name);
 
-        var type:String = map.getString("type", AttachmentType_enum.region_name);
-
-        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (AttachmentType_enum.valueOf(type)); {
+        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (AttachmentType_enum.valueOf(map.getString("type", AttachmentType_enum.region_name))); {
         if (_switchCond0 == region) {
             var path:String = map.getString("path", name);
             var region:RegionAttachment = attachmentLoader.newRegionAttachment(skin, name, path);
@@ -379,7 +382,7 @@ class SkeletonJson {
             region.setHeight(map.getFloat("height") * scale);
 
             var color:String = map.getString("color", null);
-            if (color != null) region.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, region.getColor());
 
             region.updateOffset();
             return region;
@@ -390,7 +393,7 @@ class SkeletonJson {
             readVertices(map, box, map.getInt("vertexCount") << 1);
 
             var color:String = map.getString("color", null);
-            if (color != null) box.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, box.getColor());
             return box;
         }
         else if (_switchCond0 == mesh) {
@@ -401,7 +404,7 @@ class SkeletonJson {
             mesh.setPath(path);
 
             var color:String = map.getString("color", null);
-            if (color != null) mesh.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, mesh.getColor());
 
             mesh.setWidth(map.getFloat("width", 0) * scale);
             mesh.setHeight(map.getFloat("height", 0) * scale);
@@ -419,7 +422,7 @@ class SkeletonJson {
             mesh.setRegionUVs(uvs);
             mesh.updateUVs();
 
-            if (map.has("hull")) mesh.setHullLength(map.require("hull").asInt() * 2);
+            if (map.has("hull")) mesh.setHullLength(map.require("hull").asInt() << 1);
             if (map.has("edges")) mesh.setEdges(map.require("edges").asShortArray());
             return mesh;
         }
@@ -430,7 +433,7 @@ class SkeletonJson {
             mesh.setPath(path);
 
             var color:String = map.getString("color", null);
-            if (color != null) mesh.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, mesh.getColor());
 
             mesh.setWidth(map.getFloat("width", 0) * scale);
             mesh.setHeight(map.getFloat("height", 0) * scale);
@@ -448,7 +451,7 @@ class SkeletonJson {
             mesh.setRegionUVs(uvs);
             mesh.updateUVs();
 
-            if (map.has("hull")) mesh.setHullLength(map.require("hull").asInt() * 2);
+            if (map.has("hull")) mesh.setHullLength(map.require("hull").asInt() << 1);
             if (map.has("edges")) mesh.setEdges(map.require("edges").asShortArray());
             return mesh;
         }
@@ -468,7 +471,7 @@ class SkeletonJson {
             path.setLengths(lengths);
 
             var color:String = map.getString("color", null);
-            if (color != null) path.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, path.getColor());
             return path;
         }
         else if (_switchCond0 == point) {
@@ -479,7 +482,7 @@ class SkeletonJson {
             point.setRotation(map.getFloat("rotation", 0));
 
             var color:String = map.getString("color", null);
-            if (color != null) point.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, point.getColor());
             return point;
         }
         else if (_switchCond0 == clipping) {
@@ -496,14 +499,13 @@ class SkeletonJson {
             readVertices(map, clip, map.getInt("vertexCount") << 1);
 
             var color:String = map.getString("color", null);
-            if (color != null) clip.getColor().setColor(Color.valueOf(color));
+            if (color != null) Color.valueOfIntoColor(color, clip.getColor());
             return clip;
-        }
-        } break; }
+        } } break; }
         return null;
     }
 
-    #if !spine_no_inline inline #end private function readVertices(map:JsonValue, attachment:VertexAttachment, verticesLength:Int):Void {
+    private function readVertices(map:JsonValue, attachment:VertexAttachment, verticesLength:Int):Void {
         attachment.setWorldVerticesLength(verticesLength);
         var vertices:FloatArray = map.require("vertices").asFloatArray();
         if (verticesLength == vertices.length) {
@@ -519,7 +521,7 @@ class SkeletonJson {
         var i:Int = 0; var n:Int = vertices.length; while (i < n) {
             var boneCount:Int = Std.int(vertices[i++]);
             bones.add(boneCount);
-            var nn:Int = i + boneCount * 4; while (i < nn) {
+            var nn:Int = i + (boneCount << 2); while (i < nn) {
                 bones.add(Std.int(vertices[i]));
                 weights.add(vertices[i + 1] * scale);
                 weights.add(vertices[i + 2] * scale);
@@ -530,56 +532,195 @@ class SkeletonJson {
         attachment.setVertices(weights.toArray());
     }
 
-    #if !spine_no_inline inline #end private function readAnimation(map:JsonValue, name:String, skeletonData:SkeletonData):Void {
+    private function readAnimation(map:JsonValue, name:String, skeletonData:SkeletonData):Void {
         var scale:Float = this.scale;
         var timelines:Array<Timeline> = new Array();
-        var duration:Float = 0;
 
         // Slot timelines.
         var slotMap:JsonValue = map.getChild("slots"); while (slotMap != null) {
             var slot:SlotData = skeletonData.findSlot(slotMap.name);
             if (slot == null) throw new SerializationException("Slot not found: " + slotMap.name);
             var timelineMap:JsonValue = slotMap.child; while (timelineMap != null) {
+                var keyMap:JsonValue = timelineMap.child;
+                if (keyMap == null) { timelineMap = timelineMap.next; continue; }
                 var timelineName:String = timelineMap.name;
+
                 if (timelineName.equals("attachment")) {
-                    var timeline:AttachmentTimeline = new AttachmentTimeline(timelineMap.size);
-                    timeline.slotIndex = slot.index;
-
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex++, valueMap.getFloat("time", 0), valueMap.getString("name")); valueMap = valueMap.next; }
+                    var timeline:AttachmentTimeline = new AttachmentTimeline(timelineMap.size, slot.index);
+                    var frame:Int = 0; while (keyMap != null) {
+                        timeline.setFrame(frame, keyMap.getFloat("time", 0), keyMap.getString("name")); keyMap = keyMap.next; frame++; }
                     timelines.add(timeline);
-                    duration = MathUtils.max(duration, timeline.getFrames()[timeline.getFrameCount() - 1]);
 
-                } else if (timelineName.equals("color")) {
-                    var timeline:ColorTimeline = new ColorTimeline(timelineMap.size);
-                    timeline.slotIndex = slot.index;
-
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        var color:Color = Color.valueOf(valueMap.getString("color"));
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), color.r, color.g, color.b, color.a);
-                        readCurve(valueMap, timeline, frameIndex);
-                        frameIndex++;
-                    valueMap = valueMap.next; }
+                } else if (timelineName.equals("rgba")) {
+                    var timeline:RGBATimeline = new RGBATimeline(timelineMap.size, timelineMap.size << 2, slot.index);
+                    var time:Float = keyMap.getFloat("time", 0);
+                    var color:String = keyMap.getString("color");
+                    var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                    var g:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                    var b:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                    var a:Float = StdEx.parseInt(color.substring(6, 8), 16) / 255;
+                    var frame:Int = 0; var bezier:Int = 0; while (true) {
+                        timeline.setFrame(frame, time, r, g, b, a);
+                        var nextMap:JsonValue = keyMap.next;
+                        if (nextMap == null) {
+                            timeline.shrink(bezier);
+                            break;
+                        }
+                        var time2:Float = nextMap.getFloat("time", 0);
+                        color = nextMap.getString("color");
+                        var nr:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                        var ng:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                        var nb:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                        var na:Float = StdEx.parseInt(color.substring(6, 8), 16) / 255;
+                        var curve:JsonValue = keyMap.get("curve");
+                        if (curve != null) {
+                            bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, r, nr, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, g, ng, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 2, time, time2, b, nb, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 3, time, time2, a, na, 1);
+                        }
+                        time = time2;
+                        r = nr;
+                        g = ng;
+                        b = nb;
+                        a = na;
+                        keyMap = nextMap;
+                    frame++; }
                     timelines.add(timeline);
-                    duration = MathUtils.max(duration, timeline.getFrames()[(timeline.getFrameCount() - 1) * ColorTimeline.ENTRIES]);
 
-                } else if (timelineName.equals("twoColor")) {
-                    var timeline:TwoColorTimeline = new TwoColorTimeline(timelineMap.size);
-                    timeline.slotIndex = slot.index;
-
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        var light:Color = Color.valueOf(valueMap.getString("light"));
-                        var dark:Color = Color.valueOf(valueMap.getString("dark"));
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), light.r, light.g, light.b, light.a, dark.r, dark.g,
-                            dark.b);
-                        readCurve(valueMap, timeline, frameIndex);
-                        frameIndex++;
-                    valueMap = valueMap.next; }
+                } else if (timelineName.equals("rgb")) {
+                    var timeline:RGBTimeline = new RGBTimeline(timelineMap.size, timelineMap.size * 3, slot.index);
+                    var time:Float = keyMap.getFloat("time", 0);
+                    var color:String = keyMap.getString("color");
+                    var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                    var g:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                    var b:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                    var frame:Int = 0; var bezier:Int = 0; while (true) {
+                        timeline.setFrame(frame, time, r, g, b);
+                        var nextMap:JsonValue = keyMap.next;
+                        if (nextMap == null) {
+                            timeline.shrink(bezier);
+                            break;
+                        }
+                        var time2:Float = nextMap.getFloat("time", 0);
+                        color = nextMap.getString("color");
+                        var nr:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                        var ng:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                        var nb:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                        var curve:JsonValue = keyMap.get("curve");
+                        if (curve != null) {
+                            bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, r, nr, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, g, ng, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 2, time, time2, b, nb, 1);
+                        }
+                        time = time2;
+                        r = nr;
+                        g = ng;
+                        b = nb;
+                        keyMap = nextMap;
+                    frame++; }
                     timelines.add(timeline);
-                    duration = MathUtils.max(duration, timeline.getFrames()[(timeline.getFrameCount() - 1) * TwoColorTimeline.ENTRIES]);
+
+                } else if (timelineName.equals("alpha")) {
+                    timelines.add(readTimeline(keyMap, new AlphaTimeline(timelineMap.size, timelineMap.size, slot.index), 0, 1));
+
+                } else if (timelineName.equals("rgba2")) {
+                    var timeline:RGBA2Timeline = new RGBA2Timeline(timelineMap.size, timelineMap.size * 7, slot.index);
+                    var time:Float = keyMap.getFloat("time", 0);
+                    var color:String = keyMap.getString("light");
+                    var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                    var g:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                    var b:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                    var a:Float = StdEx.parseInt(color.substring(6, 8), 16) / 255;
+                    color = keyMap.getString("dark");
+                    var r2:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                    var g2:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                    var b2:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                    var frame:Int = 0; var bezier:Int = 0; while (true) {
+                        timeline.setFrame(frame, time, r, g, b, a, r2, g2, b2);
+                        var nextMap:JsonValue = keyMap.next;
+                        if (nextMap == null) {
+                            timeline.shrink(bezier);
+                            break;
+                        }
+                        var time2:Float = nextMap.getFloat("time", 0);
+                        color = nextMap.getString("light");
+                        var nr:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                        var ng:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                        var nb:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                        var na:Float = StdEx.parseInt(color.substring(6, 8), 16) / 255;
+                        color = nextMap.getString("dark");
+                        var nr2:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                        var ng2:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                        var nb2:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                        var curve:JsonValue = keyMap.get("curve");
+                        if (curve != null) {
+                            bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, r, nr, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, g, ng, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 2, time, time2, b, nb, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 3, time, time2, a, na, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 4, time, time2, r2, nr2, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 5, time, time2, g2, ng2, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 6, time, time2, b2, nb2, 1);
+                        }
+                        time = time2;
+                        r = nr;
+                        g = ng;
+                        b = nb;
+                        a = na;
+                        r2 = nr2;
+                        g2 = ng2;
+                        b2 = nb2;
+                        keyMap = nextMap;
+                    frame++; }
+                    timelines.add(timeline);
+
+                } else if (timelineName.equals("rgb2")) {
+                    var timeline:RGB2Timeline = new RGB2Timeline(timelineMap.size, timelineMap.size * 6, slot.index);
+                    var time:Float = keyMap.getFloat("time", 0);
+                    var color:String = keyMap.getString("light");
+                    var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                    var g:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                    var b:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                    color = keyMap.getString("dark");
+                    var r2:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                    var g2:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                    var b2:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                    var frame:Int = 0; var bezier:Int = 0; while (true) {
+                        timeline.setFrame(frame, time, r, g, b, r2, g2, b2);
+                        var nextMap:JsonValue = keyMap.next;
+                        if (nextMap == null) {
+                            timeline.shrink(bezier);
+                            break;
+                        }
+                        var time2:Float = nextMap.getFloat("time", 0);
+                        color = nextMap.getString("light");
+                        var nr:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                        var ng:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                        var nb:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                        color = nextMap.getString("dark");
+                        var nr2:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
+                        var ng2:Float = StdEx.parseInt(color.substring(2, 4), 16) / 255;
+                        var nb2:Float = StdEx.parseInt(color.substring(4, 6), 16) / 255;
+                        var curve:JsonValue = keyMap.get("curve");
+                        if (curve != null) {
+                            bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, r, nr, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, g, ng, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 2, time, time2, b, nb, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 3, time, time2, r2, nr2, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 4, time, time2, g2, ng2, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 5, time, time2, b2, nb2, 1);
+                        }
+                        time = time2;
+                        r = nr;
+                        g = ng;
+                        b = nb;
+                        r2 = nr2;
+                        g2 = ng2;
+                        b2 = nb2;
+                        keyMap = nextMap;
+                    frame++; }
+                    timelines.add(timeline);
 
                 } else
                     throw new RuntimeException("Invalid timeline type for a slot: " + timelineName + " (" + slotMap.name + ")");
@@ -591,123 +732,161 @@ class SkeletonJson {
             var bone:BoneData = skeletonData.findBone(boneMap.name);
             if (bone == null) throw new SerializationException("Bone not found: " + boneMap.name);
             var timelineMap:JsonValue = boneMap.child; while (timelineMap != null) {
+                var keyMap:JsonValue = timelineMap.child;
+                if (keyMap == null) { timelineMap = timelineMap.next; continue; }
+
                 var timelineName:String = timelineMap.name;
-                if (timelineName.equals("rotate")) {
-                    var timeline:RotateTimeline = new RotateTimeline(timelineMap.size);
-                    timeline.boneIndex = bone.index;
-
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("angle", 0));
-                        readCurve(valueMap, timeline, frameIndex);
-                        frameIndex++;
-                    valueMap = valueMap.next; }
-                    timelines.add(timeline);
-                    duration = MathUtils.max(duration, timeline.getFrames()[(timeline.getFrameCount() - 1) * RotateTimeline.ENTRIES]);
-
-                } else if (timelineName.equals("translate") || timelineName.equals("scale") || timelineName.equals("shear")) {
-                    var timeline:TranslateTimeline = null;
-                    var timelineScale:Float = 1; var defaultValue:Float = 0;
-                    if (timelineName.equals("scale")) {
-                        timeline = new ScaleTimeline(timelineMap.size);
-                        defaultValue = 1;
-                    } else if (timelineName.equals("shear"))
-                        timeline = new ShearTimeline(timelineMap.size);
-                    else {
-                        timeline = new TranslateTimeline(timelineMap.size);
-                        timelineScale = scale;
-                    }
-                    timeline.boneIndex = bone.index;
-
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        var x:Float = valueMap.getFloat("x", defaultValue); var y:Float = valueMap.getFloat("y", defaultValue);
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), x * timelineScale, y * timelineScale);
-                        readCurve(valueMap, timeline, frameIndex);
-                        frameIndex++;
-                    valueMap = valueMap.next; }
-                    timelines.add(timeline);
-                    duration = MathUtils.max(duration, timeline.getFrames()[(timeline.getFrameCount() - 1) * TranslateTimeline.ENTRIES]);
-
-                } else
+                if (timelineName.equals("rotate"))
+                    timelines.add(readTimeline(keyMap, new RotateTimeline(timelineMap.size, timelineMap.size, bone.index), 0, 1));
+                else if (timelineName.equals("translate")) {
+                    var timeline:TranslateTimeline = new TranslateTimeline(timelineMap.size, timelineMap.size << 1, bone.index);
+                    timelines.add(readTimeline2(keyMap, timeline, "x", "y", 0, scale));
+                } else if (timelineName.equals("translatex")) {
+                    timelines
+                        .add(readTimeline(keyMap, new TranslateXTimeline(timelineMap.size, timelineMap.size, bone.index), 0, scale));
+                } else if (timelineName.equals("translatey")) {
+                    timelines
+                        .add(readTimeline(keyMap, new TranslateYTimeline(timelineMap.size, timelineMap.size, bone.index), 0, scale));
+                } else if (timelineName.equals("scale")) {
+                    var timeline:ScaleTimeline = new ScaleTimeline(timelineMap.size, timelineMap.size << 1, bone.index);
+                    timelines.add(readTimeline2(keyMap, timeline, "x", "y", 1, 1));
+                } else if (timelineName.equals("scalex"))
+                    timelines.add(readTimeline(keyMap, new ScaleXTimeline(timelineMap.size, timelineMap.size, bone.index), 1, 1));
+                else if (timelineName.equals("scaley"))
+                    timelines.add(readTimeline(keyMap, new ScaleYTimeline(timelineMap.size, timelineMap.size, bone.index), 1, 1));
+                else if (timelineName.equals("shear")) {
+                    var timeline:ShearTimeline = new ShearTimeline(timelineMap.size, timelineMap.size << 1, bone.index);
+                    timelines.add(readTimeline2(keyMap, timeline, "x", "y", 0, 1));
+                } else if (timelineName.equals("shearx"))
+                    timelines.add(readTimeline(keyMap, new ShearXTimeline(timelineMap.size, timelineMap.size, bone.index), 0, 1));
+                else if (timelineName.equals("sheary"))
+                    timelines.add(readTimeline(keyMap, new ShearYTimeline(timelineMap.size, timelineMap.size, bone.index), 0, 1));
+                else
                     throw new RuntimeException("Invalid timeline type for a bone: " + timelineName + " (" + boneMap.name + ")");
             timelineMap = timelineMap.next; }
         boneMap = boneMap.next; }
 
         // IK constraint timelines.
-        var constraintMap:JsonValue = map.getChild("ik"); while (constraintMap != null) {
-            var constraint:IkConstraintData = skeletonData.findIkConstraint(constraintMap.name);
-            var timeline:IkConstraintTimeline = new IkConstraintTimeline(constraintMap.size);
-            timeline.ikConstraintIndex = skeletonData.getIkConstraints().indexOf(constraint, true);
-            var frameIndex:Int = 0;
-            var valueMap:JsonValue = constraintMap.child; while (valueMap != null) {
-                timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("mix", 1),
-                    valueMap.getFloat("softness", 0) * scale, valueMap.getBoolean("bendPositive", true) ? 1 : -1,
-                    valueMap.getBoolean("compress", false), valueMap.getBoolean("stretch", false));
-                readCurve(valueMap, timeline, frameIndex);
-                frameIndex++;
-            valueMap = valueMap.next; }
+        var timelineMap:JsonValue = map.getChild("ik"); while (timelineMap != null) {
+            var keyMap:JsonValue = timelineMap.child;
+            if (keyMap == null) { timelineMap = timelineMap.next; continue; }
+            var constraint:IkConstraintData = skeletonData.findIkConstraint(timelineMap.name);
+            var timeline:IkConstraintTimeline = new IkConstraintTimeline(timelineMap.size, timelineMap.size << 1,
+                skeletonData.getIkConstraints().indexOf(constraint, true));
+            var time:Float = keyMap.getFloat("time", 0);
+            var mix:Float = keyMap.getFloat("mix", 1); var softness:Float = keyMap.getFloat("softness", 0) * scale;
+            var frame:Int = 0; var bezier:Int = 0; while (true) {
+                timeline.setFrame(frame, time, mix, softness, keyMap.getBoolean("bendPositive", true) ? 1 : -1,
+                    keyMap.getBoolean("compress", false), keyMap.getBoolean("stretch", false));
+                var nextMap:JsonValue = keyMap.next;
+                if (nextMap == null) {
+                    timeline.shrink(bezier);
+                    break;
+                }
+                var time2:Float = nextMap.getFloat("time", 0);
+                var mix2:Float = nextMap.getFloat("mix", 1); var softness2:Float = nextMap.getFloat("softness", 0) * scale;
+                var curve:JsonValue = keyMap.get("curve");
+                if (curve != null) {
+                    bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, mix, mix2, 1);
+                    bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, softness, softness2, scale);
+                }
+                time = time2;
+                mix = mix2;
+                softness = softness2;
+                keyMap = nextMap;
+            frame++; }
             timelines.add(timeline);
-            duration = MathUtils.max(duration, timeline.getFrames()[(timeline.getFrameCount() - 1) * IkConstraintTimeline.ENTRIES]);
-        constraintMap = constraintMap.next; }
+        timelineMap = timelineMap.next; }
 
         // Transform constraint timelines.
-        var constraintMap:JsonValue = map.getChild("transform"); while (constraintMap != null) {
-            var constraint:TransformConstraintData = skeletonData.findTransformConstraint(constraintMap.name);
-            var timeline:TransformConstraintTimeline = new TransformConstraintTimeline(constraintMap.size);
-            timeline.transformConstraintIndex = skeletonData.getTransformConstraints().indexOf(constraint, true);
-            var frameIndex:Int = 0;
-            var valueMap:JsonValue = constraintMap.child; while (valueMap != null) {
-                timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("rotateMix", 1),
-                    valueMap.getFloat("translateMix", 1), valueMap.getFloat("scaleMix", 1), valueMap.getFloat("shearMix", 1));
-                readCurve(valueMap, timeline, frameIndex);
-                frameIndex++;
-            valueMap = valueMap.next; }
+        var timelineMap:JsonValue = map.getChild("transform"); while (timelineMap != null) {
+            var keyMap:JsonValue = timelineMap.child;
+            if (keyMap == null) { timelineMap = timelineMap.next; continue; }
+            var constraint:TransformConstraintData = skeletonData.findTransformConstraint(timelineMap.name);
+            var timeline:TransformConstraintTimeline = new TransformConstraintTimeline(timelineMap.size, timelineMap.size << 2,
+                skeletonData.getTransformConstraints().indexOf(constraint, true));
+            var time:Float = keyMap.getFloat("time", 0);
+            var mixRotate:Float = keyMap.getFloat("mixRotate", 1);
+            var mixX:Float = keyMap.getFloat("mixX", 1); var mixY:Float = keyMap.getFloat("mixY", mixX);
+            var mixScaleX:Float = keyMap.getFloat("mixScaleX", 1); var mixScaleY:Float = keyMap.getFloat("mixScaleY", mixScaleX);
+            var mixShearY:Float = keyMap.getFloat("mixShearY", 1);
+            var frame:Int = 0; var bezier:Int = 0; while (true) {
+                timeline.setFrame(frame, time, mixRotate, mixX, mixY, mixScaleX, mixScaleY, mixShearY);
+                var nextMap:JsonValue = keyMap.next;
+                if (nextMap == null) {
+                    timeline.shrink(bezier);
+                    break;
+                }
+                var time2:Float = nextMap.getFloat("time", 0);
+                var mixRotate2:Float = nextMap.getFloat("mixRotate", 1);
+                var mixX2:Float = nextMap.getFloat("mixX", 1); var mixY2:Float = nextMap.getFloat("mixY", mixX2);
+                var mixScaleX2:Float = nextMap.getFloat("mixScaleX", 1); var mixScaleY2:Float = nextMap.getFloat("mixScaleY", mixScaleX2);
+                var mixShearY2:Float = nextMap.getFloat("mixShearY", 1);
+                var curve:JsonValue = keyMap.get("curve");
+                if (curve != null) {
+                    bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, mixRotate, mixRotate2, 1);
+                    bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, mixX, mixX2, 1);
+                    bezier = readCurve(curve, timeline, bezier, frame, 2, time, time2, mixY, mixY2, 1);
+                    bezier = readCurve(curve, timeline, bezier, frame, 3, time, time2, mixScaleX, mixScaleX2, 1);
+                    bezier = readCurve(curve, timeline, bezier, frame, 4, time, time2, mixScaleY, mixScaleY2, 1);
+                    bezier = readCurve(curve, timeline, bezier, frame, 5, time, time2, mixShearY, mixShearY2, 1);
+                }
+                time = time2;
+                mixRotate = mixRotate2;
+                mixX = mixX2;
+                mixY = mixY2;
+                mixScaleX = mixScaleX2;
+                mixScaleY = mixScaleY2;
+                mixScaleX = mixScaleX2;
+                keyMap = nextMap;
+            frame++; }
             timelines.add(timeline);
-            duration = MathUtils.max(duration,
-                timeline.getFrames()[(timeline.getFrameCount() - 1) * TransformConstraintTimeline.ENTRIES]);
-        constraintMap = constraintMap.next; }
+        timelineMap = timelineMap.next; }
 
         // Path constraint timelines.
         var constraintMap:JsonValue = map.getChild("path"); while (constraintMap != null) {
-            var data:PathConstraintData = skeletonData.findPathConstraint(constraintMap.name);
-            if (data == null) throw new SerializationException("Path constraint not found: " + constraintMap.name);
-            var index:Int = skeletonData.pathConstraints.indexOf(data, true);
+            var constraint:PathConstraintData = skeletonData.findPathConstraint(constraintMap.name);
+            if (constraint == null) throw new SerializationException("Path constraint not found: " + constraintMap.name);
+            var index:Int = skeletonData.pathConstraints.indexOf(constraint, true);
             var timelineMap:JsonValue = constraintMap.child; while (timelineMap != null) {
+                var keyMap:JsonValue = timelineMap.child;
+                if (keyMap == null) { timelineMap = timelineMap.next; continue; }
                 var timelineName:String = timelineMap.name;
-                if (timelineName.equals("position") || timelineName.equals("spacing")) {
-                    var timeline:PathConstraintPositionTimeline = null;
-                    var timelineScale:Float = 1;
-                    if (timelineName.equals("spacing")) {
-                        timeline = new PathConstraintSpacingTimeline(timelineMap.size);
-                        if (data.spacingMode == SpacingMode.length || data.spacingMode == SpacingMode.fixed) timelineScale = scale;
-                    } else {
-                        timeline = new PathConstraintPositionTimeline(timelineMap.size);
-                        if (data.positionMode == PositionMode.fixed) timelineScale = scale;
-                    }
-                    timeline.pathConstraintIndex = index;
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat(timelineName, 0) * timelineScale);
-                        readCurve(valueMap, timeline, frameIndex);
-                        frameIndex++;
-                    valueMap = valueMap.next; }
-                    timelines.add(timeline);
-                    duration = MathUtils.max(duration,
-                        timeline.getFrames()[(timeline.getFrameCount() - 1) * PathConstraintPositionTimeline.ENTRIES]);
+                if (timelineName.equals("position")) {
+                    var timeline:CurveTimeline1 = new PathConstraintPositionTimeline(timelineMap.size, timelineMap.size, index);
+                    timelines.add(readTimeline(keyMap, timeline, 0, constraint.positionMode == PositionMode.fixed ? scale : 1));
+                } else if (timelineName.equals("spacing")) {
+                    var timeline:CurveTimeline1 = new PathConstraintSpacingTimeline(timelineMap.size, timelineMap.size, index);
+                    timelines.add(readTimeline(keyMap, timeline, 0,
+                        constraint.spacingMode == SpacingMode.length || constraint.spacingMode == SpacingMode.fixed ? scale : 1));
                 } else if (timelineName.equals("mix")) {
-                    var timeline:PathConstraintMixTimeline = new PathConstraintMixTimeline(timelineMap.size);
-                    timeline.pathConstraintIndex = index;
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), valueMap.getFloat("rotateMix", 1),
-                            valueMap.getFloat("translateMix", 1));
-                        readCurve(valueMap, timeline, frameIndex);
-                        frameIndex++;
-                    valueMap = valueMap.next; }
+                    var timeline:PathConstraintMixTimeline = new PathConstraintMixTimeline(timelineMap.size, timelineMap.size * 3, index);
+                    var time:Float = keyMap.getFloat("time", 0);
+                    var mixRotate:Float = keyMap.getFloat("mixRotate", 1);
+                    var mixX:Float = keyMap.getFloat("mixX", 1); var mixY:Float = keyMap.getFloat("mixY", mixX);
+                    var frame:Int = 0; var bezier:Int = 0; while (true) {
+                        timeline.setFrame(frame, time, mixRotate, mixX, mixY);
+                        var nextMap:JsonValue = keyMap.next;
+                        if (nextMap == null) {
+                            timeline.shrink(bezier);
+                            break;
+                        }
+                        var time2:Float = nextMap.getFloat("time", 0);
+                        var mixRotate2:Float = nextMap.getFloat("mixRotate", 1);
+                        var mixX2:Float = nextMap.getFloat("mixX", 1); var mixY2:Float = nextMap.getFloat("mixY", mixX2);
+                        var curve:JsonValue = keyMap.get("curve");
+                        if (curve != null) {
+                            bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, mixRotate, mixRotate2, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, mixX, mixX2, 1);
+                            bezier = readCurve(curve, timeline, bezier, frame, 2, time, time2, mixY, mixY2, 1);
+                        }
+                        time = time2;
+                        mixRotate = mixRotate2;
+                        mixX = mixX2;
+                        mixY = mixY2;
+                        keyMap = nextMap;
+                    frame++; }
                     timelines.add(timeline);
-                    duration = MathUtils.max(duration,
-                        timeline.getFrames()[(timeline.getFrameCount() - 1) * PathConstraintMixTimeline.ENTRIES]);
                 }
             timelineMap = timelineMap.next; }
         constraintMap = constraintMap.next; }
@@ -720,25 +899,25 @@ class SkeletonJson {
                 var slot:SlotData = skeletonData.findSlot(slotMap.name);
                 if (slot == null) throw new SerializationException("Slot not found: " + slotMap.name);
                 var timelineMap:JsonValue = slotMap.child; while (timelineMap != null) {
+                    var keyMap:JsonValue = timelineMap.child;
+                    if (keyMap == null) { timelineMap = timelineMap.next; continue; }
+
                     var attachment:VertexAttachment = fastCast(skin.getAttachment(slot.index, timelineMap.name), VertexAttachment);
                     if (attachment == null) throw new SerializationException("Deform attachment not found: " + timelineMap.name);
                     var weighted:Bool = attachment.getBones() != null;
                     var vertices:FloatArray = attachment.getVertices();
-                    var deformLength:Int = weighted ? Std.int(vertices.length / 3 * 2) : vertices.length;
+                    var deformLength:Int = weighted ? Std.int((vertices.length / 3)) << 1 : vertices.length;
 
-                    var timeline:DeformTimeline = new DeformTimeline(timelineMap.size);
-                    timeline.slotIndex = slot.index;
-                    timeline.attachment = attachment;
-
-                    var frameIndex:Int = 0;
-                    var valueMap:JsonValue = timelineMap.child; while (valueMap != null) {
+                    var timeline:DeformTimeline = new DeformTimeline(timelineMap.size, timelineMap.size, slot.index, attachment);
+                    var time:Float = keyMap.getFloat("time", 0);
+                    var frame:Int = 0; var bezier:Int = 0; while (true) {
                         var deform:FloatArray = null;
-                        var verticesValue:JsonValue = valueMap.get("vertices");
+                        var verticesValue:JsonValue = keyMap.get("vertices");
                         if (verticesValue == null)
                             deform = weighted ?  FloatArray.create(deformLength): vertices;
                         else {
                             deform = FloatArray.create(deformLength);
-                            var start:Int = valueMap.getInt("offset", 0);
+                            var start:Int = keyMap.getInt("offset", 0);
                             arraycopy(verticesValue.asFloatArray(), 0, deform, start, verticesValue.size);
                             if (scale != 1) {
                                 var i:Int = start; var n:Int = i + verticesValue.size; while (i < n) {
@@ -750,23 +929,29 @@ class SkeletonJson {
                             }
                         }
 
-                        timeline.setFrame(frameIndex, valueMap.getFloat("time", 0), deform);
-                        readCurve(valueMap, timeline, frameIndex);
-                        frameIndex++;
-                    valueMap = valueMap.next; }
+                        timeline.setFrame(frame, time, deform);
+                        var nextMap:JsonValue = keyMap.next;
+                        if (nextMap == null) {
+                            timeline.shrink(bezier);
+                            break;
+                        }
+                        var time2:Float = nextMap.getFloat("time", 0);
+                        var curve:JsonValue = keyMap.get("curve");
+                        if (curve != null) bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, 0, 1, 1);
+                        time = time2;
+                        keyMap = nextMap;
+                    frame++; }
                     timelines.add(timeline);
-                    duration = MathUtils.max(duration, timeline.getFrames()[timeline.getFrameCount() - 1]);
                 timelineMap = timelineMap.next; }
             slotMap = slotMap.next; }
         deformMap = deformMap.next; }
 
         // Draw order timeline.
         var drawOrdersMap:JsonValue = map.get("drawOrder");
-        if (drawOrdersMap == null) drawOrdersMap = map.get("draworder");
         if (drawOrdersMap != null) {
             var timeline:DrawOrderTimeline = new DrawOrderTimeline(drawOrdersMap.size);
             var slotCount:Int = skeletonData.slots.size;
-            var frameIndex:Int = 0;
+            var frame:Int = 0;
             var drawOrderMap:JsonValue = drawOrdersMap.child; while (drawOrderMap != null) {
                 var drawOrder:IntArray = null;
                 var offsets:JsonValue = drawOrderMap.get("offsets");
@@ -792,17 +977,16 @@ class SkeletonJson {
                     var i:Int = slotCount - 1; while (i >= 0) {
                         if (drawOrder[i] == -1) drawOrder[i] = unchanged[--unchangedIndex]; i--; }
                 }
-                timeline.setFrame(frameIndex++, drawOrderMap.getFloat("time", 0), drawOrder);
-            drawOrderMap = drawOrderMap.next; }
+                timeline.setFrame(frame, drawOrderMap.getFloat("time", 0), drawOrder);
+            drawOrderMap = drawOrderMap.next; frame++; }
             timelines.add(timeline);
-            duration = MathUtils.max(duration, timeline.getFrames()[timeline.getFrameCount() - 1]);
         }
 
         // Event timeline.
         var eventsMap:JsonValue = map.get("events");
         if (eventsMap != null) {
             var timeline:EventTimeline = new EventTimeline(eventsMap.size);
-            var frameIndex:Int = 0;
+            var frame:Int = 0;
             var eventMap:JsonValue = eventsMap.child; while (eventMap != null) {
                 var eventData:EventData = skeletonData.findEvent(eventMap.getString("name"));
                 if (eventData == null) throw new SerializationException("Event not found: " + eventMap.getString("name"));
@@ -814,23 +998,81 @@ class SkeletonJson {
                     event.volume = eventMap.getFloat("volume", eventData.volume);
                     event.balance = eventMap.getFloat("balance", eventData.balance);
                 }
-                timeline.setFrame(frameIndex++, event);
-            eventMap = eventMap.next; }
+                timeline.setFrame(frame, event);
+            eventMap = eventMap.next; frame++; }
             timelines.add(timeline);
-            duration = MathUtils.max(duration, timeline.getFrames()[timeline.getFrameCount() - 1]);
         }
 
         timelines.shrink();
+        var duration:Float = 0;
+        var items = timelines.items;
+        var i:Int = 0; var n:Int = timelines.size; while (i < n) {
+            duration = MathUtils.max(duration, (fastCast(items[i], Timeline)).getDuration()); i++; }
         skeletonData.animations.add(new Animation(name, timelines, duration));
     }
 
-    #if !spine_no_inline inline #end public function readCurve(map:JsonValue, timeline:CurveTimeline, frameIndex:Int):Void {
-        var curve:JsonValue = map.get("curve");
-        if (curve == null) return;
-        if (curve.isString())
-            timeline.setStepped(frameIndex);
-        else
-            timeline.setCurve(frameIndex, curve.asFloat(), map.getFloat("c2", 0), map.getFloat("c3", 1), map.getFloat("c4", 1));
+    private function readTimeline(keyMap:JsonValue, timeline:CurveTimeline1, defaultValue:Float, scale:Float):Timeline {
+        var time:Float = keyMap.getFloat("time", 0); var value:Float = keyMap.getFloat("value", defaultValue) * scale;
+        var frame:Int = 0; var bezier:Int = 0; while (true) {
+            timeline.setFrame(frame, time, value);
+            var nextMap:JsonValue = keyMap.next;
+            if (nextMap == null) {
+                timeline.shrink(bezier);
+                return timeline;
+            }
+            var time2:Float = nextMap.getFloat("time", 0);
+            var value2:Float = nextMap.getFloat("value", defaultValue) * scale;
+            var curve:JsonValue = keyMap.get("curve");
+            if (curve != null) bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, value, value2, scale);
+            time = time2;
+            value = value2;
+            keyMap = nextMap;
+        frame++; }
+    }
+
+    private function readTimeline2(keyMap:JsonValue, timeline:CurveTimeline2, name1:String, name2:String, defaultValue:Float, scale:Float):Timeline {
+        var time:Float = keyMap.getFloat("time", 0);
+        var value1:Float = keyMap.getFloat(name1, defaultValue) * scale; var value2:Float = keyMap.getFloat(name2, defaultValue) * scale;
+        var frame:Int = 0; var bezier:Int = 0; while (true) {
+            timeline.setFrame(frame, time, value1, value2);
+            var nextMap:JsonValue = keyMap.next;
+            if (nextMap == null) {
+                timeline.shrink(bezier);
+                return timeline;
+            }
+            var time2:Float = nextMap.getFloat("time", 0);
+            var nvalue1:Float = nextMap.getFloat(name1, defaultValue) * scale; var nvalue2:Float = nextMap.getFloat(name2, defaultValue) * scale;
+            var curve:JsonValue = keyMap.get("curve");
+            if (curve != null) {
+                bezier = readCurve(curve, timeline, bezier, frame, 0, time, time2, value1, nvalue1, scale);
+                bezier = readCurve(curve, timeline, bezier, frame, 1, time, time2, value2, nvalue2, scale);
+            }
+            time = time2;
+            value1 = nvalue1;
+            value2 = nvalue2;
+            keyMap = nextMap;
+        frame++; }
+    }
+
+    #if !spine_no_inline inline #end public function readCurve(curve:JsonValue, timeline:CurveTimeline, bezier:Int, frame:Int, value:Int, time1:Float, time2:Float, value1:Float, value2:Float, scale:Float):Int {
+        if (curve.isString()) {
+            if (curve.asString().equals("stepped")) timeline.setStepped(frame);
+            return bezier;
+        }
+        curve = curve.getAtIndex(value << 2);
+        var cx1:Float = curve.asFloat();
+        curve = curve.next;
+        var cy1:Float = curve.asFloat() * scale;
+        curve = curve.next;
+        var cx2:Float = curve.asFloat();
+        curve = curve.next;
+        var cy2:Float = curve.asFloat() * scale;
+        setBezier(timeline, frame, value, bezier, time1, value1, cx1, cy1, cx2, cy2, time2, value2);
+        return bezier + 1;
+    }
+
+    #if !spine_no_inline inline #end static public function setBezier(timeline:CurveTimeline, frame:Int, value:Int, bezier:Int, time1:Float, value1:Float, cx1:Float, cy1:Float, cx2:Float, cy2:Float, time2:Float, value2:Float):Void {
+        timeline.setBezier(bezier, frame, value, time1, value1, cx1, cy1, cx2, cy2, time2, value2);
     }
 }
 

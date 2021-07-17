@@ -65,12 +65,12 @@ using StringTools;
 
 class TextureAtlas
 {
-    private var pages : Array<AtlasPage> = new Array<AtlasPage>();
-    private var regions : Array<AtlasRegion> = new Array<AtlasRegion>();
-    private var textureLoader : TextureLoader;
+    private var pages:Array<AtlasPage> = new Array<AtlasPage>();
+    private var regions:Array<AtlasRegion> = new Array<AtlasRegion>();
+    private var textureLoader:TextureLoader;
 
     /** @param object A String. */
-    public function new(object : String, textureLoader : TextureLoader)
+    public function new(object:String, textureLoader:TextureLoader)
     {
         if (object == null)
         {
@@ -79,7 +79,7 @@ class TextureAtlas
         load(Std.string(object), textureLoader);
     }
 
-    private function load(atlasText : String, textureLoader : TextureLoader) : Void
+    private function load(atlasText:String, textureLoader:TextureLoader):Void
     {
         if (textureLoader == null)
         {
@@ -87,12 +87,12 @@ class TextureAtlas
         }
         this.textureLoader = textureLoader;
 
-        var reader : Reader = new Reader(atlasText);
-        var tuple : Array<Dynamic> = [null, null, null, null];
-        var page : AtlasPage = null;
+        var reader:Reader = new Reader(atlasText);
+        var tuple:Array<String> = [null, null, null, null];
+        var page:AtlasPage = null;
         while (true)
         {
-            var line : String = reader.readLine();
+            var line:String = reader.readLine();
             if (line == null)
             {
                 break;
@@ -108,40 +108,57 @@ class TextureAtlas
                 {
                     page = new AtlasPage();
                     page.name = line;
-
-                    if (reader.readTuple(tuple) == 2)
-                    {
-                        // size is only optional for an atlas packed with an old TexturePacker.
-                        page.width = Std.parseInt(tuple[0]);
-                        page.height = Std.parseInt(tuple[1]);
-                        reader.readTuple(tuple);
-                    }
-                    page.format = tuple[0];
-
-                    reader.readTuple(tuple);
-                    page.minFilter = tuple[0];
-                    page.magFilter = tuple[1];
-
-                    var direction : String = reader.readValue();
                     page.uWrap = TextureWrap.clampToEdge;
                     page.vWrap = TextureWrap.clampToEdge;
-                    if (direction == "x")
-                    {
-                        page.uWrap = TextureWrap.repeat;
+
+                    var key = reader.nextLineKey();
+                    while (key != null) {
+                        
+                        switch key {
+
+                            case 'size':
+                                reader.readTuple(tuple);
+                                page.width = Std.parseInt(tuple[0]);
+                                page.height = Std.parseInt(tuple[1]);
+                            
+                            case 'format':
+                                page.format = reader.readValue();
+                            
+                            case 'filter':
+                                reader.readTuple(tuple);
+                                page.minFilter = tuple[0];
+                                page.magFilter = tuple[1];
+
+                            case 'repeat':
+                                var direction:String = reader.readValue();
+                                if (direction == "x") {
+                                    page.uWrap = TextureWrap.repeat;
+                                }
+                                else {
+                                    if (direction == "y") {
+                                        page.vWrap = TextureWrap.repeat;
+                                    }
+                                    else {
+                                        if (direction == "xy") {
+                                            page.uWrap = page.vWrap = TextureWrap.repeat;
+                                        }
+                                    }
+                                }
+
+                            case 'scale':
+                                reader.readTuple(tuple);
+                                page.scale = Std.parseFloat(tuple[0]);
+                            
+                            default:
+                                reader.readLine();
+
+                        }
+
+                        key = reader.nextLineKey();
                     }
-                    else
-                    {
-                        if (direction == "y")
-                        {
-                            page.vWrap = TextureWrap.repeat;
-                        }
-                        else
-                        {
-                            if (direction == "xy")
-                            {
-                                page.uWrap = page.vWrap = TextureWrap.repeat;
-                            }
-                        }
+
+                    if (page.format == null) {
+                        page.format = 'rgba8888';
                     }
 
                     textureLoader.loadPage(page, line);
@@ -150,19 +167,70 @@ class TextureAtlas
                 }
                 else
                 {
-                    var region : AtlasRegion = new AtlasRegion();
+                    var region:AtlasRegion = new AtlasRegion();
                     region.name = line;
                     region.page = page;
 
-                    region.rotate = reader.readValue() == "true";
+                    var x:Int = 0;
+                    var y:Int = 0;
+                    var width:Int = 0;
+                    var height:Int = 0;
+                    var originalWidth:Int = -1;
+                    var originalHeight:Int = -1;
 
-                    reader.readTuple(tuple);
-                    var x : Int = Std.parseInt(tuple[0]);
-                    var y : Int = Std.parseInt(tuple[1]);
+                    var key = reader.nextLineKey();
+                    while (key != null) {
 
-                    reader.readTuple(tuple);
-                    var width : Int = Std.parseInt(tuple[0]);
-                    var height : Int = Std.parseInt(tuple[1]);
+                        switch key {
+
+                            case 'bounds':
+                                reader.readTuple(tuple);
+                                x = Std.parseInt(tuple[0]);
+                                y = Std.parseInt(tuple[1]);
+                                width = Std.parseInt(tuple[2]);
+                                height = Std.parseInt(tuple[3]);
+
+                            case 'rotate':
+                                var value = reader.readValue();
+                                region.rotate = (value == "true" || value == "90");
+
+                            case 'xy':
+                                reader.readTuple(tuple);
+                                x = Std.parseInt(tuple[0]);
+                                y = Std.parseInt(tuple[1]);
+
+                            case 'size':
+                                reader.readTuple(tuple);
+                                width = Std.parseInt(tuple[0]);
+                                height = Std.parseInt(tuple[1]);
+
+                            case 'orig':
+                                reader.readTuple(tuple);
+                                originalWidth = Std.parseInt(tuple[0]);
+                                originalHeight = Std.parseInt(tuple[1]);
+
+                            case 'offset':
+                                reader.readTuple(tuple);
+                                region.offsetX = Std.parseInt(tuple[0]);
+                                region.offsetY = Std.parseInt(tuple[1]);
+
+                            case 'split':
+                                reader.readTuple(tuple);
+                                region.splits = [Std.parseInt(tuple[0]), Std.parseInt(tuple[1]), Std.parseInt(tuple[2]), Std.parseInt(tuple[3])];
+
+                            case 'pad':
+                                reader.readTuple(tuple);
+                                region.pads = [Std.parseInt(tuple[0]), Std.parseInt(tuple[1]), Std.parseInt(tuple[2]), Std.parseInt(tuple[3])];
+                            
+                            case 'index':
+                                region.index = Std.parseInt(reader.readValue());
+
+                            default:
+                                reader.readLine();
+                        }
+
+                        key = reader.nextLineKey();
+                    }
 
                     region.u = x / page.width;
                     region.v = y / page.height;
@@ -180,23 +248,10 @@ class TextureAtlas
                     region.y = y;
                     region.width = cast Math.abs(width);
                     region.height = cast Math.abs(height);
+                    region.originalWidth = originalWidth != -1 ? originalWidth : region.width;
+                    region.originalHeight = originalHeight != -1 ? originalHeight : region.height;
 
-                    if (reader.readTuple(tuple) == 4)
-                    {
-                        // split is optional
-                        region.splits = new Array<Int>();
-
-                        if (reader.readTuple(tuple) == 4)
-                        {
-                            // pad is optional, but only present with splits
-                            region.pads = [Std.parseInt(tuple[0]), Std.parseInt(tuple[1]), Std.parseInt(tuple[2]), Std.parseInt(tuple[3])];
-
-                            reader.readTuple(tuple);
-                        }
-                    }
-
-                    region.originalWidth = Std.parseInt(tuple[0]);
-                    region.originalHeight = Std.parseInt(tuple[1]);
+                    //trace('region u=${region.u} v=${region.v} u2=${region.u2} v2=${region.v2}');
                     
                     if (region.rotate) {
                         region.packedWidth = region.originalHeight;
@@ -205,12 +260,6 @@ class TextureAtlas
                         region.packedWidth = region.originalWidth;
                         region.packedHeight = region.originalHeight;
                     }
-
-                    reader.readTuple(tuple);
-                    region.offsetX = Std.parseInt(tuple[0]);
-                    region.offsetY = Std.parseInt(tuple[1]);
-
-                    region.index = Std.parseInt(reader.readValue());
 
                     textureLoader.loadRegion(region);
                     regions[regions.length] = region;
@@ -222,10 +271,10 @@ class TextureAtlas
     /** Returns the first region found with the specified name. This method uses string comparison to find the region, so the result
 	 * should be cached rather than calling this method multiple times.
 	 * @return The region, or null. */
-    public function findRegion(name : String) : AtlasRegion
+    public function findRegion(name:String):AtlasRegion
     {
-        var i : Int = 0;
-        var n : Int = regions.length;
+        var i:Int = 0;
+        var n:Int = regions.length;
         while (i < n)
         {
             if (regions[i].name == name)
@@ -237,10 +286,10 @@ class TextureAtlas
         return null;
     }
 
-    public function dispose() : Void
+    public function dispose():Void
     {
-        var i : Int = 0;
-        var n : Int = pages.length;
+        var i:Int = 0;
+        var n:Int = pages.length;
         while (i < n)
         {
             textureLoader.unloadPage(pages[i]);
@@ -253,21 +302,21 @@ class TextureAtlas
 
 class Reader
 {
-    private var lines : Array<Dynamic>;
-    private var index : Int;
+    private var lines:Array<String>;
+    private var index:Int;
 
-    public function new(text : String)
+    public function new(text:String)
     {
         lines = text.trim().replace("\r\n", "\n").replace("\r", "\n").split("\n");
         index = 0;
     }
 
-    public function trim(value : String) : String
+    public function trim(value:String):String
     {
         return value.trim();
     }
 
-    public function readLine() : String
+    public function readLine():String
     {
         if (index >= lines.length)
         {
@@ -276,10 +325,28 @@ class Reader
         return lines[index++];
     }
 
-    public function readValue() : String
+    public function nextLineKey():String {
+
+        if (index >= lines.length) {
+            return null;
+        }
+        else {
+            var line = lines[index];
+            var colon = line.indexOf(':');
+            if (colon != -1) {
+                return line.substring(0, colon).trim();
+            }
+            else {
+                return null;
+            }
+        }
+
+    }
+
+    public function readValue():String
     {
-        var line : String = readLine();
-        var colon : Int = line.indexOf(":");
+        var line:String = readLine();
+        var colon:Int = line.indexOf(":");
         if (colon == -1)
         {
             throw new Error("Invalid line: " + line);
@@ -288,19 +355,19 @@ class Reader
     }
 
     /** Returns the number of tuple values read (1, 2 or 4). */
-    public function readTuple(tuple : Array<Dynamic>) : Int
+    public function readTuple(tuple:Array<Dynamic>):Int
     {
-        var line : String = readLine();
-        var colon : Int = line.indexOf(":");
+        var line:String = readLine();
+        var colon:Int = line.indexOf(":");
         if (colon == -1)
         {
             throw new Error("Invalid line: " + line);
         }
-        var i : Int = 0;
-        var lastMatch : Int = colon + 1;
+        var i:Int = 0;
+        var lastMatch:Int = colon + 1;
                 while (i < 3)
         {
-            var comma : Int = line.indexOf(",", lastMatch);
+            var comma:Int = line.indexOf(",", lastMatch);
             if (comma == -1)
             {
                 break;
@@ -316,46 +383,55 @@ class Reader
 
 class AtlasPage
 {
-    public var name : String;
-    public var format : Format;
-    public var minFilter : TextureFilter;
-    public var magFilter : TextureFilter;
-    public var uWrap : TextureWrap;
-    public var vWrap : TextureWrap;
-    public var rendererObject : Dynamic;
-    public var width : Int;
-    public var height : Int;
+    public var name:String;
+    public var format:Format;
+    public var minFilter:TextureFilter;
+    public var magFilter:TextureFilter;
+    public var uWrap:TextureWrap;
+    public var vWrap:TextureWrap;
+    public var rendererObject:Dynamic;
+    public var width:Int = 0;
+    public var height:Int = 0;
+    public var scale:Float = 1.0;
     
     public function new()
     {
+    }
+
+    function toString() {
+
+        return '' + {
+            name: name, format: format, width: width, height: height, scale: scale
+        };
+
     }
 }
 
 class AtlasRegion extends TextureRegion
 {
-    public var name : String;
-    public var x : Int = 0;
-    public var y : Int = 0;
-    public var width : Int = 0;
-    public var height : Int = 0;
-    public var packedWidth : Int = 0;
-    public var packedHeight : Int = 0;
-    public var offsetX : Float = 0;
-    public var offsetY : Float = 0;
-    public var originalWidth : Int = 0;
-    public var originalHeight : Int = 0;
-    public var index : Int = 0;
-    public var degrees : Int = 0;
-    public var splits : Array<Int>;
-    public var pads : Array<Int>;
-    public var page : AtlasPage;
+    public var name:String;
+    public var x:Int = 0;
+    public var y:Int = 0;
+    public var width:Int = 0;
+    public var height:Int = 0;
+    public var packedWidth:Int = 0;
+    public var packedHeight:Int = 0;
+    public var offsetX:Float = 0;
+    public var offsetY:Float = 0;
+    public var originalWidth:Int = 0;
+    public var originalHeight:Int = 0;
+    public var index:Int = -1;
+    public var degrees:Int = 0;
+    public var splits:Array<Int>;
+    public var pads:Array<Int>;
+    public var page:AtlasPage;
 
-    public var rotate (get,set) : Bool;
-    inline function get_rotate() : Bool {
+    public var rotate (get,set):Bool;
+    inline function get_rotate():Bool {
         return degrees == 90;
     }
-    inline function set_rotate(rotate : Bool) : Bool {
-        degrees = (rotate ? 90 : 0);
+    inline function set_rotate(rotate:Bool):Bool {
+        degrees = (rotate ? 90:0);
         return rotate;
     }
 
@@ -364,18 +440,18 @@ class AtlasRegion extends TextureRegion
         super();
     }
 
-    inline public function getTexture() : AtlasRegionTexture {
+    inline public function getTexture():AtlasRegionTexture {
         return this;
     }
 }
 
 abstract AtlasRegionTexture(AtlasRegion) from AtlasRegion to AtlasRegion {
 
-    inline public function getWidth() : Int {
+    inline public function getWidth():Int {
         return this.page.width;
     }
 
-    inline public function getHeight() : Int {
+    inline public function getHeight():Int {
         return this.page.height;
     }
 

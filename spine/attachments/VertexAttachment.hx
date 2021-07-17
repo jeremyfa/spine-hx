@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,16 +15,16 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine.attachments;
@@ -32,6 +32,7 @@ package spine.attachments;
 import spine.utils.SpineUtils.*;
 
 import spine.support.utils.FloatArray;
+
 
 import spine.Bone;
 import spine.Skeleton;
@@ -42,7 +43,7 @@ import spine.Slot;
 class VertexAttachment extends Attachment {
     private static var nextID:Int = 0;
 
-    private var id:Int = (getNextID() & 65535) << 11;
+    private var id:Int = getNextID();
     public var bones:IntArray;
     public var vertices:FloatArray;
     public var worldVerticesLength:Int = 0;
@@ -67,7 +68,6 @@ class VertexAttachment extends Attachment {
      * @param stride The number of <code>worldVertices</code> entries between the value pairs written. */
     #if !spine_no_inline inline #end public function computeWorldVertices(slot:Slot, start:Int, count:Int, worldVertices:FloatArray, offset:Int, stride:Int):Void {
         count = offset + (count >> 1) * stride;
-        var skeleton:Skeleton = slot.getSkeleton();
         var deformArray:FloatArray = slot.getDeform();
         var vertices:FloatArray = this.vertices;
         var bones:IntArray = this.bones;
@@ -89,7 +89,7 @@ class VertexAttachment extends Attachment {
             v += n + 1;
             skip += n;
         i += 2; }
-        var skeletonBones = skeleton.getBones().items;
+        var skeletonBones = slot.getSkeleton().getBones().items;
         if (deformArray.size == 0) {
             var w:Int = offset; var b:Int = skip * 3; while (w < count) {
                 var wx:Float = 0; var wy:Float = 0;
@@ -171,7 +171,7 @@ class VertexAttachment extends Attachment {
         return id;
     }
 
-    /** Does not copy id (generated) or name (set on construction). **/
+    /** Does not copy id (generated) or name (set on construction). */
     #if !spine_no_inline inline #end public function copyTo(attachment:VertexAttachment):Void {
         if (bones != null) {
             attachment.bones = IntArray.create(bones.length);

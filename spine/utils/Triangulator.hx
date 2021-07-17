@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,16 +15,16 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine.utils;
@@ -36,8 +36,8 @@ import spine.support.utils.Pool;
 import spine.support.utils.ShortArray;
 
 class Triangulator {
-    private var convexPolygons:FloatArray2D = new Array();
-    private var convexPolygonsIndices:ShortArray2D = new Array();
+    private var convexPolygons:FloatArray2D = new Array(16);
+    private var convexPolygonsIndices:ShortArray2D = new Array(16);
 
     private var indicesArray:ShortArray = new ShortArray();
     private var isConcaveArray:BooleanArray = new BooleanArray();
@@ -171,11 +171,9 @@ class Triangulator {
                 if (polygon.size > 0) {
                     convexPolygons.add(polygon);
                     convexPolygonsIndices.add(polygonIndices);
-                } else {
-                    polygonPool.free(polygon);
-                    polygonIndicesPool.free(polygonIndices);                    
+                    polygon = polygonPool.obtain();
+                    polygonIndices = polygonIndicesPool.obtain();
                 }
-                polygon = polygonPool.obtain();
                 polygon.clear();
                 polygon.add(x1);
                 polygon.add(y1);
@@ -183,7 +181,6 @@ class Triangulator {
                 polygon.add(y2);
                 polygon.add(x3);
                 polygon.add(y3);
-                polygonIndices = polygonIndicesPool.obtain();
                 polygonIndices.clear();
                 polygonIndices.add(t1);
                 polygonIndices.add(t2);
@@ -199,13 +196,14 @@ class Triangulator {
         }
 
         // Go through the list of polygons and try to merge the remaining triangles with the found triangle fans.
+        var convexPolygonsIndicesItems = convexPolygonsIndices.items; var convexPolygonsItems = convexPolygons.items;
         var i:Int = 0; var n:Int = convexPolygons.size; while (i < n) {
-            polygonIndices = convexPolygonsIndices.get(i);
+            polygonIndices = convexPolygonsIndicesItems[i];
             if (polygonIndices.size == 0) { i++; continue; }
-            var firstIndex:Int = polygonIndices.get(0);
+            var firstIndex:Int = polygonIndices.first();
             var lastIndex:Int = polygonIndices.get(polygonIndices.size - 1);
 
-            polygon = convexPolygons.get(i);
+            polygon = convexPolygonsItems[i];
             var o:Int = polygon.size - 4;
             var p:FloatArray = polygon.items;
             var prevPrevX:Float = p[o]; var prevPrevY:Float = p[o + 1];
@@ -216,13 +214,13 @@ class Triangulator {
 
             var ii:Int = 0; while (ii < n) {
                 if (ii == i) { ii++; continue; }
-                var otherIndices:ShortArray = convexPolygonsIndices.get(ii);
+                var otherIndices:ShortArray = convexPolygonsIndicesItems[ii];
                 if (otherIndices.size != 3) { ii++; continue; }
-                var otherFirstIndex:Int = otherIndices.get(0);
+                var otherFirstIndex:Int = otherIndices.first();
                 var otherSecondIndex:Int = otherIndices.get(1);
                 var otherLastIndex:Int = otherIndices.get(2);
 
-                var otherPoly:FloatArray = convexPolygons.get(ii);
+                var otherPoly:FloatArray = convexPolygonsItems[ii];
                 var x3:Float = otherPoly.get(otherPoly.size - 2); var y3:Float = otherPoly.get(otherPoly.size - 1);
 
                 if (otherFirstIndex != firstIndex || otherSecondIndex != lastIndex) { ii++; continue; }
@@ -245,11 +243,11 @@ class Triangulator {
 
         // Remove empty polygons that resulted from the merge step above.
         var i:Int = convexPolygons.size - 1; while (i >= 0) {
-            polygon = convexPolygons.get(i);
+            polygon = convexPolygonsItems[i];
             if (polygon.size == 0) {
                 convexPolygons.removeIndex(i);
                 polygonPool.free(polygon);
-                polygonIndices = convexPolygonsIndices.removeIndex(i);            
+                polygonIndices = convexPolygonsIndices.removeIndex(i);
                 polygonIndicesPool.free(polygonIndices);
             }
         i--; }

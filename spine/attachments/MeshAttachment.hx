@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,16 +15,16 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine.attachments;
@@ -34,6 +34,7 @@ import spine.utils.SpineUtils.*;
 import spine.support.graphics.Color;
 import spine.support.graphics.TextureAtlas.AtlasRegion;
 import spine.support.graphics.TextureRegion;
+
 
 /** An attachment that displays a textured mesh. A mesh has hull vertices and internal vertices within the hull. Holes are not
  * supported. Each vertex has UVs (texture coordinates) and triangles are used to map an image on to the mesh.
@@ -74,7 +75,7 @@ class MeshAttachment extends VertexAttachment {
         var uvs:FloatArray = this.uvs;
         var n:Int = uvs.length;
         var u:Float = 0; var v:Float = 0; var width:Float = 0; var height:Float = 0;
-        if (Std.isOfType(region, AtlasRegion)) {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(region, AtlasRegion)) {
             u = region.getU();
             v = region.getV();
             var region:AtlasRegion = fastCast(this.region, AtlasRegion);
@@ -187,13 +188,13 @@ class MeshAttachment extends VertexAttachment {
         this.edges = edges;
     }
 
-    /** Vertex index pairs describing edges for controling triangulation. Mesh triangles will never cross edges. Only available if
-     * nonessential data was exported. Triangulation is not performed at runtime. */
+    /** Vertex index pairs describing edges for controlling triangulation, or be null if nonessential data was not exported. Mesh
+     * triangles will never cross edges. Triangulation is not performed at runtime. */
     #if !spine_no_inline inline #end public function getEdges():ShortArray {
         return edges;
     }
 
-    /** The width of the mesh's image. Available only when nonessential data was exported. */
+    /** The width of the mesh's image, or zero if nonessential data was not exported. */
     #if !spine_no_inline inline #end public function getWidth():Float {
         return width;
     }
@@ -202,7 +203,7 @@ class MeshAttachment extends VertexAttachment {
         this.width = width;
     }
 
-    /** The height of the mesh's image. Available only when nonessential data was exported. */
+    /** The height of the mesh's image, or zero if nonessential data was not exported. */
     #if !spine_no_inline inline #end public function getHeight():Float {
         return height;
     }
@@ -218,7 +219,6 @@ class MeshAttachment extends VertexAttachment {
         return parentMesh;
     }
 
-    /** @param parentMesh May be null. */
     #if !spine_no_inline inline #end public function setParentMesh(parentMesh:MeshAttachment):Void {
         this.parentMesh = parentMesh;
         if (parentMesh != null) {
@@ -261,7 +261,7 @@ class MeshAttachment extends VertexAttachment {
         return copy;
     }
 
-    /** Returns a new mesh with the {@link #parentMesh} set to this mesh's parent mesh, if any, else to this mesh. **/
+    /** Returns a new mesh with the {@link #parentMesh} set to this mesh's parent mesh, if any, else to this mesh. */
     #if !spine_no_inline inline #end public function newLinkedMesh():MeshAttachment {
         var mesh:MeshAttachment = new MeshAttachment(name);
         mesh.region = region;

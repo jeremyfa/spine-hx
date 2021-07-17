@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,16 +15,16 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
@@ -80,19 +80,16 @@ class IkConstraint implements Updatable {
     }*/
 
     /** Applies the constraint to the constrained bones. */
-    public function applyNoArgs():Void {
-        update();
-    }
-
     #if !spine_no_inline inline #end public function update():Void {
+        if (mix == 0) return;
         var target:Bone = this.target;
-        var bones:Array<Bone> = this.bones;
-        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (bones.size); {
+        var bones = this.bones.items;
+        var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (this.bones.size); {
         if (_switchCond0 == 1) {
-            applyOne(bones.first(), target.worldX, target.worldY, compress, stretch, data.uniform, mix);
+            applyOne(fastCast(bones[0], Bone), target.worldX, target.worldY, compress, stretch, data.uniform, mix);
             break;
         } else if (_switchCond0 == 2) {
-            apply(bones.first(), bones.get(1), target.worldX, target.worldY, bendDirection, stretch, softness, mix);
+            apply(fastCast(bones[0], Bone), fastCast(bones[1], Bone), target.worldX, target.worldY, bendDirection, stretch, data.uniform, softness, mix);
             break;
         } } break; }
     }
@@ -112,7 +109,9 @@ class IkConstraint implements Updatable {
         this.target = target;
     }
 
-    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotations. */
+    /** A percentage (0-1) that controls the mix between the constrained and unconstrained rotation.
+     * <p>
+     * For two bone IK: if the parent bone has local nonuniform scale, the child bone's local Y translation is set to 0. */
     #if !spine_no_inline inline #end public function getMix():Float {
         return mix;
     }
@@ -121,7 +120,8 @@ class IkConstraint implements Updatable {
         this.mix = mix;
     }
 
-    /** For two bone IK, the distance from the maximum reach of the bones that rotation will slow. */
+    /** For two bone IK, the target bone's distance from the maximum reach of the bones where rotation begins to slow. The bones
+     * will not straighten completely until the target is this far out of range. */
     #if !spine_no_inline inline #end public function getSoftness():Float {
         return softness;
     }
@@ -130,7 +130,7 @@ class IkConstraint implements Updatable {
         this.softness = softness;
     }
 
-    /** Controls the bend direction of the IK bones, either 1 or -1. */
+    /** For two bone IK, controls the bend direction of the IK bones, either 1 or -1. */
     #if !spine_no_inline inline #end public function getBendDirection():Int {
         return bendDirection;
     }
@@ -139,7 +139,7 @@ class IkConstraint implements Updatable {
         this.bendDirection = bendDirection;
     }
 
-    /** When true and only a single bone is being constrained, if the target is too close, the bone is scaled to reach it. */
+    /** For one bone IK, when true and the target is too close, the bone is scaled to reach it. */
     #if !spine_no_inline inline #end public function getCompress():Bool {
         return compress;
     }
@@ -148,8 +148,10 @@ class IkConstraint implements Updatable {
         this.compress = compress;
     }
 
-    /** When true, if the target is out of range, the parent bone is scaled to reach it. If more than one bone is being constrained
-     * and the parent bone has local nonuniform scale, stretch is not applied. */
+    /** When true and the target is out of range, the parent bone is scaled to reach it.
+     * <p>
+     * For two bone IK: 1) the child bone's local Y translation is set to 0, 2) stretch is not applied if {@link #getSoftness()} is
+     * > 0, and 3) if the parent bone has local nonuniform scale, stretch is not applied. */
     #if !spine_no_inline inline #end public function getStretch():Bool {
         return stretch;
     }
@@ -174,12 +176,33 @@ class IkConstraint implements Updatable {
     /** Applies 1 bone IK. The target is specified in the world coordinate system. */
     public static function applyOne(bone:Bone, targetX:Float, targetY:Float, compress:Bool, stretch:Bool, uniform:Bool, alpha:Float):Void {
         if (bone == null) throw new IllegalArgumentException("bone cannot be null.");
-        if (!bone.appliedValid) bone.updateAppliedTransform();
         var p:Bone = bone.parent;
-        var id:Float = 1 / (p.a * p.d - p.b * p.c);
-        var x:Float = targetX - p.worldX; var y:Float = targetY - p.worldY;
-        var tx:Float = (x * p.d - y * p.b) * id - bone.ax; var ty:Float = (y * p.a - x * p.c) * id - bone.ay;
-        var rotationIK:Float = atan2(ty, tx) * radDeg - bone.ashearX - bone.arotation;
+        var pa:Float = p.a; var pb:Float = p.b; var pc:Float = p.c; var pd:Float = p.d;
+        var rotationIK:Float = -bone.ashearX - bone.arotation; var tx:Float = 0; var ty:Float = 0;
+        var _continueAfterSwitch1 = false; while(true) { var _switchCond1 = (bone.data.transformMode); {
+        if (_switchCond1 == onlyTranslation) {
+            tx = targetX - bone.worldX;
+            ty = targetY - bone.worldY;
+            break;
+        } else if (_switchCond1 == noRotationOrReflection) {
+            var s:Float = Math.abs(pa * pd - pb * pc) / (pa * pa + pc * pc);
+            var sa:Float = pa / bone.skeleton.scaleX;
+            var sc:Float = pc / bone.skeleton.scaleY;
+            pb = -sc * s * bone.skeleton.scaleX;
+            pd = sa * s * bone.skeleton.scaleY;
+            rotationIK += atan2(sc, sa) * radDeg;
+            // Fall through.
+            var x:Float = targetX - p.worldX; var y:Float = targetY - p.worldY;
+            var d:Float = pa * pd - pb * pc;
+            tx = (x * pd - y * pb) / d - bone.ax;
+            ty = (y * pa - x * pc) / d - bone.ay;
+        } else {
+            var x:Float = targetX - p.worldX; var y:Float = targetY - p.worldY;
+            var d:Float = pa * pd - pb * pc;
+            tx = (x * pd - y * pb) / d - bone.ax;
+            ty = (y * pa - x * pc) / d - bone.ay;
+        } } break; }
+        rotationIK += atan2(ty, tx) * radDeg;
         if (bone.ascaleX < 0) rotationIK += 180;
         if (rotationIK > 180)
             rotationIK -= 360;
@@ -187,6 +210,14 @@ class IkConstraint implements Updatable {
             rotationIK += 360;
         var sx:Float = bone.ascaleX; var sy:Float = bone.ascaleY;
         if (compress || stretch) {
+            var _continueAfterSwitch2 = false; while(true) { var _switchCond2 = (bone.data.transformMode); {
+            if (_switchCond2 == noScale) {
+                    tx = targetX - bone.worldX;
+                ty = targetY - bone.worldY;
+            } else if (_switchCond2 == noScaleOrReflection) {
+                tx = targetX - bone.worldX;
+                ty = targetY - bone.worldY;
+            } } break; }
             var b:Float = bone.data.length * sx; var dd:Float = Math.sqrt(tx * tx + ty * ty);
             if ((compress && dd < b) || (stretch && dd > b) && b > 0.0001) {
                 var s:Float = (dd / b - 1) * alpha + 1;
@@ -199,16 +230,10 @@ class IkConstraint implements Updatable {
 
     /** Applies 2 bone IK. The target is specified in the world coordinate system.
      * @param child A direct descendant of the parent bone. */
-    public static function apply(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, stretch:Bool, softness:Float, alpha:Float):Void {
+    public static function apply(parent:Bone, child:Bone, targetX:Float, targetY:Float, bendDir:Int, stretch:Bool, uniform:Bool, softness:Float, alpha:Float):Void {
         if (parent == null) throw new IllegalArgumentException("parent cannot be null.");
         if (child == null) throw new IllegalArgumentException("child cannot be null.");
-        if (alpha == 0) {
-            child.updateWorldTransform();
-            return;
-        }
-        if (!parent.appliedValid) parent.updateAppliedTransform();
-        if (!child.appliedValid) child.updateAppliedTransform();
-        var px:Float = parent.ax; var py:Float = parent.ay; var psx:Float = parent.ascaleX; var sx:Float = psx; var psy:Float = parent.ascaleY; var csx:Float = child.ascaleX;
+        var px:Float = parent.ax; var py:Float = parent.ay; var psx:Float = parent.ascaleX; var psy:Float = parent.ascaleY; var sx:Float = psx; var sy:Float = psy; var csx:Float = child.ascaleX;
         var os1:Int = 0; var os2:Int = 0; var s2:Int = 0;
         if (psx < 0) {
             psx = -psx;
@@ -229,7 +254,7 @@ class IkConstraint implements Updatable {
             os2 = 0;
         var cx:Float = child.ax; var cy:Float = 0; var cwx:Float = 0; var cwy:Float = 0; var a:Float = parent.a; var b:Float = parent.b; var c:Float = parent.c; var d:Float = parent.d;
         var u:Bool = Math.abs(psx - psy) <= 0.0001;
-        if (!u) {
+        if (!u || stretch) {
             cy = 0;
             cwx = a * cx + parent.worldX;
             cwy = c * cx + parent.worldY;
@@ -256,7 +281,7 @@ class IkConstraint implements Updatable {
         var tx:Float = (x * d - y * b) * id - px; var ty:Float = (y * a - x * c) * id - py;
         var dd:Float = tx * tx + ty * ty;
         if (softness != 0) {
-            softness *= psx * (csx + 1) / 2;
+            softness *= psx * (csx + 1) * 0.5;
             var td:Float = Math.sqrt(dd); var sd:Float = td - l1 - l2 * psx + softness;
             if (sd > 0) {
                 var p:Float = MathUtils.min(1, Std.int(sd / (softness * 2))) - 1;
@@ -270,13 +295,19 @@ class IkConstraint implements Updatable {
         if (u) {
             l2 *= psx;
             var cos:Float = (dd - l1 * l1 - l2 * l2) / (2 * l1 * l2);
-            if (cos < -1)
+            if (cos < -1) {
                 cos = -1;
-            else if (cos > 1) {
+                a2 = PI * bendDir;
+            } else if (cos > 1) {
                 cos = 1;
-                if (stretch) sx *= (Math.sqrt(dd) / (l1 + l2) - 1) * alpha + 1;
-            }
-            a2 = Math.acos(cos) * bendDir;
+                a2 = 0;
+                if (stretch) {
+                    a = (Math.sqrt(dd) / (l1 + l2) - 1) * alpha + 1;
+                    sx *= a;
+                    if (uniform) sy *= a;
+                }
+            } else
+                a2 = Math.acos(cos) * bendDir;
             a = l1 + l2 * cos;
             b = l2 * sin(a2);
             a1 = atan2(ty * a - tx * b, tx * a + ty * b);
@@ -290,7 +321,7 @@ class IkConstraint implements Updatable {
             if (d >= 0) {
                 var q:Float = Math.sqrt(d);
                 if (c1 < 0) q = -q;
-                q = -(c1 + q) / 2;
+                q = -(c1 + q) * 0.5;
                 var r0:Float = q / c2; var r1:Float = c / q;
                 var r:Float = Math.abs(r0) < Math.abs(r1) ? r0 : r1;
                 if (r * r <= dd) {
@@ -321,7 +352,7 @@ class IkConstraint implements Updatable {
                     maxY = y;
                 }
             }
-            if (dd <= (minDist + maxDist) / 2) {
+            if (dd <= (minDist + maxDist) * 0.5) {
                 a1 = ta - atan2(minY * bendDir, minX);
                 a2 = minAngle * bendDir;
             } else {
@@ -334,13 +365,15 @@ class IkConstraint implements Updatable {
         a1 = (a1 - os) * radDeg + os1 - rotation;
         if (a1 > 180)
             a1 -= 360;
-        else if (a1 < -180) a1 += 360;
-        parent.updateWorldTransformWithData(px, py, rotation + a1 * alpha, sx, parent.ascaleY, 0, 0);
+        else if (a1 < -180) //
+            a1 += 360;
+        parent.updateWorldTransformWithData(px, py, rotation + a1 * alpha, sx, sy, 0, 0);
         rotation = child.arotation;
         a2 = ((a2 + os) * radDeg - child.ashearX) * s2 + os2 - rotation;
         if (a2 > 180)
             a2 -= 360;
-        else if (a2 < -180) a2 += 360;
+        else if (a2 < -180) //
+            a2 += 360;
         child.updateWorldTransformWithData(cx, cy, rotation + a2 * alpha, child.ascaleX, child.ascaleY, child.ashearX, child.ashearY);
     }
 }

@@ -88,4 +88,10 @@ abstract FloatArray(std.Array<Float>) from std.Array<Float> to std.Array<Float> 
         return item;
     }
 
+    public static function fill(array:FloatArray, fromIndex:Int, toIndex:Int, val:Float) {
+        for (i in fromIndex...toIndex) {
+            array.unsafeSet(i, val);
+        }
+    }
+
 }

@@ -12,9 +12,9 @@ For the official legal terms governing the Spine Runtimes, please read the [Spin
 
 ## Spine version
 
-spine-hx works with data exported from Spine 3.8.xx.
+spine-hx works with data exported from Spine 4.0.xx.
 
-spine-hx supports all Spine features until 3.8.xx.
+spine-hx supports all Spine features until 4.0.xx.
 
 spine-hx does support loading the binary format.
 
@@ -42,5 +42,5 @@ Warning: haxe 3.4.7 should be used for conversion, for now.
 
 [@Beeblerox](https://github.com/Beeblerox) who provided a manually converted SkeletonBinary.hx file (from C# code base)
 
-⚠️ SkeletonBinary is not available on runtime 3.8 yet
+⚠️ SkeletonBinary is not available on runtime 4.0 yet
 

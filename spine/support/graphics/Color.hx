@@ -57,6 +57,22 @@ class Color {
         return new Color(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
     }
 
+    public static function valueOfIntoColor(hex:String, intoColor:Color):Color {
+        hex = hex.charAt(0) == '#' ? hex.substring(1) : hex;
+        hex = hex.substr(0, 2) == '0x' ? hex.substring(2) : hex;
+        var r:Float = Std.parseInt('0x' + hex.substring(0, 2));
+        var g:Float = Std.parseInt('0x' + hex.substring(2, 4));
+        var b:Float = Std.parseInt('0x' + hex.substring(4, 6));
+        var a:Float = hex.length != 8 ? 255 : Std.parseInt('0x' + hex.substring(6, 8));
+        if (intoColor == null) {
+            intoColor = new Color(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
+        }
+        else {
+            intoColor.set(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
+        }
+        return intoColor;
+    }
+
     public var r:Float;
     public var g:Float;
     public var b:Float;
@@ -77,11 +93,18 @@ class Color {
         return this;
     }
     
-    inline public function set(r:Float, g:Float, b:Float, a:Float = -1):Color {
+    inline public function set(r:Float, g:Float, b:Float, a:Float):Color {
         this.r = r;
         this.g = g;
         this.b = b;
-        if (a != -1) this.a = a;
+        this.a = a;
+        return this;
+    }
+    
+    inline public function setRGB(r:Float, g:Float, b:Float):Color {
+        this.r = r;
+        this.g = g;
+        this.b = b;
         return this;
     }
     

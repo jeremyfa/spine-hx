@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,22 +15,23 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
 
 import spine.support.graphics.Color;
 import spine.support.utils.FloatArray;
+
 
 import spine.Animation.DeformTimeline;
 import spine.attachments.Attachment;
@@ -42,10 +43,13 @@ import spine.attachments.VertexAttachment;
 class Slot {
     public var data:SlotData;
     public var bone:Bone;
-    public var color:Color = new Color(); public var darkColor:Color = null;
+    public var color:Color = new Color();
+    public var darkColor:Color;
     public var attachment:Attachment;
     private var attachmentTime:Float = 0;
     private var deform:FloatArray = new FloatArray();
+
+    public var attachmentState:Int = 0;
 
     public function new(data:SlotData, bone:Bone) {
         if (data == null) throw new IllegalArgumentException("data cannot be null.");
@@ -101,13 +105,17 @@ class Slot {
         return attachment;
     }
 
-    /** Sets the slot's attachment and, if the attachment changed, resets {@link #attachmentTime} and clears {@link #deform}.
-     * @param attachment May be null. */
+    /** Sets the slot's attachment and, if the attachment changed, resets {@link #attachmentTime} and clears the {@link #deform}.
+     * The deform is not cleared if the old attachment has the same {@link VertexAttachment#getDeformAttachment()} as the specified
+     * attachment. */
     #if !spine_no_inline inline #end public function setAttachment(attachment:Attachment):Void {
         if (this.attachment == attachment) return;
+        if (!(#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(attachment, VertexAttachment)) || !(#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(this.attachment, VertexAttachment))
+            || (fastCast(attachment, VertexAttachment)).getDeformAttachment() != (fastCast(this.attachment, VertexAttachment)).getDeformAttachment()) {
+            deform.clear();
+        }
         this.attachment = attachment;
         attachmentTime = bone.skeleton.time;
-        deform.clear();
     }
 
     /** The time that has elapsed since the last time the attachment was set or cleared. Relies on Skeleton

@@ -1,4 +1,5 @@
 .DS_Store
+.haxelib
 /spine-runtimes
 /convert.js
 node_modules

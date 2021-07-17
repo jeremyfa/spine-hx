@@ -4,6 +4,8 @@ interface JsonValue {
     
     function get(key:String):JsonValue;
     
+    function getAtIndex(index:Int):JsonValue;
+    
     function has(key:String):Bool;
 
     function getChild(key:String):JsonValue;
@@ -63,10 +65,18 @@ class JsonDynamic implements JsonValue {
     }
 
     public function get(key:String):JsonValue {
-        if (/*/*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array)) {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, std.Array)) {
             return null;
         } else {
             return Reflect.hasField(data, key) ? new JsonDynamic(Reflect.field(data, key)) : null;
+        }
+    }
+
+    public function getAtIndex(index:Int):JsonValue {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, std.Array)) {
+            return new JsonChild(data, index);
+        } else {
+            return null;
         }
     }
 
@@ -87,8 +97,8 @@ class JsonDynamic implements JsonValue {
     }
 
     public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
-        if (Std.isOfType(key, Int)) {
-            if (/*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array)) {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(key, Int)) {
+            if (/*#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, Array) || */#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, std.Array)) {
                 return data[key];
             } else {
                 return defaultValue;
@@ -138,11 +148,11 @@ class JsonDynamic implements JsonValue {
     }
 
     public function isString():Bool {
-        return Std.isOfType(data, String);
+        return #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, String);
     }
 
     public function isArray():Bool{
-        return /*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array);
+        return /*#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, Array) || */#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, std.Array);
     }
 
     public var next(get,never):JsonValue;
@@ -157,7 +167,7 @@ class JsonDynamic implements JsonValue {
 
     public var size(get,never):Int;
     function get_size():Int {
-        if (/*Std.isOfType(data, Array) || */Std.isOfType(data, std.Array)) {
+        if (/*#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, Array) || */#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data, std.Array)) {
             return data.length;
         }
         return Reflect.fields(data).length;
@@ -169,7 +179,7 @@ class JsonDynamic implements JsonValue {
         if (item == null) {
             return null;
         }
-        else if (/*Std.isOfType(item, Array) || */Std.isOfType(item, std.Array)) {
+        else if (/*#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(item, Array) || */#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(item, std.Array)) {
             return new JsonChild(item, 0);
         }
         else {
@@ -216,6 +226,14 @@ class JsonChild implements JsonValue {
         return Reflect.hasField(data[index], key) ? new JsonDynamic(Reflect.field(data[index], key)) : null;
     }
 
+    public function getAtIndex(idx:Int):JsonValue {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data[index], std.Array)) {
+            return new JsonChild(data[index], idx);
+        } else {
+            return null;
+        }
+    }
+
     public function getChild(key:String):JsonValue {
         var item:Dynamic = Reflect.field(data[index], key);
         if (item == null) return null;
@@ -227,8 +245,8 @@ class JsonChild implements JsonValue {
     }
 
     public function getFloat(key:Either<Int,String>, defaultValue:Float = 0):Float {
-        if (Std.isOfType(key, Int)) {
-            if (Std.isOfType(data[index], std.Array)) {
+        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(key, Int)) {
+            if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data[index], std.Array)) {
                 return getByIndex()[key];
             } else {
                 return 0;
@@ -260,11 +278,11 @@ class JsonChild implements JsonValue {
     }
 
     public function isString():Bool {
-        return Std.isOfType(data[index], String);
+        return #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data[index], String);
     }
 
     public function isArray():Bool{
-        return Std.isOfType(data[index], std.Array);
+        return #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(data[index], std.Array);
     }
 
     public var next(get,never):JsonValue;
@@ -291,7 +309,7 @@ class JsonChild implements JsonValue {
     public function get_child():JsonValue {
         var item:Dynamic = data[index];
         if (item == null) return null;
-        else if (Std.isOfType(item, std.Array)) {
+        else if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(item, std.Array)) {
             return new JsonChild(item, 0);
         }
         else {

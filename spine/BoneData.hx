@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,21 +15,22 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
 
 import spine.support.graphics.Color;
+
 
 /** Stores the setup pose for a {@link Bone}. */
 class BoneData {
@@ -44,7 +45,6 @@ class BoneData {
     // Nonessential.
     public var color:Color = new Color(0.61, 0.61, 0.61, 1); // 9b9b9bff
 
-    /** @param parent May be null. */
     public function new(index:Int, name:String, parent:BoneData) {
         if (index < 0) throw new IllegalArgumentException("index must be >= 0.");
         if (name == null) throw new IllegalArgumentException("name cannot be null.");
@@ -53,8 +53,7 @@ class BoneData {
         this.parent = parent;
     }
 
-    /** Copy constructor.
-     * @param parent May be null. */
+    /** Copy constructor. */
     /*public function new(bone:BoneData, parent:BoneData) {
         if (bone == null) throw new IllegalArgumentException("bone cannot be null.");
         index = bone.index;
@@ -80,7 +79,6 @@ class BoneData {
         return name;
     }
 
-    /** @return May be null. */
     #if !spine_no_inline inline #end public function getParent():BoneData {
         return parent;
     }
@@ -179,7 +177,8 @@ class BoneData {
 
     /** When true, {@link Skeleton#updateWorldTransform()} only updates this bone if the {@link Skeleton#getSkin()} contains this
      * bone.
-     * @see Skin#getBones() */
+     * <p>
+     * See {@link Skin#getBones()}. */
     #if !spine_no_inline inline #end public function getSkinRequired():Bool {
         return skinRequired;
     }
@@ -188,7 +187,7 @@ class BoneData {
         this.skinRequired = skinRequired;
     }
 
-    /** The color of the bone as it was in Spine. Available only when nonessential data was exported. Bones are not usually
+    /** The color of the bone as it was in Spine, or a default color if nonessential data was not exported. Bones are not usually
      * rendered at runtime. */
     #if !spine_no_inline inline #end public function getColor():Color {
         return color;

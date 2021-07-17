@@ -1,8 +1,8 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated May 1, 2019. Replaces all prior versions.
+ * Last updated January 1, 2020. Replaces all prior versions.
  *
- * Copyright (c) 2013-2019, Esoteric Software LLC
+ * Copyright (c) 2013-2020, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
@@ -15,21 +15,22 @@
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
  *
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
- * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THE SPINE RUNTIMES ARE PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
+ * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 package spine;
 
 import spine.support.utils.Array;
+
 
 /** Stores the setup pose and all of the stateless data for a skeleton.
  * <p>
@@ -55,19 +56,22 @@ class SkeletonData {
 
     // --- Bones.
 
+    public function new() {
+        
+    }
+
     /** The skeleton's bones, sorted parent first. The root bone is always the first bone. */
     public function getBones():Array<BoneData> {
         return bones;
     }
 
     /** Finds a bone by comparing each bone's name. It is more efficient to cache the results of this method than to call it
-     * multiple times.
-     * @return May be null. */
+     * multiple times. */
     public function findBone(boneName:String):BoneData {
         if (boneName == null) throw new IllegalArgumentException("boneName cannot be null.");
-        var bones:Array<BoneData> = this.bones;
-        var i:Int = 0; var n:Int = bones.size; while (i < n) {
-            var bone:BoneData = bones.get(i);
+        var bones = this.bones.items;
+        var i:Int = 0; var n:Int = this.bones.size; while (i < n) {
+            var bone:BoneData = fastCast(bones[i], BoneData);
             if (bone.name.equals(boneName)) return bone;
         i++; }
         return null;
@@ -81,13 +85,12 @@ class SkeletonData {
     }
 
     /** Finds a slot by comparing each slot's name. It is more efficient to cache the results of this method than to call it
-     * multiple times.
-     * @return May be null. */
+     * multiple times. */
     public function findSlot(slotName:String):SlotData {
         if (slotName == null) throw new IllegalArgumentException("slotName cannot be null.");
-        var slots:Array<SlotData> = this.slots;
-        var i:Int = 0; var n:Int = slots.size; while (i < n) {
-            var slot:SlotData = slots.get(i);
+        var slots = this.slots.items;
+        var i:Int = 0; var n:Int = this.slots.size; while (i < n) {
+            var slot:SlotData = fastCast(slots[i], SlotData);
             if (slot.name.equals(slotName)) return slot;
         i++; }
         return null;
@@ -97,20 +100,17 @@ class SkeletonData {
 
     /** The skeleton's default skin. By default this skin contains all attachments that were not in a skin in Spine.
      * <p>
-     * See {@link Skeleton#getAttachment(int, String)}.
-     * @return May be null. */
+     * See {@link Skeleton#getAttachment(int, String)}. */
     #if !spine_no_inline inline #end public function getDefaultSkin():Skin {
         return defaultSkin;
     }
 
-    /** @param defaultSkin May be null. */
     public function setDefaultSkin(defaultSkin:Skin):Void {
         this.defaultSkin = defaultSkin;
     }
 
     /** Finds a skin by comparing each skin's name. It is more efficient to cache the results of this method than to call it
-     * multiple times.
-     * @return May be null. */
+     * multiple times. */
     public function findSkin(skinName:String):Skin {
         if (skinName == null) throw new IllegalArgumentException("skinName cannot be null.");
         for (skin in skins) {
@@ -126,8 +126,7 @@ class SkeletonData {
     // --- Events.
 
     /** Finds an event by comparing each events's name. It is more efficient to cache the results of this method than to call it
-     * multiple times.
-     * @return May be null. */
+     * multiple times. */
     public function findEvent(eventDataName:String):EventData {
         if (eventDataName == null) throw new IllegalArgumentException("eventDataName cannot be null.");
         for (eventData in events) {
@@ -148,13 +147,12 @@ class SkeletonData {
     }
 
     /** Finds an animation by comparing each animation's name. It is more efficient to cache the results of this method than to
-     * call it multiple times.
-     * @return May be null. */
+     * call it multiple times. */
     public function findAnimation(animationName:String):Animation {
         if (animationName == null) throw new IllegalArgumentException("animationName cannot be null.");
-        var animations:Array<Animation> = this.animations;
-        var i:Int = 0; var n:Int = animations.size; while (i < n) {
-            var animation:Animation = animations.get(i);
+        var animations = this.animations.items;
+        var i:Int = 0; var n:Int = this.animations.size; while (i < n) {
+            var animation:Animation = fastCast(animations[i], Animation);
             if (animation.name.equals(animationName)) return animation;
         i++; }
         return null;
@@ -168,13 +166,12 @@ class SkeletonData {
     }
 
     /** Finds an IK constraint by comparing each IK constraint's name. It is more efficient to cache the results of this method
-     * than to call it multiple times.
-     * @return May be null. */
+     * than to call it multiple times. */
     public function findIkConstraint(constraintName:String):IkConstraintData {
         if (constraintName == null) throw new IllegalArgumentException("constraintName cannot be null.");
-        var ikConstraints:Array<IkConstraintData> = this.ikConstraints;
-        var i:Int = 0; var n:Int = ikConstraints.size; while (i < n) {
-            var constraint:IkConstraintData = ikConstraints.get(i);
+        var ikConstraints = this.ikConstraints.items;
+        var i:Int = 0; var n:Int = this.ikConstraints.size; while (i < n) {
+            var constraint:IkConstraintData = fastCast(ikConstraints[i], IkConstraintData);
             if (constraint.name.equals(constraintName)) return constraint;
         i++; }
         return null;
@@ -188,13 +185,12 @@ class SkeletonData {
     }
 
     /** Finds a transform constraint by comparing each transform constraint's name. It is more efficient to cache the results of
-     * this method than to call it multiple times.
-     * @return May be null. */
+     * this method than to call it multiple times. */
     public function findTransformConstraint(constraintName:String):TransformConstraintData {
         if (constraintName == null) throw new IllegalArgumentException("constraintName cannot be null.");
-        var transformConstraints:Array<TransformConstraintData> = this.transformConstraints;
-        var i:Int = 0; var n:Int = transformConstraints.size; while (i < n) {
-            var constraint:TransformConstraintData = transformConstraints.get(i);
+        var transformConstraints = this.transformConstraints.items;
+        var i:Int = 0; var n:Int = this.transformConstraints.size; while (i < n) {
+            var constraint:TransformConstraintData = fastCast(transformConstraints[i], TransformConstraintData);
             if (constraint.name.equals(constraintName)) return constraint;
         i++; }
         return null;
@@ -208,13 +204,12 @@ class SkeletonData {
     }
 
     /** Finds a path constraint by comparing each path constraint's name. It is more efficient to cache the results of this method
-     * than to call it multiple times.
-     * @return May be null. */
+     * than to call it multiple times. */
     public function findPathConstraint(constraintName:String):PathConstraintData {
         if (constraintName == null) throw new IllegalArgumentException("constraintName cannot be null.");
-        var pathConstraints:Array<PathConstraintData> = this.pathConstraints;
-        var i:Int = 0; var n:Int = pathConstraints.size; while (i < n) {
-            var constraint:PathConstraintData = pathConstraints.get(i);
+        var pathConstraints = this.pathConstraints.items;
+        var i:Int = 0; var n:Int = this.pathConstraints.size; while (i < n) {
+            var constraint:PathConstraintData = fastCast(pathConstraints[i], PathConstraintData);
             if (constraint.name.equals(constraintName)) return constraint;
         i++; }
         return null;
@@ -222,13 +217,12 @@ class SkeletonData {
 
     // ---
 
-    /** The skeleton's name, which by default is the name of the skeleton data file, if possible.
-     * @return May be null. */
+    /** The skeleton's name, which by default is the name of the skeleton data file when possible, or null when a name hasn't been
+     * set. */
     #if !spine_no_inline inline #end public function getName():String {
         return name;
     }
 
-    /** @param name May be null. */
     #if !spine_no_inline inline #end public function setName(name:String):Void {
         this.name = name;
     }
@@ -274,45 +268,38 @@ class SkeletonData {
         return version;
     }
 
-    /** @param version May be null. */
     #if !spine_no_inline inline #end public function setVersion(version:String):Void {
         this.version = version;
     }
 
-    /** The skeleton data hash. This value will change if any of the skeleton data has changed.
-     * @return May be null. */
+    /** The skeleton data hash. This value will change if any of the skeleton data has changed. */
     #if !spine_no_inline inline #end public function getHash():String {
         return hash;
     }
 
-    /** @param hash May be null. */
     #if !spine_no_inline inline #end public function setHash(hash:String):Void {
         this.hash = hash;
     }
 
-    /** The path to the images directory as defined in Spine. Available only when nonessential data was exported.
-     * @return May be null. */
+    /** The path to the images directory as defined in Spine, or null if nonessential data was not exported. */
     #if !spine_no_inline inline #end public function getImagesPath():String {
         return imagesPath;
     }
 
-    /** @param imagesPath May be null. */
     #if !spine_no_inline inline #end public function setImagesPath(imagesPath:String):Void {
         this.imagesPath = imagesPath;
     }
 
-    /** The path to the audio directory as defined in Spine. Available only when nonessential data was exported.
-     * @return May be null. */
+    /** The path to the audio directory as defined in Spine, or null if nonessential data was not exported. */
     #if !spine_no_inline inline #end public function getAudioPath():String {
         return audioPath;
     }
 
-    /** @param audioPath May be null. */
     #if !spine_no_inline inline #end public function setAudioPath(audioPath:String):Void {
         this.audioPath = audioPath;
     }
 
-    /** The dopesheet FPS in Spine. Available only when nonessential data was exported. */
+    /** The dopesheet FPS in Spine, or zero if nonessential data was not exported. */
     #if !spine_no_inline inline #end public function getFps():Float {
         return fps;
     }
@@ -324,6 +311,4 @@ class SkeletonData {
     #if !spine_no_inline inline #end public function toString():String {
         return name != null ? name : Type.getClassName(Type.getClass(this));
     }
-
-    public function new() {}
 }
