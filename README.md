@@ -36,7 +36,7 @@ haxe convert.hxml
 
 Every file of the runtime is converted automatically, except the files located inside ``support/`` directory and ``SkeletonBinary.hx``.
 
-Warning: haxe 3.4.7 should be used for conversion, for now.
+Warning: haxe 3.4.7 should be used for conversion (this is only a requirement for conversion: generated runtime is compatible with all recent haxe version including 4.0 and above).
 
 ## Thanks to
 
