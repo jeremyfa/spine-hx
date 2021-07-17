@@ -62,7 +62,7 @@ class SkeletonBounds {
             var slot:Slot = slots.get(i);
             if (!slot.bone.active) { i++; continue; }
             var attachment:Attachment = slot.attachment;
-            if (Std.isOfType(attachment, BoundingBoxAttachment)) {
+            if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(attachment, BoundingBoxAttachment)) {
                 var boundingBox:BoundingBoxAttachment = fastCast(attachment, BoundingBoxAttachment);
                 boundingBoxes.add(boundingBox);
 

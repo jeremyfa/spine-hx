@@ -236,7 +236,7 @@ class AnimationState {
                 var ii:Int = 0; while (ii < timelineCount) {
                     var timeline:Timeline = fastCast(timelines[ii], Timeline);
                     var timelineBlend:MixBlend = (timelineMode[ii] & NOT_LAST - 1) == SUBSEQUENT ? blend : MixBlend.setup;
-                    if (Std.isOfType(timeline, RotateTimeline)) {
+                    if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, RotateTimeline)) {
                         applyRotateTimeline(fastCast(timeline, RotateTimeline), skeleton, animationTime, mix, timelineBlend, timelinesRotation,
                             ii << 1, firstFrame);
                     } else
@@ -294,11 +294,11 @@ class AnimationState {
                 var _continueAfterSwitch0 = false; while(true) { var _switchCond0 = (timelineMode[i] & NOT_LAST - 1); {
                 if (_switchCond0 == SUBSEQUENT) {
                     timelineBlend = blend;
-                    if (!attachments && Std.isOfType(timeline, AttachmentTimeline)) {
+                    if (!attachments && #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, AttachmentTimeline)) {
                         if ((timelineMode[i] & NOT_LAST) == NOT_LAST) { _continueAfterSwitch0 = true; break; }
                         timelineBlend = MixBlend.setup;
                     }
-                    if (!drawOrder && Std.isOfType(timeline, DrawOrderTimeline)) { _continueAfterSwitch0 = true; break; }
+                    if (!drawOrder && #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, DrawOrderTimeline)) { _continueAfterSwitch0 = true; break; }
                     alpha = alphaMix;
                     break;
                 } else if (_switchCond0 == FIRST) {
@@ -316,14 +316,14 @@ class AnimationState {
                     break;
                 } } break; } if (_continueAfterSwitch0) { i++; continue; }
                 from.totalAlpha += alpha;
-                if (Std.isOfType(timeline, RotateTimeline)) {
+                if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, RotateTimeline)) {
                     applyRotateTimeline(fastCast(timeline, RotateTimeline), skeleton, animationTime, alpha, timelineBlend, timelinesRotation,
                         i << 1, firstFrame);
                 } else {
                     if (timelineBlend == MixBlend.setup) {
-                        if (Std.isOfType(timeline, AttachmentTimeline)) {
+                        if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, AttachmentTimeline)) {
                             if (attachments || (timelineMode[i] & NOT_LAST) == NOT_LAST) direction = MixDirection.directionIn;
-                        } else if (Std.isOfType(timeline, DrawOrderTimeline)) {
+                        } else if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, DrawOrderTimeline)) {
                             if (drawOrder) direction = MixDirection.directionIn;
                         }
                     }
@@ -751,8 +751,8 @@ class AnimationState {
             var id:Int = timeline.getPropertyId();
             if (!propertyIDs.add(id))
                 timelineMode[i] = SUBSEQUENT;
-            else if (to == null || Std.isOfType(timeline, AttachmentTimeline) || Std.isOfType(timeline, DrawOrderTimeline)
-                || Std.isOfType(timeline, EventTimeline) || !to.animation.hasTimeline(id)) {
+            else if (to == null || #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, AttachmentTimeline) || #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, DrawOrderTimeline)
+                || #if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timeline, EventTimeline) || !to.animation.hasTimeline(id)) {
                 timelineMode[i] = FIRST;
             } else {
                 var next:TrackEntry = to.mixingTo; while (next != null) {
@@ -776,7 +776,7 @@ class AnimationState {
         var propertyIDs:IntSet = this.propertyIDs;
 
         var i:Int = 0; while (i < timelinesCount) {
-            if (Std.isOfType(timelines[i], AttachmentTimeline)) {
+            if (#if (haxe_ver >= 4.0) Std.isOfType #else Std.is #end(timelines[i], AttachmentTimeline)) {
                 var timeline:AttachmentTimeline = fastCast(timelines[i], AttachmentTimeline);
                 if (!propertyIDs.add(timeline.slotIndex)) timelineMode[i] |= NOT_LAST;
             }
