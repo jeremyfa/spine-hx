@@ -22,8 +22,8 @@ class ArrayExtensions<T> {
         array.splice(index, 1);
     }
 
-    #if !debug inline #end public static function unsafeGet<T>(array:Array<T>, index:Int):T {
-#if debug
+    #if !spine_debug_unsafe inline #end public static function unsafeGet<T>(array:Array<T>, index:Int):T {
+#if spine_debug_unsafe
         if (index < 0 || index >= array.length) throw 'Invalid unsafeGet: index=$index length=${array.length}';
 #end
 #if cpp
@@ -33,8 +33,8 @@ class ArrayExtensions<T> {
 #end
     }
 
-    #if !debug inline #end public static function unsafeSet<T>(array:Array<T>, index:Int, value:T):Void {
-#if debug
+    #if !spine_debug_unsafe inline #end public static function unsafeSet<T>(array:Array<T>, index:Int, value:T):Void {
+#if spine_debug_unsafe
         if (index < 0 || index >= array.length) throw 'Invalid unsafeSet: index=$index length=${array.length}';
 #end
 #if cpp

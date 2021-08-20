@@ -220,7 +220,7 @@ using StringTools;
         controls.set('true', true);
         controls.set('false', true);
         controls.set('break', true);
-        
+
         // Stub
         var consumeExpression = function(?options:{
             ?varType:String,
@@ -296,7 +296,7 @@ using StringTools;
                 after = haxe.substring(i);
                 c = haxe.charAt(i);
                 cc = c + (i < len ? after.charAt(1) : '');
-                
+
                 if (cleanedHaxeInSingleLineComment) {
                     if (c == "\n") {
                         cleanedHaxeInSingleLineComment = false;
@@ -373,7 +373,7 @@ using StringTools;
 
             c = after.charAt(0);
             cc = c + (i < len ? after.charAt(1) : '');
-            
+
             if (i > 0) {
                 pc = java.charAt(i - 1);
             }
@@ -435,7 +435,7 @@ using StringTools;
                 case 'boolean': 'Bool';
                 case 'Object': 'Dynamic';
                 case 'boolean[]': 'BooleanArray';
-                case 'Array': 'Array<Dynamic>';
+                case 'Array': 'Array<Any>';
                 default: null;
             }
             if (type == null) {
@@ -1109,7 +1109,7 @@ using StringTools;
                     }
                     else if (word == 'new') {
                         if (RE_NEW_INSTANCE.match(after)) {
-                            
+
                             openParens++;
                             i += RE_NEW_INSTANCE.matched(0).length;
 
@@ -1158,7 +1158,7 @@ using StringTools;
 
                             openBrackets++;
                             i += RE_NEW_ARRAY.matched(0).length;
-                            
+
                             var arrayType = RE_NEW_ARRAY.matched(1).charAt(0).toUpperCase() + RE_NEW_ARRAY.matched(1).substring(1);
                             var index = haxe.length;
                             var part1:String = '';
@@ -1325,7 +1325,7 @@ using StringTools;
                         haxe += c;
 
                         consumeExpression({ until: ')' });
-                        
+
                         haxe += ';';
                         i++;
 
@@ -1505,7 +1505,7 @@ using StringTools;
                                 }
                                 item.depth--;
                             }
-                            
+
                         }
                         else {
                             i += word.length;
@@ -1923,7 +1923,7 @@ using StringTools;
                         }
 
                         var modifiers = convertModifiers(RE_PROPERTY.matched(1));
-                        
+
                         var hasAccessModifier = false;
                         if (modifiers.exists('final') && modifiers.exists('static') && name.toUpperCase() == name) {
                             haxe += 'inline ';
@@ -2010,7 +2010,7 @@ using StringTools;
                         }
 
                         var modifiers = convertModifiers(RE_CONSTRUCTOR.matched(1));
-                        
+
                         if (modifiers.exists('public')) {
                             haxe += 'public ';
                         }
@@ -2092,7 +2092,7 @@ using StringTools;
                         if (!inInterface && !noInlineNames.exists(name)) {
                             haxe += '#if !spine_no_inline inline #end ';
                         }
-                        
+
                         var hasAccessModifier = false;
                         if (!inInterface && modifiers.exists('public')) {
                             haxe += 'public ';
@@ -2163,7 +2163,7 @@ using StringTools;
                 if (!RE_IMPORT.match(after)) {
                     fail('Failed to parse import');
                 }
-                
+
                 // Import replaces
                 var pack = RE_IMPORT.matched(2);
                 pack = replaceStart(pack, 'com.esotericsoftware.spine.', 'spine.');
@@ -2254,7 +2254,7 @@ using StringTools;
                 haxe += c;
                 i++;
             }
-        
+
         }
 
         // Convert tabs to spaces
@@ -2481,7 +2481,7 @@ using StringTools;
                 if (!inSub) {
                     if (line.startsWith('    ') && RE_HAXE_DECL.match(line.substring(4))) {
                         inSub = true;
-                        
+
                         // Check if previous lines should be in sub as well
                         var prevLines = [];
                         while (mainLines.length >= 0 && cleanedCode(mainLines[mainLines.length-1], { canBeInComment: true }).trim() == '') {
@@ -2639,7 +2639,7 @@ using StringTools;
                             // Save modified file
                             saveFile(item.filePath, lines.join("\n"));
                         }
-                        
+
                     }
                     else if (item.message.startsWith('Int should be String') && item.message.endsWith("For function argument 'key'")) {
 
@@ -2831,7 +2831,7 @@ using StringTools;
 
                         var lines = file.split("\n");
                         var line = lines[item.line - 1];
-                        
+
                         var newLine = line.replace('super.toString()', 'Type.getClassName(Type.getClass(this))');
 
                         // Add new change
@@ -2845,7 +2845,7 @@ using StringTools;
                     }
                     else if (item.message.startsWith('Unknown identifier : propertyIds')) {
                         numFixed++;
-                        
+
                         var file = getFile(item.filePath);
 
                         var lines = file.split("\n");
@@ -2898,7 +2898,7 @@ using StringTools;
 
                         var lines = file.split("\n");
                         var line = lines[item.line - 1];
-                        
+
                         var newLine = line;
                         newLine = newLine.replace('applyOne(', 'applyTwo(');
                         newLine = newLine.replace('apply(', 'applyOne(');
@@ -2958,7 +2958,7 @@ using StringTools;
                     }
                     else if (item.message.startsWith('String should be spine.support.utils.StringArray')) {
                         numFixed++;
-                        
+
                         var file = getFile(item.filePath);
 
                         var lines = file.split("\n");
@@ -2979,7 +2979,7 @@ using StringTools;
                     }
                     else if (item.message.startsWith('Unexpected )')) {
                         numFixed++;
-                        
+
                         var file = getFile(item.filePath);
 
                         var lines = file.split("\n");
@@ -2996,7 +2996,7 @@ using StringTools;
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
-                    } 
+                    }
                     else if (item.message.startsWith('Float should be spine.Bone')) {
                         numFixed++;
 
@@ -3004,7 +3004,7 @@ using StringTools;
 
                         var lines = file.split("\n");
                         var line = lines[item.line - 1];
-                        
+
                         var newLine = line.replace('apply(', 'applyOne(');
 
                         // Add new change
@@ -3067,7 +3067,7 @@ using StringTools;
                         var line = lines[lineIndex];
 
                         if (line.indexOf('Mode == null)') != -1) {
-                        
+
                             var newLine = '//' + line;
 
                             // Add new change
@@ -3099,7 +3099,7 @@ using StringTools;
 
                         var lines = file.split("\n");
                         var line = lines[item.line - 1];
-                        
+
                         var newLine = line.replace('containsPoint(', 'polygonContainsPoint(');
                         newLine = newLine.replace('intersectsSegment(', 'polygonIntersectsSegment(');
 
@@ -3119,7 +3119,7 @@ using StringTools;
 
                         var lines = file.split("\n");
                         var line = lines[item.line - 1];
-                        
+
                         var newLine = line.replace('.set(', '.setColor(');
 
                         // Add new change
@@ -3420,7 +3420,7 @@ using StringTools;
                         && prevInfo.line == line
                         && prevInfo.start == start
                         && prevInfo.end == end) {
-                        
+
                         // Concatenate multiline message
                         prevInfo.message += "\n" + message;
                     }
@@ -3454,7 +3454,7 @@ using StringTools;
                         }
                         lineStr = messageLines[l];
                     }
-                    
+
                     // If all lines of message are equal, just keep one line
                     if (allLinesAreEqual) {
                         info[i].message = lineStr;
@@ -3514,7 +3514,7 @@ using StringTools;
         var result = '';
         var cleanSpaces = options != null && options.cleanSpaces ? true : false;
         var canBeInComment = options != null && options.canBeInComment ? true : false;
-        
+
         if (canBeInComment && code.ltrim().startsWith('*')) inMultiLineComment = true;
         else if (canBeInComment && code.rtrim().endsWith('*/')) inMultiLineComment = true;
 
@@ -3603,7 +3603,7 @@ using StringTools;
 
             c = after.charAt(0);
             cc = c + (i < len ? after.charAt(1) : '');
-            
+
             if (i > 0) {
                 pc = cleaned.charAt(i - 1);
             }

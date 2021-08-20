@@ -968,7 +968,7 @@ class TrackEntry implements Poolable {
         return trackEnd;
     }
 
-    public function setTrackEnd(trackEnd:Float):Void {
+    #if !spine_no_inline inline #end public function setTrackEnd(trackEnd:Float):Void {
         this.trackEnd = trackEnd;
     }
 
@@ -1237,7 +1237,7 @@ class TrackEntry implements Poolable {
 
 class EventQueue {
     private var AnimationState_this:AnimationState;
-    private var objects:Array<Dynamic> = new Array();
+    private var objects:Array<Any> = new Array();
     public var drainDisabled:Bool = false;
 
     #if !spine_no_inline inline #end public function start(entry:TrackEntry):Void {
