@@ -672,10 +672,10 @@ class AnimationState {
      * @return A track entry to allow further customization of animation playback. References to the track entry must not be kept
      *         after the {@link AnimationStateListener#dispose(TrackEntry)} event occurs. */
     #if !spine_no_inline inline #end public function addEmptyAnimation(trackIndex:Int, mixDuration:Float, delay:Float):TrackEntry {
-        var entry:TrackEntry = addAnimation(trackIndex, emptyAnimation, false, delay <= 0 ? 1 : delay);
+        var entry:TrackEntry = addAnimation(trackIndex, emptyAnimation, false, delay);
+        if (delay <= 0) entry.delay += entry.mixDuration - mixDuration;
         entry.mixDuration = mixDuration;
         entry.trackEnd = mixDuration;
-        if (delay <= 0 && entry.previous != null) entry.delay = entry.previous.getTrackComplete() - entry.mixDuration + delay;
         return entry;
     }
 
