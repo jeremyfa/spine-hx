@@ -2,12 +2,11 @@ package spine.support.extensions;
 
 class ArrayExtensions<T> {
 
-    inline static public function setSize<T>(array:Array<T>, size:Int):Array<T> {
-        var len = array.length;
-        if (len > size) {
-            array.splice(size, size - len);
+    inline static public function setSize<T>(array:Array<T>, size:Int, currentLength:Int):Array<T> {
+        if (currentLength > size) {
+            array.splice(size, size - currentLength);
         }
-        else if (len < size) {
+        else if (currentLength < size) {
             var dArray:Array<Dynamic> = array;
             dArray[size - 1] = null;
         }

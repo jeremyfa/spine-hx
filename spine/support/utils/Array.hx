@@ -56,9 +56,9 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
         return array.length;
     }
 
-    public inline static function create(length:Float = 0):Dynamic {
+    public inline static function create(length:Float = 0):Any {
         var len = Std.int(length);
-        var array = new Array<Dynamic>(len != 0 ? len : 16);
+        var array = new Array<Any>(len != 0 ? len : 16);
         if (length != 0) {
             array.setSize(len);
         }

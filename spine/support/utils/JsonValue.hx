@@ -1,11 +1,11 @@
 package spine.support.utils;
 
 interface JsonValue {
-    
+
     function get(key:String):JsonValue;
-    
+
     function getAtIndex(index:Int):JsonValue;
-    
+
     function has(key:String):Bool;
 
     function getChild(key:String):JsonValue;
@@ -55,7 +55,7 @@ class JsonDynamic implements JsonValue {
     public function new(data:Dynamic) {
         this.data = data;
     }
-    
+
     public function has(key:String):Bool {
         return get(key) != null;
     }
@@ -213,7 +213,7 @@ class JsonChild implements JsonValue {
         this.index = index;
         this.keys = keys;
     }
-    
+
     public function has(key:String):Bool {
         return get(key) != null;
     }
@@ -287,7 +287,8 @@ class JsonChild implements JsonValue {
 
     public var next(get,never):JsonValue;
     function get_next():JsonValue {
-        if (index < data.length - 1) {
+        var dataArrayAny:Array<Any> = data;
+        if (index < dataArrayAny.length - 1) {
             return new JsonChild(data, index + 1, keys);
         }
         else {

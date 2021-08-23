@@ -11,7 +11,7 @@ class SnapshotArray<T> {
     public var size(get,never):Int;
     inline function get_size():Int {
         return array.length;
-    } 
+    }
 
     public function new() {
         array = new Array();
@@ -39,8 +39,9 @@ class SnapshotArray<T> {
 
         var snapshot = snapshots[snapshotIndex];
         snapshotIndex--;
+        var len = snapshot.length;
         var dynSnapshot:Array<Dynamic> = snapshot;
-        for (i in 0...dynSnapshot.length) {
+        for (i in 0...len) {
             dynSnapshot.unsafeSet(i, null);
         }
 
