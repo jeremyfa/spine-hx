@@ -9,6 +9,9 @@ class StringExtensions {
 
     /** Hash code for mappings. */
     inline public static function getHashCode(str:String):Int {
+        #if cs
+        return untyped __cs__('{0}.GetHashCode()', str);
+        #else
         var hash = 0, chr;
         if (str.length == 0) return hash;
         for (i in 0...str.length) {
@@ -16,6 +19,7 @@ class StringExtensions {
             hash  = ((hash << 5) - hash) + chr;
         }
         return hash;
+        #end
     }
 
 }

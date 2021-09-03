@@ -5,7 +5,39 @@ abstract Array<T>(std.Array<T>) from std.Array<T> to std.Array<T> {
 
     #if cs
 
-    public static function copy(src:std.Array<Dynamic>, srcPos:Int, dest:std.Array<Dynamic>, destPos:Int, length:Int) {
+    #if (haxe_ver >= 4.2)
+
+    inline extern overload public static function copy(src:std.Array<Int>, srcPos:Int, dest:std.Array<Int>, destPos:Int, length:Int) {
+        var val;
+        var srcIndex = srcPos;
+        var destIndex = destPos;
+        var end = length + srcPos;
+        while (srcIndex < end) {
+            //dest[i + destPos] = src[i + srcPos];
+            val = src.unsafeGet(srcIndex);
+            dest.unsafeSet(destIndex, val);
+            srcIndex++;
+            destIndex++;
+        }
+    }
+
+    inline extern overload public static function copy(src:std.Array<Float>, srcPos:Int, dest:std.Array<Float>, destPos:Int, length:Int) {
+        var val;
+        var srcIndex = srcPos;
+        var destIndex = destPos;
+        var end = length + srcPos;
+        while (srcIndex < end) {
+            //dest[i + destPos] = src[i + srcPos];
+            val = src.unsafeGet(srcIndex);
+            dest.unsafeSet(destIndex, val);
+            srcIndex++;
+            destIndex++;
+        }
+    }
+
+    #end
+
+    #if (haxe_ver >= 4.2) inline extern overload #end public static function copy(src:std.Array<Dynamic>, srcPos:Int, dest:std.Array<Dynamic>, destPos:Int, length:Int) {
         // This could probably be improved by avoiding boxing/unboxing
         var val;
         var srcIndex = srcPos;

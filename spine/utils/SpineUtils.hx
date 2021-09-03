@@ -57,17 +57,20 @@ class SpineUtils {
         return Math.atan2(y, x);
     }
 
-    #if !spine_no_inline inline #end public static function arraycopy(src:Dynamic, srcPos:Int, dest:Dynamic, destPos:Int, length:Int):Void {
-        if (src == null) throw new IllegalArgumentException("src cannot be null.");
-        if (dest == null) throw new IllegalArgumentException("dest cannot be null.");
-        try {
-            spine.support.utils.Array.copy(src, srcPos, dest, destPos, length);
-        } catch (ex:Dynamic) {
-            throw new ArrayIndexOutOfBoundsException( //
-                "Src: " + spine.support.utils.Array.getLengthOf(src) + ", " + srcPos //
-                    + ", dest: " + spine.support.utils.Array.getLengthOf(dest) + ", " + destPos //
-                    + ", count: " + length);
-        }
+    #if (haxe_ver >= 4.2)
+
+    inline extern overload public static function arraycopy(src:std.Array<Int>, srcPos:Int, dest:std.Array<Int>, destPos:Int, length:Int):Void {
+        spine.support.utils.Array.copy(src, srcPos, dest, destPos, length);
+    }
+
+    inline extern overload public static function arraycopy(src:std.Array<Float>, srcPos:Int, dest:std.Array<Float>, destPos:Int, length:Int):Void {
+        spine.support.utils.Array.copy(src, srcPos, dest, destPos, length);
+    }
+
+    #end
+
+    inline #if (haxe_ver >= 4.2) extern overload #end public static function arraycopy(src:std.Array<Dynamic>, srcPos:Int, dest:std.Array<Dynamic>, destPos:Int, length:Int):Void {
+        spine.support.utils.Array.copy(src, srcPos, dest, destPos, length);
     }
 
     public function new() {}
