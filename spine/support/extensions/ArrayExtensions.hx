@@ -26,7 +26,11 @@ class ArrayExtensions<T> {
         if (index < 0 || index >= array.length) throw 'Invalid unsafeGet: index=$index length=${array.length}';
 #end
 #if cpp
+        #if app_cpp_nativearray_unsafe
         return cpp.NativeArray.unsafeGet(array, index);
+        #else
+        return untyped array.__unsafe_get(index);
+        #end
 #else
         return array[index];
 #end
@@ -37,7 +41,11 @@ class ArrayExtensions<T> {
         if (index < 0 || index >= array.length) throw 'Invalid unsafeSet: index=$index length=${array.length}';
 #end
 #if cpp
+        #if app_cpp_nativearray_unsafe
         cpp.NativeArray.unsafeSet(array, index, value);
+        #else
+        untyped array.__unsafe_set(index, value);
+        #end
 #else
         array[index] = value;
 #end
