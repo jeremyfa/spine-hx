@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
- 
+
 package spine.support.graphics;
 
 /******************************************************************************
@@ -113,17 +113,17 @@ class TextureAtlas
 
                     var key = reader.nextLineKey();
                     while (key != null) {
-                        
+
                         switch key {
 
                             case 'size':
                                 reader.readTuple(tuple);
                                 page.width = Std.parseInt(tuple[0]);
                                 page.height = Std.parseInt(tuple[1]);
-                            
+
                             case 'format':
                                 page.format = reader.readValue();
-                            
+
                             case 'filter':
                                 reader.readTuple(tuple);
                                 page.minFilter = tuple[0];
@@ -148,7 +148,7 @@ class TextureAtlas
                             case 'scale':
                                 reader.readTuple(tuple);
                                 page.scale = Std.parseFloat(tuple[0]);
-                            
+
                             default:
                                 reader.readLine();
 
@@ -175,8 +175,8 @@ class TextureAtlas
                     var y:Int = 0;
                     var width:Int = 0;
                     var height:Int = 0;
-                    var originalWidth:Int = -1;
-                    var originalHeight:Int = -1;
+                    var originalWidth:Int = 0;
+                    var originalHeight:Int = 0;
 
                     var key = reader.nextLineKey();
                     while (key != null) {
@@ -214,6 +214,13 @@ class TextureAtlas
                                 region.offsetX = Std.parseInt(tuple[0]);
                                 region.offsetY = Std.parseInt(tuple[1]);
 
+                            case 'offsets':
+                                reader.readTuple(tuple);
+                                region.offsetX = Std.parseInt(tuple[0]);
+                                region.offsetY = Std.parseInt(tuple[1]);
+                                originalWidth = Std.parseInt(tuple[2]);
+                                originalHeight = Std.parseInt(tuple[3]);
+
                             case 'split':
                                 reader.readTuple(tuple);
                                 region.splits = [Std.parseInt(tuple[0]), Std.parseInt(tuple[1]), Std.parseInt(tuple[2]), Std.parseInt(tuple[3])];
@@ -221,7 +228,7 @@ class TextureAtlas
                             case 'pad':
                                 reader.readTuple(tuple);
                                 region.pads = [Std.parseInt(tuple[0]), Std.parseInt(tuple[1]), Std.parseInt(tuple[2]), Std.parseInt(tuple[3])];
-                            
+
                             case 'index':
                                 region.index = Std.parseInt(reader.readValue());
 
@@ -246,19 +253,17 @@ class TextureAtlas
                     }
                     region.x = x;
                     region.y = y;
-                    region.width = cast Math.abs(width);
-                    region.height = cast Math.abs(height);
-                    region.originalWidth = originalWidth != -1 ? originalWidth : region.width;
-                    region.originalHeight = originalHeight != -1 ? originalHeight : region.height;
+                    region.width = Std.int(Math.abs(width));
+                    region.height = Std.int(Math.abs(height));
+                    region.originalWidth = originalWidth != 0 ? originalWidth : region.width;
+                    region.originalHeight = originalHeight != 0 ? originalHeight : region.height;
 
-                    //trace('region u=${region.u} v=${region.v} u2=${region.u2} v2=${region.v2}');
-                    
                     if (region.rotate) {
-                        region.packedWidth = region.originalHeight;
-                        region.packedHeight = region.originalWidth;
+                        region.packedWidth = region.height;
+                        region.packedHeight = region.width;
                     } else {
-                        region.packedWidth = region.originalWidth;
-                        region.packedHeight = region.originalHeight;
+                        region.packedWidth = region.width;
+                        region.packedHeight = region.height;
                     }
 
                     textureLoader.loadRegion(region);
@@ -393,7 +398,7 @@ class AtlasPage
     public var width:Int = 0;
     public var height:Int = 0;
     public var scale:Float = 1.0;
-    
+
     public function new()
     {
     }
