@@ -85,7 +85,7 @@ class Triangulator {
                             }
                         }
                     ii = (ii + 1) % vertexCount; } if (!_gotoLabel_outer) break; 
-				}
+                }
 
                 if (next == 0) {
                     do {
