@@ -113,20 +113,6 @@ class Triangulator {
             isConcave[previousIndex] = isGeometryConcave(previousIndex, vertexCount, vertices, indices);
             isConcave[nextIndex] = isGeometryConcave(nextIndex, vertexCount, vertices, indices);
         }
-			
-            // Cut ear tip.
-            triangles.add(indices[(vertexCount + i - 1) % vertexCount]);
-            triangles.add(indices[i]);
-            triangles.add(indices[(i + 1) % vertexCount]);
-            indicesArray.removeIndex(i);
-            isConcaveArray.removeIndex(i);
-            vertexCount--;
-
-            var previousIndex:Int = (vertexCount + i - 1) % vertexCount;
-            var nextIndex:Int = i == vertexCount ? 0 : i;
-            isConcave[previousIndex] = isGeometryConcave(previousIndex, vertexCount, vertices, indices);
-            isConcave[nextIndex] = isGeometryConcave(nextIndex, vertexCount, vertices, indices);
-        }
 
         if (vertexCount == 3) {
             triangles.add(indices[2]);
