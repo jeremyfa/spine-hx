@@ -53,7 +53,7 @@ import spine.Animation.Timeline;
  * <p>
  * See <a href='http://esotericsoftware.com/spine-applying-animations/'>Applying Animations</a> in the Spine Runtimes Guide. */
 class AnimationState {
-    private static var emptyAnimation:Animation = new Animation("<empty>", new Array(0), 0);
+    public static var emptyAnimation:Animation = new Animation("<empty>", new Array(0), 0);
 
     /** 1) A previously applied timeline has set this property.<br>
      * Result: Mix from the current pose to the timeline pose. */
@@ -349,7 +349,7 @@ class AnimationState {
                     // HOLD_MIX
                     timelineBlend = MixBlend.setup;
                     var holdMix:TrackEntry = fastCast(timelineHoldMix[i], TrackEntry);
-                    alpha = alphaHold * MathUtils.max(0, Std.int(1 - holdMix.mixTime / holdMix.mixDuration));
+                    alpha = alphaHold * MathUtils.max(0.0, 1 - holdMix.mixTime / holdMix.mixDuration);
                     break;
                 } } break; } if (_continueAfterSwitch0) { i++; continue; }
                 from.totalAlpha += alpha;
@@ -550,7 +550,7 @@ class AnimationState {
 
             // Store the interrupted mix percentage.
             if (from.mixingFrom != null && from.mixDuration > 0)
-                current.interruptAlpha *= MathUtils.min(1, Std.int(from.mixTime / from.mixDuration));
+                current.interruptAlpha *= MathUtils.min(1.0, from.mixTime / from.mixDuration);
 
             from.timelinesRotation.clear(); // Reset rotation for mixing out, in case entry was mixed in.
         }
@@ -1228,6 +1228,12 @@ class TrackEntry implements Poolable {
         return reverse;
     }
 
+    /** Returns true if this entry is for the empty animation. See {@link AnimationState#setEmptyAnimation(int, float)},
+     * {@link AnimationState#addEmptyAnimation(int, float, float)}, and {@link AnimationState#setEmptyAnimations(float)}. */
+    #if !spine_no_inline inline #end public function isEmptyAnimation():Bool {
+        return animation == AnimationState.emptyAnimation;
+    }
+
     #if !spine_no_inline inline #end public function toString():String {
         return animation == null ? "<none>" : animation.name;
     }
@@ -1346,28 +1352,37 @@ class EventQueue {
  * See TrackEntry {@link TrackEntry#setListener(AnimationStateListener)} and AnimationState
  * {@link AnimationState#addListener(AnimationStateListener)}. */
 interface AnimationStateListener {
-    /** Invoked when this entry has been set as the current entry. */
+    /** Invoked when this entry has been set as the current entry. {@link #end(TrackEntry)} will occur when this entry will no
+     * longer be applied. */
     public function start(entry:TrackEntry):Void;
 
     /** Invoked when another entry has replaced this entry as the current entry. This entry may continue being applied for
      * mixing. */
     public function interrupt(entry:TrackEntry):Void;
 
-    /** Invoked when this entry is no longer the current entry and will never be applied again. */
+    /** Invoked when this entry will never be applied again. This only occurs if this entry has previously been set as the
+     * current entry ({@link #start(TrackEntry)} was invoked). */
     public function end(entry:TrackEntry):Void;
 
     /** Invoked when this entry will be disposed. This may occur without the entry ever being set as the current entry.
+     * <p>
      * References to the entry should not be kept after <code>dispose</code> is called, as it may be destroyed or reused. */
     public function dispose(entry:TrackEntry):Void;
 
-    /** Invoked every time this entry's animation completes a loop. Because this event is trigged in
-     * {@link AnimationState#apply(Skeleton)}, any animations set in response to the event won't be applied until the next time
-     * the AnimationState is applied. */
+    /** Invoked every time this entry's animation completes a loop. This may occur during mixing (after
+     * {@link #interrupt(TrackEntry)}).
+     * <p>
+     * If this entry's {@link TrackEntry#getMixingTo()} is not null, this entry is mixing out (it is not the current entry).
+     * <p>
+     * Because this event is triggered at the end of {@link AnimationState#apply(Skeleton)}, any animations set in response to
+     * the event won't be applied until the next time the AnimationState is applied. */
     public function complete(entry:TrackEntry):Void;
 
-    /** Invoked when this entry's animation triggers an event. Because this event is trigged in
-     * {@link AnimationState#apply(Skeleton)}, any animations set in response to the event won't be applied until the next time
-     * the AnimationState is applied. */
+    /** Invoked when this entry's animation triggers an event. This may occur during mixing (after
+     * {@link #interrupt(TrackEntry)}), see {@link TrackEntry#eventThreshold}.
+     * <p>
+     * Because this event is triggered at the end of {@link AnimationState#apply(Skeleton)}, any animations set in response to
+     * the event won't be applied until the next time the AnimationState is applied. */
     public function event(entry:TrackEntry, event:Event):Void;
 }
 

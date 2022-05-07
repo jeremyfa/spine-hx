@@ -543,16 +543,17 @@ class SkeletonJson extends SkeletonLoader {
             var timelineMap:JsonValue = slotMap.child; while (timelineMap != null) {
                 var keyMap:JsonValue = timelineMap.child;
                 if (keyMap == null) { timelineMap = timelineMap.next; continue; }
-                var timelineName:String = timelineMap.name;
 
+                var frames:Int = timelineMap.size;
+                var timelineName:String = timelineMap.name;
                 if (timelineName.equals("attachment")) {
-                    var timeline:AttachmentTimeline = new AttachmentTimeline(timelineMap.size, slot.index);
+                    var timeline:AttachmentTimeline = new AttachmentTimeline(frames, slot.index);
                     var frame:Int = 0; while (keyMap != null) {
                         timeline.setFrame(frame, keyMap.getFloat("time", 0), keyMap.getString("name")); keyMap = keyMap.next; frame++; }
                     timelines.add(timeline);
 
                 } else if (timelineName.equals("rgba")) {
-                    var timeline:RGBATimeline = new RGBATimeline(timelineMap.size, timelineMap.size << 2, slot.index);
+                    var timeline:RGBATimeline = new RGBATimeline(frames, frames << 2, slot.index);
                     var time:Float = keyMap.getFloat("time", 0);
                     var color:String = keyMap.getString("color");
                     var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
@@ -589,7 +590,7 @@ class SkeletonJson extends SkeletonLoader {
                     timelines.add(timeline);
 
                 } else if (timelineName.equals("rgb")) {
-                    var timeline:RGBTimeline = new RGBTimeline(timelineMap.size, timelineMap.size * 3, slot.index);
+                    var timeline:RGBTimeline = new RGBTimeline(frames, frames * 3, slot.index);
                     var time:Float = keyMap.getFloat("time", 0);
                     var color:String = keyMap.getString("color");
                     var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
@@ -622,10 +623,10 @@ class SkeletonJson extends SkeletonLoader {
                     timelines.add(timeline);
 
                 } else if (timelineName.equals("alpha")) {
-                    timelines.add(readTimeline(keyMap, new AlphaTimeline(timelineMap.size, timelineMap.size, slot.index), 0, 1));
+                    timelines.add(readTimeline(keyMap, new AlphaTimeline(frames, frames, slot.index), 0, 1));
 
                 } else if (timelineName.equals("rgba2")) {
-                    var timeline:RGBA2Timeline = new RGBA2Timeline(timelineMap.size, timelineMap.size * 7, slot.index);
+                    var timeline:RGBA2Timeline = new RGBA2Timeline(frames, frames * 7, slot.index);
                     var time:Float = keyMap.getFloat("time", 0);
                     var color:String = keyMap.getString("light");
                     var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
@@ -676,7 +677,7 @@ class SkeletonJson extends SkeletonLoader {
                     timelines.add(timeline);
 
                 } else if (timelineName.equals("rgb2")) {
-                    var timeline:RGB2Timeline = new RGB2Timeline(timelineMap.size, timelineMap.size * 6, slot.index);
+                    var timeline:RGB2Timeline = new RGB2Timeline(frames, frames * 6, slot.index);
                     var time:Float = keyMap.getFloat("time", 0);
                     var color:String = keyMap.getString("light");
                     var r:Float = StdEx.parseInt(color.substring(0, 2), 16) / 255;
@@ -735,32 +736,31 @@ class SkeletonJson extends SkeletonLoader {
                 var keyMap:JsonValue = timelineMap.child;
                 if (keyMap == null) { timelineMap = timelineMap.next; continue; }
 
+                var frames:Int = timelineMap.size;
                 var timelineName:String = timelineMap.name;
                 if (timelineName.equals("rotate"))
-                    timelines.add(readTimeline(keyMap, new RotateTimeline(timelineMap.size, timelineMap.size, bone.index), 0, 1));
+                    timelines.add(readTimeline(keyMap, new RotateTimeline(frames, frames, bone.index), 0, 1));
                 else if (timelineName.equals("translate")) {
-                    var timeline:TranslateTimeline = new TranslateTimeline(timelineMap.size, timelineMap.size << 1, bone.index);
+                    var timeline:TranslateTimeline = new TranslateTimeline(frames, frames << 1, bone.index);
                     timelines.add(readTimeline2(keyMap, timeline, "x", "y", 0, scale));
                 } else if (timelineName.equals("translatex")) {
-                    timelines
-                        .add(readTimeline(keyMap, new TranslateXTimeline(timelineMap.size, timelineMap.size, bone.index), 0, scale));
+                    timelines.add(readTimeline(keyMap, new TranslateXTimeline(frames, frames, bone.index), 0, scale));
                 } else if (timelineName.equals("translatey")) {
-                    timelines
-                        .add(readTimeline(keyMap, new TranslateYTimeline(timelineMap.size, timelineMap.size, bone.index), 0, scale));
+                    timelines.add(readTimeline(keyMap, new TranslateYTimeline(frames, frames, bone.index), 0, scale));
                 } else if (timelineName.equals("scale")) {
-                    var timeline:ScaleTimeline = new ScaleTimeline(timelineMap.size, timelineMap.size << 1, bone.index);
+                    var timeline:ScaleTimeline = new ScaleTimeline(frames, frames << 1, bone.index);
                     timelines.add(readTimeline2(keyMap, timeline, "x", "y", 1, 1));
                 } else if (timelineName.equals("scalex"))
-                    timelines.add(readTimeline(keyMap, new ScaleXTimeline(timelineMap.size, timelineMap.size, bone.index), 1, 1));
+                    timelines.add(readTimeline(keyMap, new ScaleXTimeline(frames, frames, bone.index), 1, 1));
                 else if (timelineName.equals("scaley"))
-                    timelines.add(readTimeline(keyMap, new ScaleYTimeline(timelineMap.size, timelineMap.size, bone.index), 1, 1));
+                    timelines.add(readTimeline(keyMap, new ScaleYTimeline(frames, frames, bone.index), 1, 1));
                 else if (timelineName.equals("shear")) {
-                    var timeline:ShearTimeline = new ShearTimeline(timelineMap.size, timelineMap.size << 1, bone.index);
+                    var timeline:ShearTimeline = new ShearTimeline(frames, frames << 1, bone.index);
                     timelines.add(readTimeline2(keyMap, timeline, "x", "y", 0, 1));
                 } else if (timelineName.equals("shearx"))
-                    timelines.add(readTimeline(keyMap, new ShearXTimeline(timelineMap.size, timelineMap.size, bone.index), 0, 1));
+                    timelines.add(readTimeline(keyMap, new ShearXTimeline(frames, frames, bone.index), 0, 1));
                 else if (timelineName.equals("sheary"))
-                    timelines.add(readTimeline(keyMap, new ShearYTimeline(timelineMap.size, timelineMap.size, bone.index), 0, 1));
+                    timelines.add(readTimeline(keyMap, new ShearYTimeline(frames, frames, bone.index), 0, 1));
                 else
                     throw new RuntimeException("Invalid timeline type for a bone: " + timelineName + " (" + boneMap.name + ")");
             timelineMap = timelineMap.next; }
@@ -803,7 +803,7 @@ class SkeletonJson extends SkeletonLoader {
             var keyMap:JsonValue = timelineMap.child;
             if (keyMap == null) { timelineMap = timelineMap.next; continue; }
             var constraint:TransformConstraintData = skeletonData.findTransformConstraint(timelineMap.name);
-            var timeline:TransformConstraintTimeline = new TransformConstraintTimeline(timelineMap.size, timelineMap.size << 2,
+            var timeline:TransformConstraintTimeline = new TransformConstraintTimeline(timelineMap.size, timelineMap.size * 6,
                 skeletonData.getTransformConstraints().indexOf(constraint, true));
             var time:Float = keyMap.getFloat("time", 0);
             var mixRotate:Float = keyMap.getFloat("mixRotate", 1);
@@ -851,16 +851,18 @@ class SkeletonJson extends SkeletonLoader {
             var timelineMap:JsonValue = constraintMap.child; while (timelineMap != null) {
                 var keyMap:JsonValue = timelineMap.child;
                 if (keyMap == null) { timelineMap = timelineMap.next; continue; }
+
+                var frames:Int = timelineMap.size;
                 var timelineName:String = timelineMap.name;
                 if (timelineName.equals("position")) {
-                    var timeline:CurveTimeline1 = new PathConstraintPositionTimeline(timelineMap.size, timelineMap.size, index);
+                    var timeline:CurveTimeline1 = new PathConstraintPositionTimeline(frames, frames, index);
                     timelines.add(readTimeline(keyMap, timeline, 0, constraint.positionMode == PositionMode.fixed ? scale : 1));
                 } else if (timelineName.equals("spacing")) {
-                    var timeline:CurveTimeline1 = new PathConstraintSpacingTimeline(timelineMap.size, timelineMap.size, index);
+                    var timeline:CurveTimeline1 = new PathConstraintSpacingTimeline(frames, frames, index);
                     timelines.add(readTimeline(keyMap, timeline, 0,
                         constraint.spacingMode == SpacingMode.length || constraint.spacingMode == SpacingMode.fixed ? scale : 1));
                 } else if (timelineName.equals("mix")) {
-                    var timeline:PathConstraintMixTimeline = new PathConstraintMixTimeline(timelineMap.size, timelineMap.size * 3, index);
+                    var timeline:PathConstraintMixTimeline = new PathConstraintMixTimeline(frames, frames * 3, index);
                     var time:Float = keyMap.getFloat("time", 0);
                     var mixRotate:Float = keyMap.getFloat("mixRotate", 1);
                     var mixX:Float = keyMap.getFloat("mixX", 1); var mixY:Float = keyMap.getFloat("mixY", mixX);

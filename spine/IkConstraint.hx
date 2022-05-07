@@ -284,7 +284,7 @@ class IkConstraint implements Updatable {
             softness *= psx * (csx + 1) * 0.5;
             var td:Float = Math.sqrt(dd); var sd:Float = td - l1 - l2 * psx + softness;
             if (sd > 0) {
-                var p:Float = MathUtils.min(1, Std.int(sd / (softness * 2))) - 1;
+                var p:Float = MathUtils.min(1.0, sd / (softness * 2)) - 1;
                 p = (sd - softness * (1 - p * p)) / td;
                 tx -= p * tx;
                 ty -= p * ty;

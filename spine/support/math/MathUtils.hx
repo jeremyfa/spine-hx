@@ -49,11 +49,11 @@ class MathUtils {
     inline static public function min<T>(val1:T, val2:T):T {
         return untyped Math.min(untyped val1, untyped val2);
     }
-    
+
     #end
 
     inline static public function signum(val:Float):Int {
         return val > 0 ? 1 : val < 0 ? -1 : 0;
     }
-    
+
 }

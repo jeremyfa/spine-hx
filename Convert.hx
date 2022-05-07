@@ -37,7 +37,7 @@ class Convert {
 
         // Delete previously converted files
         println('Delete previously converted files\u2026');
-        deleteRecursive('spine', ['support', 'SkeletonBinary.hx']);
+        deleteRecursive('spine', ['support', 'SkeletonBinary.hx', 'utils/Triangulator.hx']);
 
         // Convert
         var ctx = {
@@ -2597,7 +2597,17 @@ using StringTools;
                         }
                         var snippet = line.substring(item.start, item.end);
 
-                        if (snippet.startsWith('return ')) {
+                        var addStdInt = true;
+                        if (RE_MATHUTILS_INTFLOAT.match(line)) {
+                            addStdInt = false;
+                            // Add new change
+                            lineChanges.push({ start: item.start - 2, end: item.end, add: '.0'.length });
+
+                            // Edit line
+                            line = line.replace(RE_MATHUTILS_INTFLOAT.matched(0), 'MathUtils.' + RE_MATHUTILS_INTFLOAT.matched(1) + '(' + RE_MATHUTILS_INTFLOAT.matched(2) + '.0,');
+                            lines[lineIndex] = line;
+                        }
+                        else if (snippet.startsWith('return ')) {
                             snippet = 'return Std.int(' + snippet.substring(7) + ')';
                         }
                         else if (snippet.indexOf('= ') != -1 && snippet.endsWith(';')) {
@@ -2607,12 +2617,14 @@ using StringTools;
                             snippet = 'Std.int(' + snippet + ')';
                         }
 
-                        // Add new change
-                        lineChanges.push({ start: item.start, end: item.end, add: 'Std.int()'.length });
+                        if (addStdInt) {
+                            // Add new change
+                            lineChanges.push({ start: item.start, end: item.end, add: 'Std.int()'.length });
 
-                        // Edit line
-                        line = line.substring(0, item.start) + snippet + line.substring(item.end);
-                        lines[lineIndex] = line;
+                            // Edit line
+                            line = line.substring(0, item.start) + snippet + line.substring(item.end);
+                            lines[lineIndex] = line;
+                        }
 
                         // Save modified file
                         saveFile(item.filePath, lines.join("\n"));
@@ -2874,7 +2886,9 @@ using StringTools;
                         var newSnippet = snippet;
 
                         if (item.filePath.endsWith('AnimationState.hx')) {
-                            if (newSnippet.toUpperCase() == newSnippet) {
+                            if (newSnippet == 'emptyAnimation') {
+                                newSnippet = 'AnimationState.' + newSnippet;
+                            } else if (newSnippet.toUpperCase() == newSnippet) {
                                 newSnippet = '@:privateAccess AnimationState.' + newSnippet;
                             } else {
                                 newSnippet = 'AnimationState_this.' + newSnippet;
@@ -3488,7 +3502,17 @@ using StringTools;
             var hasException = false;
             for (name in FileSystem.readDirectory(path)) {
                 if (except == null || except.indexOf(name) == -1) {
-                    deleteRecursive(Path.join([path, name]));
+                    var subExcept:Array<String> = null;
+                    if (except != null) {
+                        for (item in except) {
+                            if (item.startsWith(name + '/')) {
+                                if (subExcept == null)
+                                    subExcept = [];
+                                subExcept.push(item.substring(name.length + 1));
+                            }
+                        }
+                    }
+                    deleteRecursive(Path.join([path, name]), subExcept);
                 }
                 else if (except != null) {
                     hasException = true;
@@ -3734,6 +3758,7 @@ using StringTools;
         'utils/SkeletonDrawable.java' => true,
         'utils/SkeletonDataLoader.java' => true,
         'utils/TwoColorPolygonBatch.java' => true,
+        'utils/Triangulator.java' => true,
         'vertexeffects/JitterEffect.java' => true,
         'vertexeffects/SwirlEffect.java' => true
     ];
@@ -3796,6 +3821,7 @@ using StringTools;
     static var RE_PARENT_CLASS_THIS = ~/^([a-zA-Z0-9_]+)(\s*)\.\s*this\s*\./;
     static var RE_CASE_BREAKS = ~/(;|})\s*(break|continue|return)\s*(\s[^;]+)?;\s*(\}\s*)?$/;
     static var RE_EXPR_RETURNS = ~/(;|})\s*(return\s*(\s[^;]+)?;\s*(\}\s*))$/;
+    static var RE_MATHUTILS_INTFLOAT = ~/MathUtils\.(min|max)\(([0-9]+),/;
 
     static var RE_HAXE_COMPILER_OUTPUT_LINE = ~/^\s*(.+)?(?=:[0-9]*:):([0-9]+):\s+(characters|lines)\s+([0-9]+)\-([0-9]+)(?:\s+:\s*(.*?))?\s*$/;
     static var RE_ERROR_IDENTIFIER_NOT_PART = ~/^Identifier '([^']+)' is not part of ([a-zA-Z0-9_\[\]\.]+(?:<[a-zA-Z0-9_,<>\[\]]*>)?)/;

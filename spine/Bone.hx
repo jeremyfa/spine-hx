@@ -422,8 +422,8 @@ class Bone implements Updatable {
     #if !spine_no_inline inline #end public function updateAppliedTransform():Void {
         var parent:Bone = this.parent;
         if (parent == null) {
-            ax = worldX;
-            ay = worldY;
+            ax = worldX - skeleton.x;
+            ay = worldY - skeleton.y;
             var a:Float = this.a; var b:Float = this.b; var c:Float = this.c; var d:Float = this.d;
             arotation = atan2(c, a) * radDeg;
             ascaleX = Math.sqrt(a * a + c * c);

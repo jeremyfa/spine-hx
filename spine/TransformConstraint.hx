@@ -278,8 +278,8 @@ class TransformConstraint implements Updatable {
             var rotation:Float = bone.arotation + (target.arotation + data.offsetRotation) * mixRotate;
             var x:Float = bone.ax + (target.ax + data.offsetX) * mixX;
             var y:Float = bone.ay + (target.ay + data.offsetY) * mixY;
-            var scaleX:Float = (bone.ascaleX * ((target.ascaleX - 1 + data.offsetScaleX) * mixScaleX) + 1);
-            var scaleY:Float = (bone.ascaleY * ((target.ascaleY - 1 + data.offsetScaleY) * mixScaleY) + 1);
+            var scaleX:Float = bone.ascaleX * (((target.ascaleX - 1 + data.offsetScaleX) * mixScaleX) + 1);
+            var scaleY:Float = bone.ascaleY * (((target.ascaleY - 1 + data.offsetScaleY) * mixScaleY) + 1);
             var shearY:Float = bone.ashearY + (target.ashearY + data.offsetShearY) * mixShearY;
 
             bone.updateWorldTransformWithData(x, y, rotation, scaleX, scaleY, bone.ashearX, shearY);

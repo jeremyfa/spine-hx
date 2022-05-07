@@ -169,7 +169,10 @@ class PathConstraintData extends ConstraintData {
  * <p>
  * See <a href="http://esotericsoftware.com/spine-path-constraints#Rotate-mode">Rotate mode</a> in the Spine User Guide. */
 @:enum abstract RotateMode(Int) from Int to Int {
-    var tangent = 0; var chain = 1; var chainScale = 2;
+    var tangent = 0; var chain = 1;
+    /** When chain scale, constrained bones should all have the same parent. That way when the path constraint scales a bone, it
+     * doesn't affect other constrained bones. */
+    var chainScale = 2;
 
     //public static var values:RotateMode[] = RotateMode.values();
 }
