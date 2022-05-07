@@ -287,7 +287,7 @@ class JsonChild implements JsonValue {
 
     public var next(get,never):JsonValue;
     function get_next():JsonValue {
-        var dataArrayAny:Array<Any> = data;
+        var dataArrayAny:Array<Any> = cast data;
         if (index < dataArrayAny.length - 1) {
             return new JsonChild(data, index + 1, keys);
         }
