@@ -1,11 +1,11 @@
 package;
 
 import Sys.*;
+import haxe.Json;
+import haxe.io.Path;
+import js.node.ChildProcess;
 import sys.FileSystem;
 import sys.io.File;
-import haxe.io.Path;
-import haxe.Json;
-import js.node.ChildProcess;
 
 using StringTools;
 
@@ -37,7 +37,7 @@ class Convert {
 
         // Delete previously converted files
         println('Delete previously converted files\u2026');
-        deleteRecursive('spine', ['support', 'SkeletonBinary.hx', 'utils/Triangulator.hx']);
+        deleteRecursive('spine', ['support', 'SkeletonBinary.hx', 'utils/Triangulator.hx', 'utils/SpineUtils.hx']);
 
         // Convert
         var ctx = {
@@ -3759,6 +3759,7 @@ using StringTools;
         'utils/SkeletonDataLoader.java' => true,
         'utils/TwoColorPolygonBatch.java' => true,
         'utils/Triangulator.java' => true,
+        'utils/SpineUtils.java' => true,
         'vertexeffects/JitterEffect.java' => true,
         'vertexeffects/SwirlEffect.java' => true
     ];
