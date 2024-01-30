@@ -199,7 +199,7 @@ class BoneData {
 }
 
 /** Determines how a bone inherits world transforms from parent bones. */
-@:enum abstract TransformMode(Int) from Int to Int {
+enum abstract TransformMode(Int) from Int to Int {
     var normal = 0; var onlyTranslation = 1; var noRotationOrReflection = 2; var noScale = 3; var noScaleOrReflection = 4;
 
     //public static var values:TransformMode[] = TransformMode.values();

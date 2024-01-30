@@ -775,7 +775,7 @@ class AnimationState {
             return;
         }
 
-        var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0; 
+        var _gotoLabel_outer:Int; while (true) { _gotoLabel_outer = 0;
         var i:Int = 0; while (i < timelinesCount) {
             var timeline:Timeline = fastCast(timelines[i], Timeline);
             var ids:StringArray = timeline.getPropertyIds();
@@ -1342,7 +1342,7 @@ class EventQueue {
     public function new() {}
 }
 
-@:enum abstract EventType(Int) from Int to Int {
+enum abstract EventType(Int) from Int to Int {
     var start = 0; var interrupt = 1; var end = 2; var dispose = 3; var complete = 4; var event = 5;
 }
 

@@ -150,7 +150,7 @@ class PathConstraintData extends ConstraintData {
 /** Controls how the first bone is positioned along the path.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-path-constraints#Position-mode">Position mode</a> in the Spine User Guide. */
-@:enum abstract PositionMode(Int) from Int to Int {
+enum abstract PositionMode(Int) from Int to Int {
     var fixed = 0; var percent = 1;
 
     //public static var values:PositionMode[] = PositionMode.values();
@@ -159,7 +159,7 @@ class PathConstraintData extends ConstraintData {
 /** Controls how bones after the first bone are positioned along the path.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-path-constraints#Spacing-mode">Spacing mode</a> in the Spine User Guide. */
-@:enum abstract SpacingMode(Int) from Int to Int {
+enum abstract SpacingMode(Int) from Int to Int {
     var length = 0; var fixed = 1; var percent = 2; var proportional = 3;
 
     //public static var values:SpacingMode[] = SpacingMode.values();
@@ -168,7 +168,7 @@ class PathConstraintData extends ConstraintData {
 /** Controls how bones are rotated, translated, and scaled to match the path.
  * <p>
  * See <a href="http://esotericsoftware.com/spine-path-constraints#Rotate-mode">Rotate mode</a> in the Spine User Guide. */
-@:enum abstract RotateMode(Int) from Int to Int {
+enum abstract RotateMode(Int) from Int to Int {
     var tangent = 0; var chain = 1;
     /** When chain scale, constrained bones should all have the same parent. That way when the path constraint scales a bone, it
      * doesn't affect other constrained bones. */

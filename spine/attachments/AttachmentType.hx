@@ -29,7 +29,7 @@
 
 package spine.attachments;
 
-@:enum abstract AttachmentType(Int) from Int to Int {
+enum abstract AttachmentType(Int) from Int to Int {
     var region = 0; var boundingbox = 1; var mesh = 2; var linkedmesh = 3; var path = 4; var point = 5; var clipping = 6;
 
     //public static var values:AttachmentType[] = values();

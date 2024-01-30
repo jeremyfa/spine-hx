@@ -139,7 +139,7 @@ class Animation {
  * <code>alpha</code> < 1.
  * <p>
  * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixBlend, MixDirection)}. */
-@:enum abstract MixBlend(Int) from Int to Int {
+enum abstract MixBlend(Int) from Int to Int {
     /** Transitions from the setup value to the timeline value (the current value is not used). Before the first frame, the
      * setup value is set. */
     var setup = 0;
@@ -167,11 +167,11 @@ class Animation {
  * mixing in toward 1 (the timeline's value). Some timelines use this to decide how values are applied.
  * <p>
  * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixBlend, MixDirection)}. */
-@:enum abstract MixDirection(Int) from Int to Int {
+enum abstract MixDirection(Int) from Int to Int {
     var directionIn = 0; var directionOut = 1;
 }
 
-@:enum abstract Property(Int) from Int to Int {
+enum abstract Property(Int) from Int to Int {
     var rotate = 0; var x = 1; var y = 2; var scaleX = 3; var scaleY = 4; var shearX = 5; var shearY = 6; //
     var rgb = 7; var alpha = 8; var rgb2 = 9; //
     var attachment = 10; var deform = 11; //

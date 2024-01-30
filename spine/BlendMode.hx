@@ -34,7 +34,7 @@ import spine.support.graphics.GL20.*;
 
 
 /** Determines how images are blended with existing pixels when drawn. */
-@:enum abstract BlendMode(Int) from Int to Int {
+enum abstract BlendMode(Int) from Int to Int {
     var normal = 0; //
     var additive = 1; //
     var multiply = 2; //

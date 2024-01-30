@@ -1,6 +1,6 @@
 package spine.support.graphics;
 
-@:enum abstract Format(String) from String to String {
+enum abstract Format(String) from String to String {
 	var alpha = "alpha";
 	var intensity = "intensity";
 	var luminanceAlpha = "luminanceAlpha";

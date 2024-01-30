@@ -1,6 +1,6 @@
 package spine.support.graphics;
 
-@:enum abstract TextureFilter(String) from String to String {
+enum abstract TextureFilter(String) from String to String {
 	var nearest = "nearest";
 	var linear = "linear";
 	var mipMap = "mipMap";

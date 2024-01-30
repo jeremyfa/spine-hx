@@ -1863,7 +1863,7 @@ using StringTools;
                             inEnum = true;
                             inEnumValues = [];
                             beforeEnumBraces = openBraces;
-                            haxe += '@:enum abstract ';
+                            haxe += 'enum abstract ';
                         }
 
                         if (keyword == 'enum') {
@@ -2224,7 +2224,7 @@ using StringTools;
                     inEnum = true;
                     inEnumValues = [];
                     beforeEnumBraces = openBraces;
-                    haxe += '@:enum abstract ';
+                    haxe += 'enum abstract ';
                 }
 
                 if (keyword == 'enum') {
